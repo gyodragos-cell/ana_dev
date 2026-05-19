@@ -1,0 +1,46 @@
+🔐 Cum Activezi Licența Pro
+Pentru Utilizatori:
+Metoda 1: Folosind scriptul activate_license.py
+
+
+python activate_license.py --key CHEIA_TA_DE_LICENTA
+Metoda 2: Folosind comanda Python
+
+
+python -c "from core.license_manager import LicenseManager; m = LicenseManager(); m.activate('CHEIA_TA_DE_LICENTA')"
+Metoda 3: Verificare status licență
+
+
+python -c "from core.license_manager import get_license_manager; print(get_license_manager().get_license_info())"
+Pentru Tine (Generator Licențe):
+Când vrei să creezi o licență pentru un utilizator:
+
+
+python generate_license.py --email user@example.com --days 30
+Parametri:
+
+--email - Email-ul utilizatorului
+--days - Durata licenței (30 zile, 90 zile, 365 zile etc.)
+--trial - Pentru licență trial (max 7 zile)
+--quiet - Afișează doar cheia (fără alte mesaje)
+Exemplu Complet:
+Generezi licența:
+
+python generate_license.py --email client@example.com --days 30
+Primești o cheie de genul:
+
+Z0123456789ABCDEF... (cheie lungă criptată)
+Trimite cheia clientului + instrucțiuni:
+
+1. Copiaza cheia de licenta
+2. Ruleaza: python activate_license.py --key CHEIA_PRIMITA
+3. Reporneste serverul ANA MAX
+Clientul activează și poate folosi tool-urile premium.
+Verificare Licență Activă:
+
+python -c "from core.license_manager import get_license_manager; m = get_license_manager(); print('Pro:', m.is_pro()); print('Info:', m.get_license_info())"
+Important:
+Licența este legată de calculatorul unde a fost activată
+Nu se poate transfera pe alt calculator fără dezactivare
+La expirare, tool-urile premium devin din nou blocate
+Fișierul .license conține datele criptate (nu îl șterge!)

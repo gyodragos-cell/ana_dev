@@ -1,0 +1,88 @@
+### 🔄 Cum Funcționează:
+
+#### __Pasul 1: Tu generezi licența (pe calculatorul tău)__
+
+```bash
+# Intri în folderul proiectului tău
+cd C:\Users\billy\Desktop\ANA_MAX_GitHub_Release
+
+# Generezi licență pentru un client
+python generate_license.py --email client@gmail.com --days 30
+```
+
+__Ce se întâmplă:__
+
+- Scriptul rulează LOCAL la tine
+- Primești o cheie lungă (ex: `Z0123456789ABCDEF...`)
+- Această cheie este LICENȚA
+
+#### __Pasul 2: Trimite cheia clientului__
+
+Clientul primește:
+
+1. Cheia de licență (text lung)
+2. Instrucțiuni simple:
+
+```javascript
+1. Descarcă ANA MAX de pe GitHub
+2. Deschide terminal în folderul proiectului
+3. Rulează: python activate_license.py --key CHEIA_PRIMITA_DE_LA_TINE
+4. Gata! Ai acces Pro pentru 30 de zile
+```
+
+#### __Pasul 3: Clientul activează (pe calculatorul LOR)__
+
+```bash
+# Clientul rulează pe calculatorul lor:
+python activate_license.py --key Z0123456789ABCDEF...
+
+# Rezultat: ✅ Licența activată cu succes!
+```
+
+### 💡 Important de Înțeles:
+
+1. __Tu ai `generate_license.py`__ - doar TU îl folosești (e la tine în proiect)
+2. __Clientul are `activate_license.py`__ - îl primește când descarcă proiectul de pe GitHub
+3. __Nu trebuie să copiezi nimic__ - totul e deja în proiectul de pe GitHub
+4. __Licența e doar un text__ - îl poți trimite prin email, WhatsApp, etc.
+
+### 📧 Exemplu Practic:
+
+__Tu:__
+
+```bash
+C:\Users\billy\Desktop\ANA_MAX_GitHub_Release> python generate_license.py --email ion@gmail.com --days 30
+
+✅ SUCCESS: Licența pro activata pana la 2026-06-14
+LICENTA KEY:
+  Zx9Kp2Mn4Vb7Qw3Rt6Yx8Jh5Lk1Nc0Pd
+```
+
+__Trimite clientului:__
+
+```javascript
+Bună! Iată licența ta Pro pentru ANA MAX:
+
+Zx9Kp2Mn4Vb7Qw3Rt6Yx8Jh5Lk1Nc0Pd
+
+Instrucțiuni:
+1. Descarcă proiectul de pe GitHub
+2. Deschide terminal în folderul ANA_MAX_GitHub_Release
+3. Rulează: python activate_license.py --key Zx9Kp2Mn4Vb7Qw3Rt6Yx8Jh5Lk1Nc0Pd
+4. Repornește serverul: python main.py
+```
+
+__Clientul:__
+
+```bash
+C:\Users\ion\Downloads\ANA_MAX_GitHub_Release> python activate_license.py --key Zx9Kp2Mn4Vb7Qw3Rt6Yx8Jh5Lk1Nc0Pd
+
+✅ SUCCESS: Licența pro activata pana la 2026-06-14
+```
+
+### ✅ Concluzie:
+
+- __Nu trebuie să muți nimic__ - toate scripturile sunt deja în proiect
+- __Tu generezi__ licența cu `generate_license.py` (la tine)
+- __Clientul activează__ cu `activate_license.py` (la el, după ce descarcă de pe GitHub)
+- __Licența e un text__ pe care i-l trimiți

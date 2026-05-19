@@ -1,0 +1,160 @@
+name: ANA MAX CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if (Test-Path docs/requirements.txt) {
+          pip install -r docs/requirements.txt
+        }
+        pip install pytest pytest-cov
+
+    - name: Check Python syntax
+      run: |
+        python -m compileall -q main.py core tools
+        Write-Host "✅ Compilation successful"
+
+    - name: Run tool healthcheck
+      run: |
+        python main.py --list-tools
+        Write-Host "✅ Tools loaded successfully"
+
+    - name: Run quick tests
+      run: |
+        python main.py --test
+        Write-Host "✅ Quick tests passed"
+
+    - name: Run unit tests
+      run: |
+        python -m pytest archives/tests/ -v --tb=short --junitxml=test-results.xml
+      continue-on-error: true
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: test-results.xml
+
+    - name: Check for BOM encoding issues
+      run: |
+        $bomFiles = @()
+        Get-ChildItem -Recurse -Filter "*.py" | ForEach-Object {
+          $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+          if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            $bomFiles += $_.Name
+          }
+        }
+        if ($bomFiles.Count -gt 0) {
+          Write-Host "⚠️ Files with BOM encoding:"
+          $bomFiles | ForEach-Object { Write-Host "  - $_" }
+          exit 1
+        } else {
+          Write-Host "✅ No BOM encoding issues"
+        }
+
+    - name: Verify Jules integration files
+      run: |
+        if (Test-Path "tools/jules_mcp_bridge.py") {
+          Write-Host "✅ Jules MCP Bridge exists"
+        }
+        if (Test-Path "tools/jules_api_rotator.py") {
+          Write-Host "✅ Jules API Rotator exists"
+        }
+
+  security-scan:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install security tools
+      run: |
+        pip install bandit safety
+
+    - name: Run Bandit security scan
+      run: |
+        bandit -r core/ tools/ -f json -o bandit-results.json || true
+      continue-on-error: true
+
+    - name: Check for hardcoded secrets
+      run: |
+        $secrets = @()
+        Get-ChildItem -Recurse -Filter "*.py" | Where-Object { $_.DirectoryName -notlike "*archives*" } | ForEach-Object {
+          $content = Get-Content $_.FullName -Raw
+          if ($content -match 'API_KEY\s*=\s*["''][^"'' ]{10,}["'']' -or 
+              $content -match 'SECRET\s*=\s*["''][^"'' ]{10,}["'']' -or
+              $content -match 'PASSWORD\s*=\s*["''][^"'' ]{8,}["'']') {
+            $secrets += $_.Name
+          }
+        }
+        if ($secrets.Count -gt 0) {
+          Write-Host "⚠️ Possible hardcoded secrets in:"
+          $secrets | ForEach-Object { Write-Host "  - $_" }
+        } else {
+          Write-Host "✅ No hardcoded secrets found"
+        }
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: bandit-results.json
+
+  build-extension:
+    runs-on: windows-latest
+    needs: test-and-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check for VS Code extension
+      run: |
+        if (Test-Path "vscode_extension") {
+          Write-Host "✅ VS Code extension found"
+        } else {
+          Write-Host "⚠️ No VS Code extension directory"
+        }
+      continue-on-error: true
+
+    - name: Create release package
+      run: |
+        $version = Get-Date -Format "yyyy.MM.dd"
+        $zipName = "ANA_MAX_v$version.zip"
+        Compress-Archive -Path main.py, core, tools, config, docs -DestinationPath $zipName
+        Write-Host "✅ Created release package: $zipName"
+
+    - name: Upload release package
+      uses: actions/upload-artifact@v4
+      with:
+        name: ANA_MAX-release
+        path: "*.zip"

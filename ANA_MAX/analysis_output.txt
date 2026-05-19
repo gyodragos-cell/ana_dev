@@ -1,0 +1,73 @@
+﻿python : <unknown>:154: 
+SyntaxWarning: invalid 
+escape sequence '\S'
+At line:1 char:44
++ ... rs\billy\Desktop\ana_de
+v\ANA_MAX; python 
+analyze_bugs.py 2>&1 | Out-F 
+...
++                            
+           
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (<unknow  
+  n>:154: ...e sequence '\   
+ S':String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+<unknown>:154: 
+SyntaxWarning: invalid 
+escape sequence '\S'
+C:\Users\billy\AppData\Roamin
+g\Python\Python312\site-packa
+ges\requests\__init__.py:113:
+ RequestsDependencyWarning: 
+urllib3 (2.6.3) or chardet 
+(7.4.3)/charset_normalizer 
+(3.4.5) doesn't match a 
+supported version!
+  warnings.warn(
+============================================================
+  ANA MAX - Bug Analysis & Repair
+============================================================
+
+≡ƒôï Checking for corrupted files...
+  ΓÜá∩╕Å  jules_mcp_bridge.py - SYNTAX ERROR
+  ΓÜá∩╕Å  verdent_tools.py - SYNTAX ERROR
+  ΓÜá∩╕Å  router.py - SYNTAX ERROR
+  Γ£à Scan complete
+
+≡ƒôª Checking imports...
+  Γ£à jules_mcp_bridge - OK (13 params)
+  Γ£à jules_api_rotator - OK (6 keys)
+  Γ£à tools.base - OK
+
+≡ƒöº Checking tool definitions...
+  Γ£à 50 tools validated
+
+≡ƒÄ» Checking Jules integration...
+  Γ£à 6 API keys configured
+  Γ£à 6 keys active
+  Γ£à Jules MCP Server built
+
+≡ƒºá Checking for memory issues...
+  Γ£à 4 database files (8808.0 KB)
+  Γ£à Log file OK (294.3 KB)
+
+≡ƒöÆ Checking security...
+  Γ£à .env configured
+  Γ£à Security scan complete
+
+============================================================
+  Analysis Report
+============================================================
+
+ΓÜá∩╕Å  WARNINGS (3):
+  ΓÇó Syntax error in C:\Users\billy\Desktop\ana_dev\ANA_MAX\tools\jules_mcp_bridge.py: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ΓÇó Syntax error in C:\Users\billy\Desktop\ana_dev\ANA_MAX\tools\verdent_tools.py: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ΓÇó Syntax error in C:\Users\billy\Desktop\ana_dev\ANA_MAX\core\backends\router.py: invalid non-printable character U+FEFF (<unknown>, line 1)
+
+≡ƒôè Summary: 0 errors, 3 warnings
+

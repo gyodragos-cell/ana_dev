@@ -1,0 +1,210 @@
+﻿python : C:\Users\billy\AppDa
+ta\Roaming\Python\Python312\s
+ite-packages\requests\__init_
+_.py:113: 
+RequestsDependencyWarning: 
+urllib3 (2.6.3) or chardet 
+(7.4.3)/charset_normalizer 
+(3.4.5) doesn't match a 
+supported version!
+At line:1 char:44
++ ... 
+lly\Desktop\ana_dev\ANA_MAX; 
+python main.py --list-tools 
+2>&1 | Out-F ...
++                            
+      ~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (C:\User  
+  s\billy\...ported versio   
+ n!:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+  warnings.warn(
+2026-05-19 04:32:27,125 - 
+core.agent - INFO - ANA 
+routing configurat: 
+opencode_zen(big-pickle) -> o
+pencode_zen(minimax-m2.5-free
+) -> opencode_zen(mimo-v2-pro
+-free) -> opencode_zen(mimo-v
+2-omni-free) -> opencode_zen(
+qwen3.6-plus-free) -> opencod
+e_zen(nemotron-3-super-free) 
+-> opencode_zen(gpt-5-nano) 
+-> nemotron_openrouter(nvidia
+/nemotron-3-super-120b-a12b:f
+ree) -> 
+gemini(gemini-2.5-flash) -> 
+kimi(kimi-k2.5) -> 
+ollama(mistral:7b)
+2026-05-19 04:32:27,300 - cor
+e.backends.opencode_zen_backe
+nd - INFO - OpenCode Zen 
+backend initializat cu 
+modelul: big-pickle
+2026-05-19 04:32:27,300 - 
+core.agent - INFO - 
+Initializat backend route: 
+opencode_zen model=big-pickle
+2026-05-19 04:32:27,300 - 
+core.agent - INFO - ANAAgent 
+initializat cu backend: 
+opencode_zen
+2026-05-19 04:32:27,300 - 
+core.memory - INFO - Baza de 
+date initializata cu succes
+2026-05-19 04:32:27,325 - 
+tools.adb_tool - INFO - ADB 
+found at: adb
+2026-05-19 04:32:37,157 - 
+tools.windows_deep_sight - 
+INFO - Incarcate 18 
+evenimente din istoric
+2026-05-19 04:32:37,466 - 
+tools.windows_uia_bridge - 
+INFO - pywinauto loaded 
+successfully: 0.6.9
+2026-05-19 04:32:38,385 - 
+tools.edge_tts_voice - INFO 
+- Using female voice: 
+Microsoft Zira Desktop - 
+English (United States)
+2026-05-19 04:32:38,385 - 
+tools.edge_tts_voice - INFO 
+- pyttsx3 initialized with 
+calm female voice
+====================================================================
+     A.N.A. MAX - Arhitectura Neurala Avansata
+     MCP Server | 56 Tools | AI Desktop Control | OpenCode Ready
+     AI Core: Context Engine, Memory Cortex, Orchestrator
+====================================================================
+
+  Incarcare tool-uri...
+  [OK] ana_identity
+  [OK] file_operations
+  [OK] code_tools
+  [OK] web_search
+  [OK] system_control
+  [OK] tool_healthcheck
+  [OK] conversation_learning
+  [OK] session_log_miner
+  [OK] ana_memory
+  [OK] privacy_shield
+  [OK] git_operations
+  [OK] network_diag
+  [OK] security_audit
+  [OK] qa_testing
+  [OK] smart_search
+  [OK] debugger
+  [OK] codebase_understanding
+  [OK] browser_control
+  [OK] terminal
+  [OK] todowrite
+  [OK] edit
+  [OK] system_optimization
+  [OK] autonomous_engine (optional)
+  [OK] task (optional)
+  [OK] science_research (optional)
+  [OK] web_ai_bridge (optional)
+  [OK] advanced_scanner (optional)
+  [OK] adal_integration (optional)
+  [OK] mitm_analyzer (optional)
+  [OK] network_pentest (optional)
+  [OK] hardware_scanner (optional)
+  [OK] bash_exec (optional)
+  [OK] glob_search (optional)
+  [OK] grep_content (optional)
+  [OK] grep_file (optional)
+  [OK] web_fetch (optional)
+  [OK] adb_operations (NEW)
+  [OK] frida_instrument (NEW)
+  [OK] apk_analyzer (NEW)
+  [OK] code_search (NEW)
+  [OK] web_scraper (NEW)
+  [OK] windows_deep_sight (GOD VIEW)
+  [OK] desktop_capture (DESKTOP CONTROL)
+  [OK] live_desktop_viewer (DESKTOP CONTROL)
+  [OK] desktop_control (DESKTOP CONTROL)
+  [OK] windows_insight (DESKTOP CONTROL)
+  [OK] windows_uia_bridge (DESKTOP CONTROL)
+  [OK] foreground_ui_snapshot (DESKTOP CONTROL)
+  [OK] edge_tts_voice (JARVIS VOICE)
+  [OK] context_engine (AI CORE)
+  [OK] proactive_interrupt (AI CORE)
+  [OK] self_evolving_tool (AI CORE)
+  [OK] memory_cortex (AI CORE)
+  [OK] ana_orchestrator (AI CORE)
+  [OK] context_bridge (AI CORE)
+  [OK] window_manager (AI CORE)
+  [OK] clipboard_manager (AI CORE)
+  [OK] ocr_tool (AI CORE)
+  [OK] jules_mcp_bridge (JULES INTEGRATION)
+  59 tool-uri incarcate.
+
+
+  Tool-uri ANA MAX (59 disponibile):
+  --------------------------------------------------
+  - adal_integration: Interfa╚¢─â cu AdaL CLI pentru execu╚¢ie de cod, debug tactic ╚Ö
+  - adb_operations: Operatii ADB pentru control dispozitive Android: devices, sh
+  - advanced_scanner: Scanare avansat─â de securitate: Deep Recon, Service Fingerpr
+  - ana_identity: Explica cine este ANA, cum lucreaza cu OpenCode, cate tool-u
+  - ana_memory: Acces curat la memoria persistenta ANA: knowledge, search, e
+  - ana_orchestrator: Task orchestrator: executes natural language tasks, batch pr
+  - apk_analyzer: Reverse engineering APK: decompile, parse manifest, list per
+  - autonomous_engine: Activeaza modul de lucru autonom (Plan -> Execute -> Verify)
+  - bash_exec: Executa o comanda shell si returneaza stdout+stderr. Suporta
+  - browser_control: Deschide browserul local sau inspecteaza o pagina web cu scr
+  - clipboard_manager: Clipboard intelligence: read, write, history, monitor, trans
+  - code_search: Cautare avansata in cod: grep cu regex, symbol lookup, find 
+  - code_tools: Instrumente pentru cod: analiz─â, execu╚¢ie, creare proiecte.
+  - codebase_understanding: Interogare semantica si analiza de arhitectura pentru codeba
+  - context_bridge: Session persistence: restores context between sessions, trac
+  - context_engine: Advanced context management: observes active windows, clipbo
+  - conversation_learning: Salveaza si cauta lectii invatate de ANA din conversatii, te
+  - debugger: Analiz─â de traceback ╚Öi propuneri de repara╚¢ii automate.
+  - desktop_capture: Captureaza ecranul desktop pentru monitoring live. Poate cap
+  - desktop_control: Control avansat desktop: click pe text, tastare, screenshot,
+  - edge_tts_voice: Natural JARVIS-style voice using Microsoft Edge TTS. Speaks 
+  - edit: Editeaza punctual un fisier prin replace exact sau insertii 
+  - file_operations: Operatii cu fisiere: citire, scriere, cautare, editare, list
+  - foreground_ui_snapshot: Captureaz─â starea UI a ferestrei active: titlu, controale vi
+  - frida_instrument: Instrumentare dinamica cu Frida: list procese, attach/spawn,
+  - git_operations: Controlul versiunilor folosind Git (status, commit, log, bra
+  - glob_search: Cauta fisiere cu pattern glob. Suporta ** recursiv si {a,b} 
+  - grep_content: Cauta un regex in fisiere si returneaza liniile care se potr
+  - grep_file: Returneaza lista de fisiere care contin cel putin un match p
+  - hardware_scanner: Hardware security scanner (White Hat) - scan IoT, routers, d
+  - jules_mcp_bridge: Delega task-uri de coding catre Jules (Google AI coding agen
+  - live_desktop_viewer: Porneste un server web cu live desktop streaming. Accesibil 
+  - memory_cortex: Advanced memory system: Episodic, Semantic, Procedural, Erro
+  - mitm_analyzer: Analiz─â trafic MITM (Charles/Wireshark) pentru bug bounty - 
+  - network_diag: Diagnoz─â re╚¢ea: ping, port scan, DNS, IP info.
+  - network_pentest: Network penetration testing (White Hat) - port scan, vuln de
+  - ocr_tool: OCR on screen, region, file or clipboard (PaddleOCR/Tesserac
+  - privacy_shield: Protejeaz─â anonimitatea Operatorului. Detecteaz─â, blocheaz─â 
+  - proactive_interrupt: AI-driven proactive detection: STUCK, SEQUENCE, CLIPBOARD IN
+  - qa_testing: Asigurarea calit─â╚¢ii: generare teste, edge-cases, mock data.
+  - science_research: Analiza statistica, procesare de date si simulari usoare.
+  - security_audit: Audit securitate: scanare secrete (keys), vulnerabilit─â╚¢i st
+  - self_evolving_tool: AI tool that learns and evolves: catches runtime errors, aut
+  - session_log_miner: Extrage lectii utile din fisiere de sesiune, rapoarte, markd
+  - smart_search: Cautare ultra-rapida in proiecte mari.
+  - system_control: Monitorizare ╚Öi control sistem: vitals, procese, comenzi she
+  - system_optimization: Optimizeaz─â sistemul Windows: cur─â╚¢─â temp, recycle bin, DNS 
+  - task: Planifica sau executa un task multi-pas folosind motorul aut
+  - terminal: Terminal persistent cu sesiune pastrata (cd, env, procese ba
+  - todowrite: Gestioneaza o lista persistenta de task-uri pentru sesiunea 
+  - tool_healthcheck: Verifica rapid starea tool-urilor ANA si raporteaza ce merge
+  - web_ai_bridge: Conecteaza ANA la provideri AI externi configurati prin vari
+  - web_fetch: Descarca o pagina web si returneaza continutul text/markdown
+  - web_scraper: Web scraping: fetch URL, parse HTML, extrage linkuri/text/im
+  - web_search: Caut─â informa╚¢ii pe web folosind DuckDuckGo (anonim).
+  - window_manager: Window management: list, snap, move, tile, focus, minimize, 
+  - windows_deep_sight: God View Windows: monitorizeaza click-uri, procese, API call
+  - windows_insight: Monitorizare 'God View' a sistemului Windows: evenimente fis
+  - windows_uia_bridge: Eyes and hands of ANA MAX (via Microsoft UI Automation). Rea
+
