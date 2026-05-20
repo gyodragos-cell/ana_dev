@@ -42,3 +42,10 @@ pytest>=8.0.0
 # Security & Mobile
 frida-tools>=14.0.0  # Dynamic instrumentation (Frida)
 frida>=16.0.0  # Frida core library
+
+# Desktop automation & OCR (added by smoke test)
+pyautogui>=0.9.55
+pygetwindow>=0.0.9
+pytesseract>=0.3.10
+opencv-python>=4.8.1.78
+numpy>=1.26.0

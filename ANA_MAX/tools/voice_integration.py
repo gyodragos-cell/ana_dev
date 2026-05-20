@@ -1,61 +1,63 @@
 """
 ANA MAX - Voice Integration Helper
-Automatically speaks Qoder's responses
 
-This module wraps voice commentary into every action.
+Lazy helper for speaking status messages. Importing this module must stay quiet.
 """
+
+from __future__ import annotations
+
+import logging
+import threading
 
 from tools.edge_tts_voice import EdgeTTSVoice
 
-# Global voice instance - always on
+logger = logging.getLogger(__name__)
+
 _voice_instance = None
+_voice_lock = threading.Lock()
 
 
 def get_voice():
-    """Get or create voice instance."""
+    """Get or create the shared voice instance."""
     global _voice_instance
     if _voice_instance is None:
-        _voice_instance = EdgeTTSVoice()
-        # Greeting
-        _voice_instance.execute('speak', text='Voice integration ready! I will speak everything Qoder writes!')
+        with _voice_lock:
+            if _voice_instance is None:
+                try:
+                    _voice_instance = EdgeTTSVoice()
+                except Exception as exc:
+                    logger.warning("Voice init failed: %s", exc)
+                    return None
     return _voice_instance
 
 
 def speak(text: str, async_mode: bool = True):
-    """
-    Speak text immediately.
-    
-    Usage:
-        from tools.voice_integration import speak
-        speak("I am fixing the bug now...")
-    """
+    """Speak text with optional background execution."""
+    if not text:
+        return
+
     voice = get_voice()
-    
+    if not voice:
+        return
+
+    def _run():
+        try:
+            voice.execute("speak", text=text)
+        except Exception as exc:
+            logger.warning("Voice speak failed: %s", exc)
+
     if async_mode:
-        # Non-blocking - speaks in background
-        import threading
-        def _speak_thread():
-            voice.execute('speak', text=text)
-        
-        thread = threading.Thread(target=_speak_thread, daemon=True)
-        thread.start()
+        threading.Thread(target=_run, daemon=True).start()
     else:
-        # Blocking - waits for speech to finish
-        voice.execute('speak', text=text)
+        _run()
 
 
 def test_voice():
-    """Test voice integration."""
-    print("\n🎙️ Testing voice integration...\n")
-    
-    speak("Hello colleague! This is a test. Can you hear me?")
-    
-    import time
-    time.sleep(3)  # Wait for speech
-    
-    speak("Voice integration is working! Now every message will be spoken!")
-    
-    print("✅ Voice test complete!")
+    """Run a small manual voice test."""
+    print("\nTesting voice integration...\n")
+    speak("Hello. This is a voice integration test.", async_mode=False)
+    speak("Voice integration is working.", async_mode=False)
+    print("Voice test complete.")
 
 
 if __name__ == "__main__":

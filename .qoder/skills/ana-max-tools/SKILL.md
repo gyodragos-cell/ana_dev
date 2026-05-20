@@ -20,10 +20,10 @@ Start with: `python main.py --port 8765` in `ANA_MAX/`
 
 ## Tool Selection Guide
 
-### When to use which tool:
+### When to use which tool
 
 | Task | Tool | Example |
-|------|------|---------|
+| --- | --- | --- |
 | **See screen** | `desktop_capture` | Before clicking on generic images/web |
 | **Inspect Windows App UI** | `windows_uia_bridge` | Best for native Windows apps (0% error) |
 | **Click/type on desktop** | `desktop_control` / `windows_uia_bridge` | GUI automation |
@@ -43,6 +43,7 @@ Start with: `python main.py --port 8765` in `ANA_MAX/`
 Pentru aplicații native Windows, preferă NATIVITATEA (`windows_uia_bridge`) în loc de capturi oarbe.
 
 **1. Metoda UIA (Pentru aplicații Windows, FĂRĂ screenshots, perfect precis):**
+
 ```python
 # Step 1: Inspect (Get all buttons, texts, menus)
 ui_tree = ana.call_tool("windows_uia_bridge", action="inspect_window", window_title="Notepad")
@@ -52,6 +53,7 @@ ana.call_tool("windows_uia_bridge", action="type_text", window_title="Notepad", 
 ```
 
 **2. Metoda Veche OCR/Screenshot (Folosește doar dacă UIA dă greș):**
+
 ```python
 # Step 1: See
 screen = ana.call_tool("desktop_capture")
@@ -62,6 +64,7 @@ screen2 = ana.call_tool("desktop_capture")
 ```
 
 **Desktop control actions:**
+
 - `click` - Click at (x, y)
 - `type` - Type text
 - `drag` - Drag from (x1,y1) to (x2,y2)
@@ -71,6 +74,7 @@ screen2 = ana.call_tool("desktop_capture")
 ## File Operations
 
 **Best practices:**
+
 - Always check if file exists before writing
 - Use `action="read"` for reading
 - Use `action="write"` for creating/overwriting
@@ -78,6 +82,7 @@ screen2 = ana.call_tool("desktop_capture")
 - Use `edit` tool for surgical changes (preferred for code)
 
 **Example:**
+
 ```python
 # Read file
 result = ana.call_tool("file_operations", action="read", path="config.py")
@@ -92,6 +97,7 @@ ana.call_tool("file_operations", action="write", path="output.txt", content="dat
 ## Memory Usage (Your Long-Term Brain)
 
 **Save important findings:**
+
 ```python
 # Save lessons learned
 ana.call_tool("ana_memory", 
@@ -107,12 +113,14 @@ ana.call_tool("ana_memory",
 ```
 
 **Search when needed:**
+
 ```python
 # Recall previous solutions
 result = ana.call_tool("ana_memory", action="search", query="authentication")
 ```
 
 **Categories to use:**
+
 - `workflow` - Process improvements
 - `config` - System configurations
 - `code` - Code patterns
@@ -122,6 +130,7 @@ result = ana.call_tool("ana_memory", action="search", query="authentication")
 ## Code Search & Analysis
 
 **Smart search first (fastest):**
+
 ```python
 # Find authentication logic
 ana.call_tool("smart_search", query="user authentication")
@@ -131,6 +140,7 @@ ana.call_tool("smart_search", query="database connection", path="./core")
 ```
 
 **Deep analysis:**
+
 ```python
 # Understand entire codebase
 ana.call_tool("codebase_understanding")
@@ -143,6 +153,7 @@ ana.call_tool("glob_search", pattern="*.py")
 ```
 
 **Workflow:**
+
 1. `smart_search` - Fast semantic search
 2. `grep_content` - Exact pattern match
 3. `file_operations` (read) - Read specific files
@@ -151,6 +162,7 @@ ana.call_tool("glob_search", pattern="*.py")
 ## Browser Automation
 
 **Complete workflow:**
+
 ```python
 # Open page
 ana.call_tool("browser_control", operation="open", url="https://example.com")
@@ -170,6 +182,7 @@ ana.call_tool("browser_control", operation="get_content")
 ```
 
 **Common operations:**
+
 - `open` - Navigate to URL
 - `click` - Click selector
 - `type` - Type in selector
@@ -180,6 +193,7 @@ ana.call_tool("browser_control", operation="get_content")
 ## Security & Network Tools
 
 **Security audit:**
+
 ```python
 # Scan for secrets in code
 ana.call_tool("security_audit", 
@@ -193,6 +207,7 @@ ana.call_tool("security_audit",
 ```
 
 **Network diagnostics:**
+
 ```python
 # Ping host
 ana.call_tool("network_diag", operation="ping", target="google.com")
@@ -207,6 +222,7 @@ ana.call_tool("network_diag", operation="dns_lookup", target="example.com")
 ## Error Handling & Health Checks
 
 **If tool fails:**
+
 ```python
 # 1. Check server connection
 if not ana.is_server_running():
@@ -221,25 +237,29 @@ tools = ana.list_tools()
 ```
 
 **Common errors:**
+
 - `ConnectionError` → Server not running
 - `Tool not found` → Check tool name with `list_tools()`
 - `Timeout` → Tool execution taking too long, retry with simpler params
 
 ## Helper Scripts
 
-Use these scripts from `.qoder/skills/ana-max-tools/scripts/`:
+Use these scripts from `.qoder/skills/ana-max-tools/scripts/`
 
 ### Quick Test
+
 ```bash
 python .qoder/skills/ana-max-tools/scripts/test_connection.py
 ```
 
 ### List Tools
+
 ```bash
 python .qoder/skills/ana-max-tools/scripts/list_tools.py
 ```
 
 ### Desktop Capture
+
 ```bash
 python .qoder/skills/ana-max-tools/scripts/capture_desktop.py
 ```
@@ -255,6 +275,7 @@ python .qoder/skills/ana-max-tools/scripts/capture_desktop.py
 ## Autonomous Mode
 
 For multi-step tasks, let ANA plan and execute:
+
 ```python
 ana.call_tool("autonomous_engine", 
     task="Create a Python web scraper that extracts product prices",
@@ -264,6 +285,7 @@ ana.call_tool("autonomous_engine",
 ## Response Parsing
 
 All tools return:
+
 ```python
 {
     "content": [{"text": "{JSON result}", "type": "text"}]
@@ -271,6 +293,7 @@ All tools return:
 ```
 
 **Parse it:**
+
 ```python
 import json
 result = ana.call_tool("system_control")
@@ -280,6 +303,7 @@ data = json.loads(result["content"][0]["text"])
 ## Workflow Examples
 
 ### Example 1: Fix a bug
+
 ```python
 # 1. Search for the code
 ana.call_tool("smart_search", query="error handling login")
@@ -295,6 +319,7 @@ ana.call_tool("file_operations", action="read", path="core/auth.py")
 ```
 
 ### Example 2: Automate desktop task
+
 ```python
 # 1. See screen
 ana.call_tool("desktop_capture")
@@ -313,6 +338,7 @@ ana.call_tool("desktop_capture")
 ```
 
 ### Example 3: Security audit
+
 ```python
 # 1. Scan for secrets
 ana.call_tool("security_audit", operation="scan_secrets", target=".")

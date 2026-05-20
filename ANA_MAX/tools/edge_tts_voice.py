@@ -1,70 +1,58 @@
 """
-ANA MAX - Edge TTS Voice Tool (EXPERIMENTAL)
-Natural JARVIS-style voice using Microsoft Edge TTS
+ANA MAX - Edge TTS Voice Tool (experimental)
 
-Voce naturală, prietenoasă, ca JARVIS.
-Folosit DOAR în ana_dev pentru teste!
+Natural local voice feedback for ANA MAX tests.
 """
 
-import logging
+from __future__ import annotations
+
 import asyncio
-import os
-from typing import Optional, Dict, Any
+import logging
+import subprocess
+import time
 from pathlib import Path
+from typing import Optional
 
 from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
 
 logger = logging.getLogger(__name__)
 
-# Import live voice bridge for real-time TTS
-try:
-    from tools.live_voice_bridge import speak as live_speak
-    LIVE_VOICE_AVAILABLE = True
-except ImportError:
-    LIVE_VOICE_AVAILABLE = False
-    logger.info("live_voice_bridge not available")
-
-# Try to import edge_tts
 try:
     import edge_tts
+
     EDGE_TTS_AVAILABLE = True
 except ImportError:
     EDGE_TTS_AVAILABLE = False
-    logger.info("edge-tts not installed - voice disabled. Run: pip install edge-tts")
+    logger.info("edge-tts not installed - Edge voice disabled")
+
+
+def _get_live_speak():
+    """Import live voice lazily so imports stay quiet."""
+    try:
+        from tools.live_voice_bridge import speak as live_speak
+
+        return live_speak
+    except Exception as exc:
+        logger.debug("live_voice_bridge not available: %s", exc)
+        return None
 
 
 class EdgeTTSVoice(Tool):
-    """
-    Ana vorbește cu voce naturală folosind Microsoft Edge TTS.
-    
-    Usage via MCP:
-        ana.call_tool('edge_tts_voice', operation='speak', text='Salut!')
-        ana.call_tool('edge_tts_voice', operation='list_voices')
-        ana.call_tool('edge_tts_voice', operation='enable')
-        ana.call_tool('edge_tts_voice', operation='disable')
-    """
-    
-    # Available voices (natural, human-like)
+    """Voice output using local pyttsx3 by default, with Edge TTS support."""
+
     VOICES = {
-        'en-us': 'en-US-AriaNeural',      # English US - Female, warm
-        'en-gb': 'en-GB-SoniaNeural',     # English UK - Female, professional
-        'ro-ro': 'ro-RO-AlinaNeural',     # Romanian - Female
+        "en-us": "en-US-AriaNeural",
+        "en-gb": "en-GB-SoniaNeural",
+        "ro-ro": "ro-RO-AlinaNeural",
     }
-    
-    def __init__(self, 
-                 voice: str = 'en-US-AriaNeural',
-                 rate: int = 150,
-                 volume: float = 0.8,
-                 use_edge_tts: bool = False):
-        """
-        Initialize voice tool.
-        
-        Args:
-            voice: Voice name (for Edge TTS mode)
-            rate: Speech rate (words per minute) - 150 = JARVIS-like
-            volume: Volume (0.0 to 1.0)
-            use_edge_tts: If True, use Edge TTS (natural but slower). If False, use pyttsx3 (fast but robotic)
-        """
+
+    def __init__(
+        self,
+        voice: str = "en-US-AriaNeural",
+        rate: int = 150,
+        volume: float = 0.8,
+        use_edge_tts: bool = False,
+    ):
         super().__init__()
         self.enabled = True
         self.voice_name = voice
@@ -72,186 +60,148 @@ class EdgeTTSVoice(Tool):
         self.volume = volume
         self.use_edge_tts = use_edge_tts
         self._tts_engine = None
-        
-        # Initialize pyttsx3 for real-time streaming (default)
+        self._temp_dir = Path.cwd() / "voice_temp"
+        self._temp_dir.mkdir(exist_ok=True)
+
         if not use_edge_tts:
-            try:
-                import pyttsx3
-                self._tts_engine = pyttsx3.init()
-                
-                # Set female voice (Zira) - warmer and friendlier
-                voices = self._tts_engine.getProperty('voices')
-                if voices:
-                    # Zira is usually index 1
-                    for voice in voices:
-                        if 'Zira' in voice.name:
-                            self._tts_engine.setProperty('voice', voice.id)
-                            logger.info(f"Using female voice: {voice.name}")
-                            break
-                
-                # Set calm, friendly rate (not too fast)
-                self._tts_engine.setProperty('rate', rate)
-                self._tts_engine.setProperty('volume', volume)
-                logger.info("pyttsx3 initialized with calm female voice")
-            except Exception as e:
-                logger.warning(f"pyttsx3 not available: {e}")
-                self.enabled = False
-    
+            self._init_pyttsx3(rate=rate, volume=volume)
+
+    def _init_pyttsx3(self, rate: int, volume: float):
+        try:
+            import pyttsx3
+
+            self._tts_engine = pyttsx3.init()
+            voices = self._tts_engine.getProperty("voices") or []
+            for voice in voices:
+                if "Zira" in voice.name:
+                    self._tts_engine.setProperty("voice", voice.id)
+                    logger.info("Using voice: %s", voice.name)
+                    break
+            self._tts_engine.setProperty("rate", rate)
+            self._tts_engine.setProperty("volume", volume)
+        except Exception as exc:
+            logger.warning("pyttsx3 not available: %s", exc)
+            self.enabled = False
+
     def get_definition(self) -> ToolDefinition:
-        """Return tool definition for MCP."""
         return ToolDefinition(
             name="edge_tts_voice",
-            description="Natural JARVIS-style voice using Microsoft Edge TTS. Speaks text aloud with human-like quality.",
+            description="Natural voice feedback using Edge TTS or local pyttsx3.",
             parameters=[
                 ToolParameter(
                     name="operation",
                     description="Operation: speak, list_voices, enable, disable",
                     type="string",
                     required=True,
-                    choices=["speak", "list_voices", "enable", "disable"]
+                    choices=["speak", "list_voices", "enable", "disable"],
                 ),
                 ToolParameter(
                     name="text",
-                    description="Text to speak (required for 'speak' operation)",
+                    description="Text to speak for the speak operation",
                     type="string",
-                    required=False
+                    required=False,
                 ),
                 ToolParameter(
                     name="voice",
-                    description="Voice name (e.g., en-US-AriaNeural, ro-RO-AlinaNeural)",
+                    description="Voice name, for example en-US-AriaNeural",
                     type="string",
-                    required=False
+                    required=False,
                 ),
             ],
-            category="voice"
+            category="voice",
         )
-    
-    def execute(self, operation: str, text: Optional[str] = None, voice: Optional[str] = None, **kwargs) -> ToolResult:
-        """Execute voice operation - ALWAYS speaks automatically!"""
+
+    def execute(
+        self,
+        operation: str,
+        text: Optional[str] = None,
+        voice: Optional[str] = None,
+        **kwargs,
+    ) -> ToolResult:
         try:
-            # AUTO-SPEAK: Every operation triggers voice commentary
             if operation == "speak" and text:
-                # Use live voice bridge for real-time TTS
-                if LIVE_VOICE_AVAILABLE:
-                    try:
-                        live_speak(text)
-                    except Exception as e:
-                        logger.warning(f"Live voice failed: {e}")
-                
+                self._speak(text, voice or self.voice_name)
                 return ToolResult(
                     status=ToolStatus.SUCCESS,
                     data={"spoken": text},
-                    message=f"Spoke: {text[:50]}..."
+                    message=f"Spoke: {text[:50]}...",
                 )
-            
-            elif operation == "list_voices":
+
+            if operation == "list_voices":
                 return ToolResult(
                     status=ToolStatus.SUCCESS,
                     data={"voices": self.VOICES},
-                    message="Available voices listed"
+                    message="Available voices listed",
                 )
-            
-            elif operation == "enable":
-                if not EDGE_TTS_AVAILABLE:
-                    return ToolResult(
-                        status=ToolStatus.ERROR,
-                        error="edge-tts not installed. Run: pip install edge-tts"
-                    )
+
+            if operation == "enable":
                 self.enabled = True
-                return ToolResult(
-                    status=ToolStatus.SUCCESS,
-                    message="Voice commentary enabled"
-                )
-            
-            elif operation == "disable":
+                return ToolResult(status=ToolStatus.SUCCESS, message="Voice enabled")
+
+            if operation == "disable":
                 self.enabled = False
-                return ToolResult(
-                    status=ToolStatus.SUCCESS,
-                    message="Voice commentary disabled"
-                )
-            
-            else:
-                return ToolResult(
-                    status=ToolStatus.ERROR,
-                    error=f"Unknown operation: {operation}"
-                )
-        
-        except Exception as e:
-            logger.error(f"Voice tool error: {e}")
-            return ToolResult(
-                status=ToolStatus.ERROR,
-                error=str(e)
-            )
-    
+                return ToolResult(status=ToolStatus.SUCCESS, message="Voice disabled")
+
+            return ToolResult(status=ToolStatus.ERROR, error=f"Unknown operation: {operation}")
+        except Exception as exc:
+            logger.error("Voice tool error: %s", exc)
+            return ToolResult(status=ToolStatus.ERROR, error=str(exc))
+
+    def _speak(self, text: str, voice: str):
+        if not self.enabled:
+            return
+
+        if self.use_edge_tts and EDGE_TTS_AVAILABLE:
+            self._speak_text(text, voice)
+            return
+
+        live_speak = _get_live_speak()
+        if live_speak:
+            live_speak(text)
+        else:
+            self._speak_realtime(text)
+
     def _speak_realtime(self, text: str):
-        """Speak text in real-time using pyttsx3 (direct streaming, no MP3)."""
         try:
             if self._tts_engine:
                 self._tts_engine.say(text)
                 self._tts_engine.runAndWait()
-        except Exception as e:
-            logger.warning(f"Voice speak error: {e}")
-    
+        except Exception as exc:
+            logger.warning("Voice speak error: %s", exc)
+
     def _speak_text(self, text: str, voice: str):
-        """Speak text using Edge TTS."""
         try:
-            # Create temp audio file with unique name
-            import time
             timestamp = int(time.time() * 1000)
-            temp_file = self._temp_dir / f'voice_{timestamp}.mp3'
-            
-            # Generate speech asynchronously
+            temp_file = self._temp_dir / f"voice_{timestamp}.mp3"
             asyncio.run(self._generate_and_play(text, str(temp_file), voice))
-            
-            # Clean up old files (keep last 5)
             self._cleanup_old_files()
-            
-        except Exception as e:
-            logger.warning(f"Edge TTS speak error: {e}")
-    
+        except Exception as exc:
+            logger.warning("Edge TTS speak error: %s", exc)
+
     async def _generate_and_play(self, text: str, output_file: str, voice: str):
-        """Generate speech and play it."""
-        try:
-            # Create communicate object
-            communicate = edge_tts.Communicate(
-                text,
-                voice,
-                rate=self.rate,
-                volume=self.volume
-            )
-            
-            # Save to file
-            await communicate.save(output_file)
-            
-            # Play the audio
-            self._play_audio(output_file)
-            
-        except Exception as e:
-            logger.error(f"Failed to generate speech: {e}")
-    
+        communicate = edge_tts.Communicate(text, voice, rate=str(self.rate), volume=str(self.volume))
+        await communicate.save(output_file)
+        self._play_audio(output_file)
+
     def _play_audio(self, file_path: str):
-        """Play audio file using Windows default player."""
         try:
-            import subprocess
-            # Simple approach: use Windows default app to open MP3
             subprocess.Popen(
-                ['start', '', file_path],
+                ["start", "", file_path],
                 shell=True,
-                creationflags=subprocess.CREATE_NO_WINDOW
+                creationflags=subprocess.CREATE_NO_WINDOW,
             )
-            # Wait for playback to finish (estimate 5 seconds)
-            import time
             time.sleep(5)
-        except Exception as e:
-            logger.warning(f"Failed to play audio: {e}")
-    
+        except Exception as exc:
+            logger.warning("Failed to play audio: %s", exc)
+
     def _cleanup_old_files(self):
-        """Clean up old voice files, keep only last 5."""
         try:
-            import glob
-            voice_files = sorted(self._temp_dir.glob('voice_*.mp3'), key=lambda f: f.stat().st_mtime, reverse=True)
-            # Delete all except last 5
+            voice_files = sorted(
+                self._temp_dir.glob("voice_*.mp3"),
+                key=lambda item: item.stat().st_mtime,
+                reverse=True,
+            )
             for old_file in voice_files[5:]:
                 old_file.unlink()
-        except Exception as e:
-            logger.debug(f"Cleanup error: {e}")
+        except Exception as exc:
+            logger.debug("Cleanup error: %s", exc)

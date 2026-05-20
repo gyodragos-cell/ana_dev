@@ -31,8 +31,10 @@ from datetime import datetime
 # Third-party imports (install if missing)
 try:
     import numpy as np
+    HAS_NUMPY = True
 except ImportError:
     np = None
+    HAS_NUMPY = False
 
 try:
     import faiss
@@ -116,11 +118,17 @@ class SimpleEmbeddingModel:
     
     def encode(self, text: str) -> np.ndarray:
         """Encode text to vector using TF-IDF."""
-        if np is None:
+        if not HAS_NUMPY:
             # Fallback: return random vector (not ideal but works)
-            return np.random.randn(self.dim).astype(np.float32)
+            import random
+            return [random.gauss(0, 1) for _ in range(self.dim)]
         
         tokens = self._tokenize(text)
+        
+        # If vocabulary is empty, return zero vector
+        if len(self.vocabulary) == 0:
+            return np.zeros(self.dim, dtype=np.float32)
+        
         vector = np.zeros(len(self.vocabulary), dtype=np.float32)
         
         # Calculate TF-IDF
@@ -261,6 +269,9 @@ class VectorMemoryCortex:
         Returns:
             Memory ID
         """
+        # Update vocabulary FIRST (before encoding)
+        self.embedding_model.update_vocabulary([content])
+        
         # Generate ID
         memory_id = hashlib.sha256(f"{content}{time.time()}".encode()).hexdigest()[:16]
         
@@ -289,9 +300,6 @@ class VectorMemoryCortex:
                 (memory_id, content, memory_type, timestamp, tags_json, metadata_json)
             )
             self._conn.commit()
-        
-        # Update vocabulary for better embeddings
-        self.embedding_model.update_vocabulary([content])
         
         logger.debug(f"Memory stored: {memory_id} (type={memory_type})")
         return memory_id
@@ -483,7 +491,7 @@ if __name__ == "__main__":
     # Store some memories
     vm.store("ANA MAX is an autonomous AI assistant", "semantic", tags=["intro", "ana"])
     vm.store("User prefers Romanian language for communication", "semantic", tags=["preference", "language"])
-    vm.store("Fixed BOM encoding issue in jules_mcp_bridge.py", "error_log", tags=["bug", "fix"])
+    vm.store("Fixed BOM encoding issue in main.py", "error_log", tags=["bug", "fix"])
     
     # Search
     results = vm.search("AI assistant capabilities", top_k=3)

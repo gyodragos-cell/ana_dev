@@ -37,7 +37,12 @@ class DesktopControlTool(Tool):
     def __init__(self):
         self.screenshot_dir = Path("screenshots")
         self.screenshot_dir.mkdir(exist_ok=True)
-        pyautogui.FAILSAFE = False # Permitem controlul total
+        # Set FAILSAFE only if pyautogui was successfully imported
+        try:
+            if HAS_DESKTOP_LIBS:
+                pyautogui.FAILSAFE = False # Permitem controlul total
+        except Exception:
+            pass
 
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
@@ -49,7 +54,7 @@ class DesktopControlTool(Tool):
                     description="Operatia: view, read_text, click_text, click_at, type, hotkey, move_window, click_image",
                     type="string",
                     required=True,
-                    choices=["view", "read_text", "click_text", "click_at", "type", "hotkey", "move_window", "click_image"]
+                    choices=["view", "read_text", "click_text", "click_at", "type", "hotkey", "move_window", "click_image", "move_mouse"]
                 ),
                 ToolParameter(
                     name="target",
@@ -76,6 +81,8 @@ class DesktopControlTool(Tool):
                 return self._view_screen()
             if operation == "read_text":
                 return self._read_text()
+            if operation == "move_mouse":
+                return self._move_mouse(kwargs.get("x") or kwargs.get("target"), kwargs.get("y"))
             if operation == "click_at":
                 return self._click_at(target)
             if operation == "type":
@@ -116,6 +123,24 @@ class DesktopControlTool(Tool):
         x, y = map(int, target.replace(" ", "").split(","))
         pyautogui.click(x, y)
         return ToolResult(status=ToolStatus.SUCCESS, message=f"Click la ({x}, {y})")
+
+    def _move_mouse(self, x_val, y_val) -> ToolResult:
+        # Accept either separate x,y or a single 'x,y' string
+        try:
+            if x_val is None:
+                return ToolResult(status=ToolStatus.ERROR, error="Coordonate lipsa pentru move_mouse")
+
+            if isinstance(x_val, str) and "," in x_val:
+                x, y = map(int, x_val.replace(" ", "").split(","))
+            elif y_val is not None:
+                x, y = int(x_val), int(y_val)
+            else:
+                return ToolResult(status=ToolStatus.ERROR, error="Coordonate invalide pentru move_mouse")
+
+            pyautogui.moveTo(x, y)
+            return ToolResult(status=ToolStatus.SUCCESS, message=f"Mouse mutat la ({x}, {y})")
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=str(e))
 
     def _type_text(self, target: str) -> ToolResult:
         if not target: return ToolResult(status=ToolStatus.ERROR, error="Text lipsa")

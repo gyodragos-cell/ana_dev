@@ -11,6 +11,7 @@ import concurrent.futures
 from enum import Enum
 import logging
 import inspect
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -297,19 +298,11 @@ class ToolRegistry:
                 error=f"Tool-ul '{name}' nu exista"
             )
             
-        # UI v17: Rich Feedback
-        try:
-            from rich.console import Console
-            from rich.panel import Panel
-            console = Console()
+        # UI v17: Rich Feedback (disabled in MCP mode)
+        if not os.environ.get('ANA_MCP_MODE'):
             clean_params = {k: (v if len(str(v)) < 100 else f"<{type(v).__name__} len={len(str(v))}>") for k, v in kwargs.items()}
-            console.print(Panel(
-                f"[bold cyan]🔧 Executie Tool:[/bold cyan] [bold yellow]{name}[/bold yellow]\n[dim]Parametri: {clean_params}[/dim]",
-                border_style="blue",
-                padding=(0, 2)
-            ))
-        except (ImportError, UnicodeEncodeError, OSError):
-            pass 
+            print(f"  Tool execution: {name}")
+            print(f"  Params: {clean_params}")
             
         logger.info("TOOL START name=%s args=%s", name, _summarize_kwargs(kwargs))
         result = tool.safe_execute(**kwargs)

@@ -7,11 +7,16 @@
 			"path": "../ANA_MAX_GitHub_Release"
 		},
 		{
-			"path": "../nouptrana"
+			"path": "../teste cu qoder my friend"
 		},
 		{
-			"path": "../teste cu qoder my friend"
+			"path": "../../.kiro"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"kiroAgent.enableCodebaseIndexing": true,
+		"kiroAgent.enableDebugLogs": true,
+		"kiroAgent.enableTabAutocomplete": true,
+		"chat.mcp.assisted.nuget.enabled": true
+	}
 }

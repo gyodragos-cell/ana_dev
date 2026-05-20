@@ -78,7 +78,7 @@ def _build_runtime_agent():
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="ANA MAX - MCP Server cu 56 tools, AI Desktop Control, AI Core Intelligence pentru OpenCode"
+        description="ANA MAX - MCP Server cu 64 tools, AI Desktop Control, AI Core Intelligence pentru OpenCode"
     )
     parser.add_argument("--port", "-p", type=int, default=8765, help="Port MCP server (default: 8765)")
     parser.add_argument("--host", default="127.0.0.1", help="Host MCP server (default: 127.0.0.1)")
@@ -93,7 +93,7 @@ def _print_banner() -> None:
         """
 ====================================================================
      A.N.A. MAX - Arhitectura Neurala Avansata
-     MCP Server | 56 Tools | AI Desktop Control | OpenCode Ready
+     MCP Server | 64 Tools | AI Desktop Control | OpenCode Ready
      AI Core: Context Engine, Memory Cortex, Orchestrator
 ====================================================================
 """.strip()
@@ -112,8 +112,12 @@ def _configure_logging(debug: bool) -> None:
 
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
+    # Stream handler pe stderr doar in modul debug
+    # In modul normal log-urile merg doar in fisier (evita exit code 1 in PowerShell)
+    if debug:
+        stream_handler = logging.StreamHandler(sys.stderr)
+        stream_handler.setFormatter(formatter)
+        root_logger.addHandler(stream_handler)
 
     file_handler = RotatingFileHandler(
         log_file,
@@ -124,7 +128,6 @@ def _configure_logging(debug: bool) -> None:
     file_handler.setFormatter(formatter)
 
     root_logger.setLevel(level)
-    root_logger.addHandler(stream_handler)
     root_logger.addHandler(file_handler)
 
 
@@ -193,6 +196,11 @@ def _register_all_tools():
         ("tools.foreground_ui_snapshot", "ForegroundUISnapshotTool"),  # NEW: Structural Eyes
     ]
     
+    # Live Tool Healer (2026-05-19) - intelligent supervision
+    healing_tools = [
+        ("tools.live_tool_healer", "LiveToolHealer"),
+    ]
+    
     # Voice tools (2026-05-14) - JARVIS STYLE
     voice_tools = [
         ("tools.edge_tts_voice", "EdgeTTSVoice"),  # Natural voice commentary
@@ -255,6 +263,17 @@ def _register_all_tools():
         except Exception as e:
             logging.getLogger(__name__).warning("Desktop tool skipped %s.%s: %s", module_path, class_name, e)
     
+    # Load Live Tool Healer (2026-05-19)
+    for module_path, class_name in healing_tools:
+        try:
+            tool_class = _load_tool_class(module_path, class_name)
+            tool_instance = tool_class()
+            registry.register(tool_instance)
+            loaded += 1
+            print(f"  [OK] {tool_instance.get_definition().name} (INTELLIGENT SUPERVISION)")
+        except Exception as e:
+            logging.getLogger(__name__).warning("Healing tool skipped %s.%s: %s", module_path, class_name, e)
+    
     # Incarca Voice tools (2026-05-14) - JARVIS STYLE
     for module_path, class_name in voice_tools:
         try:
@@ -266,27 +285,18 @@ def _register_all_tools():
         except Exception as e:
             logging.getLogger(__name__).warning("Voice tool skipped %s.%s: %s", module_path, class_name, e)
 
-    # Jules MCP Integration (2026-05-19)
-    jules_tools = [
-        ("tools.jules_mcp_bridge", "JulesMCPTool"),  # Jules coding agent bridge
-    ]
-    
     # Ruflo-inspired: Vector Memory & Swarm (2026-05-19)
     advanced_tools = [
         ("tools.vector_memory_tool", "VectorMemoryTool"),  # Vector search 150x+ faster
         ("tools.swarm_tool", "SwarmTool"),  # Multi-agent swarm orchestration
     ]
     
-    # Incarca Jules MCP tools (2026-05-19)
-    for module_path, class_name in jules_tools:
-        try:
-            tool_class = _load_tool_class(module_path, class_name)
-            tool_instance = tool_class()
-            registry.register(tool_instance)
-            loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (JULES INTEGRATION)")
-        except Exception as e:
-            logging.getLogger(__name__).warning("Jules tool skipped %s.%s: %s", module_path, class_name, e)
+    # UI-TARS inspired: Vision, Remote Control, Event Stream (2026-05-19)
+    uitars_tools = [
+        ("tools.vision_fallback_tool", "VisionFallbackTool"),  # Vision-based GUI fallback
+        ("tools.remote_control_tool", "RemoteControlTool"),  # Remote machine control
+        ("tools.event_stream_tool", "EventStreamTool"),  # Event stream debugging
+    ]
     
     # Incarca Advanced tools (Vector Memory + Swarm) (2026-05-19)
     for module_path, class_name in advanced_tools:
@@ -298,6 +308,17 @@ def _register_all_tools():
             print(f"  [OK] {tool_instance.get_definition().name} (RUFLO-INTEGRATION)")
         except Exception as e:
             logging.getLogger(__name__).warning("Advanced tool skipped %s.%s: %s", module_path, class_name, e)
+    
+    # Incarca UI-TARS tools (Vision, Remote, Event Stream) (2026-05-19)
+    for module_path, class_name in uitars_tools:
+        try:
+            tool_class = _load_tool_class(module_path, class_name)
+            tool_instance = tool_class()
+            registry.register(tool_instance)
+            loaded += 1
+            print(f"  [OK] {tool_instance.get_definition().name} (UI-TARS-INTEGRATION)")
+        except Exception as e:
+            logging.getLogger(__name__).warning("UI-TARS tool skipped %s.%s: %s", module_path, class_name, e)
     
     # AI Core adapters (context_engine, proactive_interrupt, self_evolving,
     # memory_cortex, orchestrator, context_bridge, window_manager)
@@ -315,17 +336,6 @@ def _register_all_tools():
                 )
     except ImportError as e:
         logging.getLogger(__name__).warning("tool_adapters.py nu a putut fi incarcat: %s", e)
-
-    # Incarca Jules MCP tools (2026-05-19)
-    for module_path, class_name in jules_tools:
-        try:
-            tool_class = _load_tool_class(module_path, class_name)
-            tool_instance = tool_class()
-            registry.register(tool_instance)
-            loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (JULES INTEGRATION)")
-        except Exception as e:
-            logging.getLogger(__name__).warning("Jules MCP tool skipped %s.%s: %s", module_path, class_name, e)
 
     return loaded
 

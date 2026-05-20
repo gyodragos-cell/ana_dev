@@ -1,0 +1,22 @@
+# Local agent / IDE state
+.kiro/
+.uploads/
+.venv/
+.vscode/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Runtime output
+logs/
+screenshots/
+*.tmp
+*.bak
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
