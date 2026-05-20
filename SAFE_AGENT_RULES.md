@@ -44,6 +44,7 @@ After editing:
 2. Run the narrowest relevant test.
 3. If a command prints an error, do not report success until the error is explained or fixed.
 4. Leave unrelated dirty files alone.
+5. Run `RUN_ANA_QUALITY_GATE.bat` before calling the workspace clean.
 
 ## ANA Tool Rules
 
@@ -95,3 +96,19 @@ Default behavior:
 - test after
 - explain honestly
 
+## Quality Gate
+
+Use this before commits, handoffs, or long breaks:
+
+```text
+RUN_ANA_QUALITY_GATE.bat
+```
+
+It checks:
+
+- clean git status
+- ASCII-only guard for critical scripts
+- compile of core ANA files
+- `python main.py --test`
+- MCP stdio tool listing
+- Frida through MCP
