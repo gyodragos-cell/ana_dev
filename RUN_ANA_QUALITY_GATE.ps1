@@ -50,6 +50,7 @@ Step-Header "2. ASCII Guard"
 $asciiFiles = @(
     "SAFE_AGENT_RULES.md",
     "DESKTOP_PROJECT_MAP.md",
+    "PUBLIC_NAMING_POLICY.md",
     "RUN_ANA_QUALITY_GATE.bat",
     "RUN_ANA_QUALITY_GATE.ps1",
     "ANA_MAX\requirements.txt",

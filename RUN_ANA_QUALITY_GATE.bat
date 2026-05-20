@@ -4,7 +4,7 @@ setlocal
 cd /d "%~dp0"
 
 echo ============================================================
-echo ANA DEV QUALITY GATE
+echo PROJECT QUALITY GATE
 echo ============================================================
 echo.
 
@@ -13,9 +13,9 @@ set EXITCODE=%ERRORLEVEL%
 
 echo.
 if "%EXITCODE%"=="0" (
-  echo [PASS] ANA quality gate passed.
+  echo [PASS] Project quality gate passed.
 ) else (
-  echo [FAIL] ANA quality gate failed.
+  echo [FAIL] Project quality gate failed.
 )
 
 echo.
