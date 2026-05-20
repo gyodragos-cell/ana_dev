@@ -41,6 +41,7 @@ def load_tools():
     from tools.desktop_capture import DesktopCaptureTool
     from tools.desktop_control_tool import DesktopControlTool
     from tools.edit_tool import EditTool
+    from tools.edge_tts_voice import EdgeTTSVoice
     from tools.files import FilesTool
     from tools.foreground_ui_snapshot import ForegroundUISnapshotTool
     from tools.frida_automation import FridaTool
@@ -81,6 +82,7 @@ def load_tools():
         LiveDesktopViewerTool(),
         DesktopControlTool(),
         WindowsInsightTool(),
+        EdgeTTSVoice(),
     ]
 
     for tool in tools:
