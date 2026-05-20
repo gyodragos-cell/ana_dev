@@ -62,7 +62,9 @@ $asciiFiles = @(
     "ANA_MAX\tools\live_voice_bridge.py",
     "ANA_MAX\tools\voice_commentary.py",
     "ANA_MAX\tools\voice_integration.py",
-    "ANA_MAX\voice_toggle.py"
+    "ANA_MAX\voice_toggle.py",
+    "ANA_MAX\chat_voice_bridge.py",
+    "RUN_CHAT_VOICE_BRIDGE.bat"
 )
 
 foreach ($relative in $asciiFiles) {
@@ -82,7 +84,7 @@ foreach ($relative in $asciiFiles) {
     }
 }
 
-Run-Step "3. Compile Core Files" $ana "python -m compileall -q main.py tools test_mcp_frida_call.py test_frida.py voice_toggle.py"
+Run-Step "3. Compile Core Files" $ana "python -m compileall -q main.py tools test_mcp_frida_call.py test_frida.py voice_toggle.py chat_voice_bridge.py"
 Run-Step "4. ANA Smoke Test" $ana "python main.py --test"
 Run-Step "5. MCP Tool List" $ana "python test_mcp_tools.py"
 Run-Step "6. Frida Through MCP" $ana "python test_mcp_frida_call.py"
