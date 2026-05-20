@@ -22,6 +22,15 @@ JokerForge is built around that gap: make agent work observable, testable, and h
 
 Start here if you are reviewing the project:
 
+```text
+AI_AGENT_OPERATOR_RULES.md
+```
+
+That file defines how Codex, Qoder, Cursor, Windsurf, Antigravity, and any
+other agent should work with this repository.
+
+Then run:
+
 ```powershell
 .\RUN_ANA_QUALITY_GATE.ps1
 ```
@@ -90,6 +99,7 @@ RUN_ANA_QUALITY_GATE.ps1         Repeatable verification gate
 jokerforge_pythonanywhere_demo/  Safe public Flask demo
 PUBLIC_NAMING_POLICY.md          Public/private naming rules
 SAFE_AGENT_RULES.md              Operating rules for AI agents
+AI_AGENT_OPERATOR_RULES.md       Role map and workflow for AI agents
 DESKTOP_PROJECT_MAP.md           Local workspace map
 ```
 
