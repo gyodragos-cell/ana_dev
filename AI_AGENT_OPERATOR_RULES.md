@@ -5,6 +5,10 @@ Purpose: protect Billy's work while using multiple AI agents and local tools.
 This file is the operating manual. Give it to any AI agent before letting it
 touch the project.
 
+If a new AI session starts from zero, first give the agent
+`AGENT_START_HERE.md`. That file defines the reading order and points back to
+this operator manual.
+
 ## Core Principle
 
 The human is the operator.

@@ -23,6 +23,15 @@ JokerForge is built around that gap: make agent work observable, testable, and h
 Start here if you are reviewing the project:
 
 ```text
+AGENT_START_HERE.md
+```
+
+That file gives any AI agent the required reading order before it touches the
+workspace.
+
+Then read:
+
+```text
 AI_AGENT_OPERATOR_RULES.md
 ```
 
@@ -108,6 +117,7 @@ See `PUBLIC_NAMING_POLICY.md` for the naming and privacy rules.
 
 ```text
 ANA_MAX/                         Core tools and MCP server
+AGENT_START_HERE.md              First file for any AI agent
 ANA_SCHOOL_DEMO.html             Local browser demo
 RUN_JOKERFORGE_COCKPIT.bat       Local cockpit launcher
 RUN_JOKERFORGE_ENGINEER_PROOF.ps1 One-command engineer proof

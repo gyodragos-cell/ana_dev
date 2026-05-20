@@ -49,6 +49,7 @@ Pop-Location
 Step-Header "2. ASCII Guard"
 $asciiFiles = @(
     "SAFE_AGENT_RULES.md",
+    "AGENT_START_HERE.md",
     "DESKTOP_PROJECT_MAP.md",
     "PUBLIC_NAMING_POLICY.md",
     "AI_AGENT_OPERATOR_RULES.md",
