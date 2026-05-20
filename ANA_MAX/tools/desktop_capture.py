@@ -20,7 +20,7 @@ import subprocess
 import os
 import logging
 import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from pathlib import Path
 from datetime import datetime
 
@@ -114,36 +114,31 @@ class DesktopCaptureTool(Tool):
         output_file = self._get_output_path(kwargs.get("output_file"))
         
         try:
-            # Incerc cu mss mai intai (mai rapid)
-            if self._try_mss_capture(output_file):
-                self._last_capture = output_file
+            success, method, diagnostics = self._capture_with_fallbacks(output_file)
+            if success:
+                self._last_capture = str(output_file)
                 return ToolResult(
                     status=ToolStatus.SUCCESS,
-                    data={"file": str(output_file), "size": output_file.stat().st_size},
-                    message=f"Captura ecran salvata: {output_file.name}"
-                )
-            
-            # Fallback la PIL
-            if self._try_pil_capture(output_file):
-                self._last_capture = output_file
-                return ToolResult(
-                    status=ToolStatus.SUCCESS,
-                    data={"file": str(output_file), "size": output_file.stat().st_size},
-                    message=f"Captura ecran salvata: {output_file.name}"
-                )
-            
-            # Ultima solutie: PowerShell
-            if self._try_powershell_capture(output_file):
-                self._last_capture = output_file
-                return ToolResult(
-                    status=ToolStatus.SUCCESS,
-                    data={"file": str(output_file), "size": output_file.stat().st_size},
+                    data={
+                        "file": str(output_file),
+                        "size": output_file.stat().st_size,
+                        "method": method,
+                        "diagnostics": diagnostics,
+                    },
                     message=f"Captura ecran salvata: {output_file.name}"
                 )
             
             return ToolResult(
                 status=ToolStatus.ERROR,
-                error="Toate metodele de capturare au esuat"
+                error="Screen capture failed or returned a black frame",
+                data={
+                    "file": str(output_file) if output_file.exists() else None,
+                    "diagnostics": diagnostics,
+                    "hint": (
+                        "Windows may be blocking screen capture in this session. "
+                        "Use foreground_ui_snapshot/windows_uia_bridge as structural fallback."
+                    ),
+                },
             )
             
         except Exception as e:
@@ -304,7 +299,8 @@ class DesktopCaptureTool(Tool):
             for i in range(count):
                 output_file = self._screenshot_dir / f"monitor_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i+1:03d}.png"
                 
-                if self._try_mss_capture(output_file) or self._try_pil_capture(output_file):
+                success, _, _ = self._capture_with_fallbacks(output_file)
+                if success:
                     captured_files.append(str(output_file))
                     logger.info(f"Monitor capture {i+1}/{count}: {output_file.name}")
                 
@@ -356,6 +352,29 @@ class DesktopCaptureTool(Tool):
         except Exception:
             return False
 
+    def _try_pil_all_screens_capture(self, output_file: Path) -> bool:
+        """Incearca PIL cu toate monitoarele Windows."""
+        try:
+            from PIL import ImageGrab
+            screenshot = ImageGrab.grab(all_screens=True)
+            screenshot.save(str(output_file), "PNG")
+            return True
+        except ImportError:
+            return False
+        except Exception:
+            return False
+
+    def _try_pyautogui_capture(self, output_file: Path) -> bool:
+        """Incearca capturare prin pyautogui."""
+        try:
+            import pyautogui
+            pyautogui.screenshot(str(output_file))
+            return True
+        except ImportError:
+            return False
+        except Exception:
+            return False
+
     def _try_powershell_capture(self, output_file: Path) -> bool:
         """Incearca capturare cu PowerShell."""
         try:
@@ -383,3 +402,71 @@ class DesktopCaptureTool(Tool):
             
         except Exception:
             return False
+
+    def _capture_with_fallbacks(self, output_file: Path) -> Tuple[bool, str, List[Dict[str, Any]]]:
+        """Try capture methods and reject black/empty frames."""
+        methods = [
+            ("mss", self._try_mss_capture),
+            ("pil", self._try_pil_capture),
+            ("pil_all_screens", self._try_pil_all_screens_capture),
+            ("pyautogui", self._try_pyautogui_capture),
+            ("powershell", self._try_powershell_capture),
+        ]
+        diagnostics: List[Dict[str, Any]] = []
+
+        for method_name, method in methods:
+            if output_file.exists():
+                try:
+                    output_file.unlink()
+                except Exception:
+                    pass
+
+            ok = method(output_file)
+            usable, reason, metrics = self._is_usable_capture(output_file)
+            diagnostics.append({
+                "method": method_name,
+                "captured": ok,
+                "usable": usable,
+                "reason": reason,
+                "metrics": metrics,
+            })
+
+            if ok and usable:
+                return True, method_name, diagnostics
+
+        return False, "", diagnostics
+
+    def _is_usable_capture(self, output_file: Path) -> Tuple[bool, str, Dict[str, Any]]:
+        """Return false when a screenshot is missing, tiny, or fully black."""
+        if not output_file.exists():
+            return False, "missing_file", {}
+
+        size = output_file.stat().st_size
+        if size < 1024:
+            return False, "too_small", {"bytes": size}
+
+        try:
+            from PIL import Image, ImageStat
+            with Image.open(output_file) as img:
+                rgb = img.convert("RGB")
+                stat = ImageStat.Stat(rgb)
+                extrema = rgb.getextrema()
+                mean = [round(value, 2) for value in stat.mean]
+                max_channel = max(high for _, high in extrema)
+                min_channel = min(low for low, _ in extrema)
+                metrics = {
+                    "bytes": size,
+                    "width": rgb.width,
+                    "height": rgb.height,
+                    "mean": mean,
+                    "max_channel": max_channel,
+                    "min_channel": min_channel,
+                }
+
+                if rgb.width <= 1 or rgb.height <= 1:
+                    return False, "invalid_dimensions", metrics
+                if max_channel <= 8 and sum(mean) <= 8:
+                    return False, "black_frame", metrics
+                return True, "ok", metrics
+        except Exception as exc:
+            return False, f"image_check_failed: {exc}", {"bytes": size}

@@ -76,6 +76,7 @@ class ForegroundUISnapshotTool(Tool):
 
     def _capture_foreground_ui(self, include_text: bool = True, max_elements: int = 20) -> Dict[str, Any]:
         """Capturează UI state de la fereastra activă."""
+        fallback = self._capture_foreground_win32()
         try:
             from pywinauto import Desktop
             from pywinauto import application
@@ -85,7 +86,8 @@ class ForegroundUISnapshotTool(Tool):
             foreground = desktop.window(handle=self._get_foreground_window_handle())
             
             if not foreground.exists():
-                return self._empty_snapshot("No foreground window found")
+                fallback["reason"] = "No foreground window found through UIA"
+                return fallback
             
             # Extract app info
             app_name = self._get_app_name(foreground)
@@ -147,7 +149,9 @@ class ForegroundUISnapshotTool(Tool):
             
         except Exception as e:
             logger.error(f"UI capture error: {e}")
-            return self._empty_snapshot(f"Error: {str(e)}")
+            fallback["reason"] = f"UIA error: {str(e)}"
+            fallback["fallback"] = "win32_foreground_window"
+            return fallback
 
     def _get_foreground_window_handle(self) -> int:
         """Get handle of foreground window."""
@@ -166,6 +170,43 @@ class ForegroundUISnapshotTool(Tool):
         except Exception:
             # Fallback to window title
             return "Unknown"
+
+    def _capture_foreground_win32(self) -> Dict[str, Any]:
+        """Cheap Win32 fallback when UIA COM is blocked or unstable."""
+        snapshot = self._empty_snapshot("Win32 fallback did not find a foreground window")
+        try:
+            import ctypes
+            import psutil
+
+            user32 = ctypes.windll.user32
+            hwnd = user32.GetForegroundWindow()
+            if not hwnd:
+                return snapshot
+
+            length = user32.GetWindowTextLengthW(hwnd)
+            buffer = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, buffer, length + 1)
+
+            pid = ctypes.c_ulong()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+
+            app_name = None
+            try:
+                app_name = psutil.Process(pid.value).name().replace(".exe", "")
+            except Exception:
+                app_name = None
+
+            snapshot.update({
+                "active_app": app_name,
+                "title": buffer.value or None,
+                "hwnd": int(hwnd),
+                "pid": int(pid.value),
+                "reason": "UIA not used; Win32 foreground fallback",
+            })
+            return snapshot
+        except Exception as exc:
+            snapshot["reason"] = f"Win32 fallback failed: {exc}"
+            return snapshot
 
     def _is_error_text(self, text: str) -> bool:
         """Detect if text is an error message."""
