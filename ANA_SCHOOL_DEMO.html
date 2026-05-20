@@ -165,8 +165,8 @@
       <p class="lead">
         This page is a message to my IT teachers: I did not forget the basics.
         I learned from HTML, then connected it to local tools, voice feedback,
-        diagnostics, Git discipline, and a real MCP server. ANA is only the
-        short name; the full direction is Arhitectura Neuro Avansata.
+        diagnostics, Git discipline, and a real MCP server. The public direction
+        is Arhitectura Neuro Avansata: local, private, useful, and verifiable.
       </p>
     </header>
 
@@ -184,8 +184,8 @@
         <h3>1. Start The Local Cockpit</h3>
         <p>Starts the MCP server, chat voice bridge, and desktop vision diagnostic.</p>
         <div class="actions">
-          <a class="button primary" href="RUN_ANA_MCP_VOICE_COCKPIT.bat">Open BAT</a>
-          <button type="button" onclick="copyText('RUN_ANA_MCP_VOICE_COCKPIT.bat')">Copy Command</button>
+          <a class="button primary" href="RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat">Open BAT</a>
+          <button type="button" onclick="copyText('RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat')">Copy Command</button>
         </div>
       </article>
 
@@ -226,9 +226,19 @@
       </p>
     </section>
 
+    <section class="panel" aria-label="Privacy message">
+      <h2>Privacy And Boundaries</h2>
+      <p>
+        This is a local educational demo. It should not collect personal data,
+        publish private logs, expose keys, or inspect systems without permission.
+        The goal is assistive tooling, diagnostics, and learning, not taking data
+        from other people.
+      </p>
+    </section>
+
     <section class="panel" aria-label="Output">
       <h2>Live Output</h2>
-      <pre id="output">Ready. Start RUN_ANA_MCP_VOICE_COCKPIT.bat, then press Check MCP.</pre>
+      <pre id="output">Ready. Start RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat, then press Check MCP.</pre>
     </section>
 
     <footer>
@@ -288,7 +298,7 @@
         const tools = data.result && data.result.tools ? data.result.tools : [];
         log("MCP is online. Tools visible: " + tools.length, "ok");
       } catch (error) {
-        log("MCP check failed. Start RUN_ANA_MCP_VOICE_COCKPIT.bat first. Browser CORS may also block file pages. Error: " + error, "warn");
+        log("MCP check failed. Start RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat first. Browser CORS may also block file pages. Error: " + error, "warn");
       }
     }
 
