@@ -147,6 +147,37 @@
     .ok { color: var(--green); }
     .warn { color: var(--amber); }
     .bad { color: var(--red); }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #07101d;
+      color: var(--text);
+      font: 15px Segoe UI, system-ui, sans-serif;
+      line-height: 1.45;
+      padding: 12px;
+    }
+    .feedback-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .feedback-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0c1728;
+      padding: 10px;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .feedback-item strong {
+      display: block;
+      color: var(--green);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
     footer {
       margin-top: 20px;
       color: var(--muted);
@@ -236,6 +267,22 @@
       </p>
     </section>
 
+    <section class="panel" aria-label="User feedback">
+      <h2>User Feedback</h2>
+      <p>
+        Write teacher or user comments here. They stay in this browser with
+        localStorage until you export or clear them.
+      </p>
+      <textarea id="feedbackText" placeholder="Example: The voice part is useful, but the page should explain privacy more clearly."></textarea>
+      <div class="actions" style="margin-top: 10px;">
+        <button class="primary" type="button" onclick="saveFeedback()">Save Comment</button>
+        <button type="button" onclick="copyFeedbackTask()">Copy As Code Task</button>
+        <button type="button" onclick="exportFeedback()">Export JSON</button>
+        <button type="button" onclick="clearFeedback()">Clear</button>
+      </div>
+      <div class="feedback-list" id="feedbackList" aria-live="polite"></div>
+    </section>
+
     <section class="panel" aria-label="Output">
       <h2>Live Output</h2>
       <pre id="output">Ready. Start RUN_JOKERFORGE_COCKPIT.bat, then press Check MCP.</pre>
@@ -248,7 +295,10 @@
 
   <script>
     const output = document.getElementById("output");
+    const feedbackText = document.getElementById("feedbackText");
+    const feedbackList = document.getElementById("feedbackList");
     const mcpUrl = "http://127.0.0.1:8765/mcp";
+    const feedbackKey = "jokerforge_school_feedback";
 
     function log(message, kind) {
       const prefix = kind ? "[" + kind.toUpperCase() + "] " : "";
@@ -318,6 +368,90 @@
         log("Voice call failed. Start the cockpit or copy the text while the voice bridge is open. Error: " + error, "warn");
       }
     }
+
+    function getFeedback() {
+      try {
+        return JSON.parse(localStorage.getItem(feedbackKey) || "[]");
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function setFeedback(items) {
+      localStorage.setItem(feedbackKey, JSON.stringify(items));
+      renderFeedback();
+    }
+
+    function saveFeedback() {
+      const text = feedbackText.value.trim();
+      if (!text) {
+        log("Write a comment first.", "warn");
+        return;
+      }
+      const items = getFeedback();
+      items.unshift({
+        text: text,
+        createdAt: new Date().toISOString()
+      });
+      setFeedback(items.slice(0, 20));
+      feedbackText.value = "";
+      log("Feedback saved locally. It did not leave this browser.", "ok");
+    }
+
+    function copyFeedbackTask() {
+      const items = getFeedback();
+      const newest = feedbackText.value.trim() || (items[0] && items[0].text) || "";
+      if (!newest) {
+        log("No feedback available to copy.", "warn");
+        return;
+      }
+      copyText("Use this feedback to improve the JokerForge demo without changing unrelated files:\n\n" + newest);
+    }
+
+    function exportFeedback() {
+      const items = getFeedback();
+      const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "jokerforge_feedback.json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      log("Feedback exported as JSON.", "ok");
+    }
+
+    function clearFeedback() {
+      setFeedback([]);
+      feedbackText.value = "";
+      log("Feedback cleared from this browser.", "ok");
+    }
+
+    function renderFeedback() {
+      const items = getFeedback();
+      feedbackList.innerHTML = "";
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "feedback-item";
+        empty.textContent = "No comments saved yet.";
+        feedbackList.appendChild(empty);
+        return;
+      }
+      items.forEach(function (item) {
+        const node = document.createElement("div");
+        node.className = "feedback-item";
+        const date = document.createElement("strong");
+        date.textContent = item.createdAt;
+        const body = document.createElement("span");
+        body.textContent = item.text;
+        node.appendChild(date);
+        node.appendChild(body);
+        feedbackList.appendChild(node);
+      });
+    }
+
+    renderFeedback();
   </script>
 </body>
 </html>
