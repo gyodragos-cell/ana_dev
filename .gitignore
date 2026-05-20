@@ -12,6 +12,16 @@ __pycache__/
 logs/
 screenshots/
 ANA_MAX/desktop_vision_diag_report.txt
+ANA_MAX/analysis_output.txt
+ANA_MAX/bug_report.txt
+ANA_MAX/compile_errors.txt
+ANA_MAX/compile_final.txt
+ANA_MAX/compile_output.txt
+ANA_MAX/smoke_test_output.txt
+ANA_MAX/test_results.txt
+ANA_MAX/tools_list.txt
+ANA_MAX/data/*.mp3
+test_voice.mp3
 *.tmp
 *.bak
 
@@ -19,5 +29,9 @@ ANA_MAX/desktop_vision_diag_report.txt
 .env
 .env.*
 !.env.example
+ANA_MAX/docs/apikey.txt
+API_KEY.txt
+ANA_MAX/API_KEY.txt
+ANA_MAX/keys/
 *.pem
 *.key

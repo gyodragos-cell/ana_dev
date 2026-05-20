@@ -87,7 +87,7 @@ class WindowsInsightTool(Tool):
 
     def _ps_monitor_loop(self, path: str):
         """Bucla PowerShell care urmareste: Fisiere si Procese."""
-        ps_script = f"""
+        ps_script = fr"""
         $path = "{path}"
         
         # 1. File Watcher
@@ -199,4 +199,3 @@ class WindowsInsightTool(Tool):
         ps_cmd = f"Get-Process -Name {target} | Select-Object * | ConvertTo-Json"
         result = subprocess.run(["powershell", "-Command", ps_cmd], capture_output=True, text=True)
         return ToolResult(status=ToolStatus.SUCCESS, data=result.stdout, message=f"Trace complet pe {target}")
-
