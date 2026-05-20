@@ -32,6 +32,21 @@ other agent should work with this repository.
 Then run:
 
 ```powershell
+.\RUN_JOKERFORGE_ENGINEER_PROOF.ps1
+```
+
+That is the fastest engineer-first proof: git snapshot, MCP tool inventory,
+authorized Frida-through-MCP check, compile surface, and full quality gate.
+
+For the detailed proof path, read:
+
+```text
+ENGINEER_WOW_DEMO.md
+```
+
+For the lower-level gate, run:
+
+```powershell
 .\RUN_ANA_QUALITY_GATE.ps1
 ```
 
@@ -95,7 +110,9 @@ See `PUBLIC_NAMING_POLICY.md` for the naming and privacy rules.
 ANA_MAX/                         Core tools and MCP server
 ANA_SCHOOL_DEMO.html             Local browser demo
 RUN_JOKERFORGE_COCKPIT.bat       Local cockpit launcher
+RUN_JOKERFORGE_ENGINEER_PROOF.ps1 One-command engineer proof
 RUN_ANA_QUALITY_GATE.ps1         Repeatable verification gate
+ENGINEER_WOW_DEMO.md             Reviewer-focused proof path
 jokerforge_pythonanywhere_demo/  Safe public Flask demo
 PUBLIC_NAMING_POLICY.md          Public/private naming rules
 SAFE_AGENT_RULES.md              Operating rules for AI agents
