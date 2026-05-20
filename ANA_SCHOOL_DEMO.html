@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ANA MAX School Demo</title>
+  <title>Arhitectura Neuro Avansata - School Demo</title>
   <style>
     :root {
       color-scheme: dark;
@@ -160,18 +160,19 @@
 <body>
   <main class="wrap">
     <header>
-      <div class="tag">school demo / HTML + Python + PowerShell + MCP</div>
-      <h1>ANA MAX: HTML as a real AI control panel</h1>
+      <div class="tag">Arhitectura Neuro Avansata / school demo / HTML + Python + PowerShell + MCP</div>
+      <h1>Arhitectura Neuro Avansata: HTML as a real AI control panel</h1>
       <p class="lead">
         This page is a message to my IT teachers: I did not forget the basics.
         I learned from HTML, then connected it to local tools, voice feedback,
-        diagnostics, Git discipline, and a real MCP server.
+        diagnostics, Git discipline, and a real MCP server. ANA is only the
+        short name; the full direction is Arhitectura Neuro Avansata.
       </p>
     </header>
 
     <section class="panel">
       <div class="status" aria-label="Project facts">
-        <div class="pill"><strong>64</strong><span>ANA tools loaded locally</span></div>
+        <div class="pill"><strong>64</strong><span>local tools loaded</span></div>
         <div class="pill"><strong>24</strong><span>MCP stdio tools exposed</span></div>
         <div class="pill"><strong>1</strong><span>voice bridge for chat text</span></div>
         <div class="pill"><strong>Git</strong><span>quality gate before handoff</span></div>
@@ -190,7 +191,7 @@
 
       <article class="card">
         <h3>2. Check MCP Server</h3>
-        <p>Tests whether ANA is online at <code>http://127.0.0.1:8765/mcp</code>.</p>
+        <p>Tests whether the local Arhitectura Neuro Avansata MCP server is online at <code>http://127.0.0.1:8765/mcp</code>.</p>
         <div class="actions">
           <button class="primary" type="button" onclick="checkMcp()">Check MCP</button>
           <a class="button" href="http://127.0.0.1:8765/health" target="_blank" rel="noreferrer">Open Health</a>
@@ -199,10 +200,10 @@
 
       <article class="card">
         <h3>3. Speak A Message</h3>
-        <p>Uses MCP to call the ANA voice tool. If the browser blocks the call, use the chat voice bridge and copy text.</p>
+        <p>Uses MCP to call the voice tool. If the browser blocks the call, use the chat voice bridge and copy text.</p>
         <div class="actions">
           <button class="primary" type="button" onclick="speakMessage()">Speak</button>
-          <button type="button" onclick="copyText('ANA school demo voice test.')">Copy Voice Text</button>
+          <button type="button" onclick="copyText('Arhitectura Neuro Avansata school demo voice test.')">Copy Voice Text</button>
         </div>
       </article>
 
@@ -231,7 +232,7 @@
     </section>
 
     <footer>
-      ANA MAX local educational demo. Public-safe idea: observe, act, verify, speak.
+        Arhitectura Neuro Avansata local educational demo. Public-safe idea: observe, act, verify, speak.
     </footer>
   </main>
 
@@ -292,13 +293,13 @@
     }
 
     async function speakMessage() {
-      log("Calling ANA voice through MCP...", "info");
+      log("Calling voice through MCP...", "info");
       try {
         const data = await callMcp("tools/call", {
           name: "edge_tts_voice",
           arguments: {
             operation: "speak",
-            text: "Hello teachers. This HTML page is connected to ANA MAX through MCP."
+            text: "Hello teachers. This HTML page is connected to Arhitectura Neuro Avansata through MCP."
           }
         });
         const text = data.result && data.result.content ? data.result.content[0].text : JSON.stringify(data);

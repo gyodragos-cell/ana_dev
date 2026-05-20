@@ -11,12 +11,12 @@ set "INFO=%ANA%\ANA_MCP_CONNECTION_INFO.txt"
 cd /d "%ANA%"
 
 echo ============================================================
-echo ANA MAX - MCP + VOICE COCKPIT
+echo ARHITECTURA NEURO AVANSATA - MCP + VOICE COCKPIT
 echo ============================================================
 echo.
 echo This starts:
-echo   1. ANA MCP HTTP server
-echo   2. ANA chat voice bridge
+echo   1. Arhitectura Neuro Avansata MCP HTTP server
+echo   2. Chat voice bridge
 echo   3. Desktop vision diagnostic
 echo.
 echo MCP URL:
@@ -24,7 +24,7 @@ echo   %MCP_URL%
 echo.
 
 (
-  echo ANA MAX MCP CONNECTION INFO
+  echo ARHITECTURA NEURO AVANSATA MCP CONNECTION INFO
   echo ===========================
   echo MCP HTTP URL: %MCP_URL%
   echo Health URL:   http://%MCP_HOST%:%MCP_PORT%/health
@@ -41,18 +41,18 @@ echo.
   echo RUN_DESKTOP_VISION_DIAG checks if this Windows session allows screenshots.
 ) > "%INFO%"
 
-echo Starting ANA MCP server window...
-start "ANA MAX MCP Server :8765" cmd /k "cd /d ""%ANA%"" && python main.py --host %MCP_HOST% --port %MCP_PORT%"
+echo Starting MCP server window...
+start "Arhitectura Neuro Avansata MCP Server :8765" cmd /k "cd /d ""%ANA%"" && python main.py --host %MCP_HOST% --port %MCP_PORT%"
 
 timeout /t 3 /nobreak >nul
 
-echo Starting ANA Chat Voice Bridge window...
-start "ANA MAX Chat Voice Bridge" cmd /k "cd /d ""%ANA%"" && python chat_voice_bridge.py"
+echo Starting Chat Voice Bridge window...
+start "Arhitectura Neuro Avansata Chat Voice Bridge" cmd /k "cd /d ""%ANA%"" && python chat_voice_bridge.py"
 
 timeout /t 2 /nobreak >nul
 
 echo Starting Desktop Vision Diagnostic window...
-start "ANA MAX Desktop Vision Diagnostic" cmd /k "cd /d ""%ANA%"" && python desktop_vision_diag.py"
+start "Arhitectura Neuro Avansata Desktop Vision Diagnostic" cmd /k "cd /d ""%ANA%"" && python desktop_vision_diag.py"
 
 echo.
 echo ============================================================
@@ -64,7 +64,7 @@ echo.
 echo What to do now:
 echo   - Keep the MCP server window open.
 echo   - Keep the voice bridge window open.
-echo   - Copy text from chat if you want ANA to speak it.
+echo   - Copy text from chat if you want the voice bridge to speak it.
 echo   - After the vision diagnostic ends, tell Codex: gata.
 echo.
 echo Note:
