@@ -67,7 +67,9 @@ $asciiFiles = @(
     "ANA_MAX\desktop_vision_diag.py",
     "RUN_CHAT_VOICE_BRIDGE.bat",
     "RUN_DESKTOP_VISION_DIAG.bat",
-    "RUN_ANA_MCP_VOICE_COCKPIT.bat"
+    "RUN_ANA_MCP_VOICE_COCKPIT.bat",
+    "ANA_SCHOOL_DEMO.html",
+    "OPEN_ANA_SCHOOL_DEMO.bat"
 )
 
 foreach ($relative in $asciiFiles) {
