@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Arhitectura Neuro Avansata - School Demo</title>
+  <title>JokerForge - School Demo</title>
   <style>
     :root {
       color-scheme: dark;
@@ -160,13 +160,13 @@
 <body>
   <main class="wrap">
     <header>
-      <div class="tag">Arhitectura Neuro Avansata / school demo / HTML + Python + PowerShell + MCP</div>
-      <h1>Arhitectura Neuro Avansata: HTML as a real AI control panel</h1>
+      <div class="tag">JokerForge / school demo / HTML + Python + PowerShell + MCP</div>
+      <h1>JokerForge: HTML as a real AI control panel</h1>
       <p class="lead">
         This page is a message to my IT teachers: I did not forget the basics.
         I learned from HTML, then connected it to local tools, voice feedback,
-        diagnostics, Git discipline, and a real MCP server. The public direction
-        is Arhitectura Neuro Avansata: local, private, useful, and verifiable.
+        diagnostics, Git discipline, and a real MCP server. JokerForge is
+        local-first, private, useful, and verifiable.
       </p>
     </header>
 
@@ -184,14 +184,14 @@
         <h3>1. Start The Local Cockpit</h3>
         <p>Starts the MCP server, chat voice bridge, and desktop vision diagnostic.</p>
         <div class="actions">
-          <a class="button primary" href="RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat">Open BAT</a>
-          <button type="button" onclick="copyText('RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat')">Copy Command</button>
+          <a class="button primary" href="RUN_JOKERFORGE_COCKPIT.bat">Open BAT</a>
+          <button type="button" onclick="copyText('RUN_JOKERFORGE_COCKPIT.bat')">Copy Command</button>
         </div>
       </article>
 
       <article class="card">
         <h3>2. Check MCP Server</h3>
-        <p>Tests whether the local Arhitectura Neuro Avansata MCP server is online at <code>http://127.0.0.1:8765/mcp</code>.</p>
+        <p>Tests whether the local JokerForge MCP server is online at <code>http://127.0.0.1:8765/mcp</code>.</p>
         <div class="actions">
           <button class="primary" type="button" onclick="checkMcp()">Check MCP</button>
           <a class="button" href="http://127.0.0.1:8765/health" target="_blank" rel="noreferrer">Open Health</a>
@@ -203,7 +203,7 @@
         <p>Uses MCP to call the voice tool. If the browser blocks the call, use the chat voice bridge and copy text.</p>
         <div class="actions">
           <button class="primary" type="button" onclick="speakMessage()">Speak</button>
-          <button type="button" onclick="copyText('Arhitectura Neuro Avansata school demo voice test.')">Copy Voice Text</button>
+          <button type="button" onclick="copyText('JokerForge school demo voice test.')">Copy Voice Text</button>
         </div>
       </article>
 
@@ -238,11 +238,11 @@
 
     <section class="panel" aria-label="Output">
       <h2>Live Output</h2>
-      <pre id="output">Ready. Start RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat, then press Check MCP.</pre>
+      <pre id="output">Ready. Start RUN_JOKERFORGE_COCKPIT.bat, then press Check MCP.</pre>
     </section>
 
     <footer>
-        Arhitectura Neuro Avansata local educational demo. Public-safe idea: observe, act, verify, speak.
+        JokerForge local educational demo. Public-safe idea: observe, act, verify, speak.
     </footer>
   </main>
 
@@ -298,7 +298,7 @@
         const tools = data.result && data.result.tools ? data.result.tools : [];
         log("MCP is online. Tools visible: " + tools.length, "ok");
       } catch (error) {
-        log("MCP check failed. Start RUN_ARHITECTURA_NEURO_AVANSATA_COCKPIT.bat first. Browser CORS may also block file pages. Error: " + error, "warn");
+        log("MCP check failed. Start RUN_JOKERFORGE_COCKPIT.bat first. Browser CORS may also block file pages. Error: " + error, "warn");
       }
     }
 
@@ -309,7 +309,7 @@
           name: "edge_tts_voice",
           arguments: {
             operation: "speak",
-            text: "Hello teachers. This HTML page is connected to Arhitectura Neuro Avansata through MCP."
+            text: "Hello teachers. This HTML page is connected to JokerForge through MCP."
           }
         });
         const text = data.result && data.result.content ? data.result.content[0].text : JSON.stringify(data);

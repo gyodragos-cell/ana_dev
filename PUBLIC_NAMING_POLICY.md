@@ -7,7 +7,13 @@ Purpose: keep public wording professional, clear, and privacy-safe.
 Use this for demos, school pages, release pages, and user-facing text:
 
 ```text
-Arhitectura Neuro Avansata
+JokerForge
+```
+
+Use this as a descriptive subtitle when useful:
+
+```text
+local-first AI tooling for observation, voice feedback, diagnostics, and assistive workflows
 ```
 
 ## Internal Codename

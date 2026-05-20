@@ -11,11 +11,11 @@ set "INFO=%ANA%\ANA_MCP_CONNECTION_INFO.txt"
 cd /d "%ANA%"
 
 echo ============================================================
-echo ARHITECTURA NEURO AVANSATA - MCP + VOICE COCKPIT
+echo JOKERFORGE - MCP + VOICE COCKPIT
 echo ============================================================
 echo.
 echo This starts:
-echo   1. Arhitectura Neuro Avansata MCP HTTP server
+echo   1. JokerForge MCP HTTP server
 echo   2. Chat voice bridge
 echo   3. Desktop vision diagnostic
 echo.
@@ -24,7 +24,7 @@ echo   %MCP_URL%
 echo.
 
 (
-  echo ARHITECTURA NEURO AVANSATA MCP CONNECTION INFO
+  echo JOKERFORGE MCP CONNECTION INFO
   echo ===========================
   echo MCP HTTP URL: %MCP_URL%
   echo Health URL:   http://%MCP_HOST%:%MCP_PORT%/health
@@ -42,17 +42,17 @@ echo.
 ) > "%INFO%"
 
 echo Starting MCP server window...
-start "Arhitectura Neuro Avansata MCP Server :8765" cmd /k "cd /d ""%ANA%"" && python main.py --host %MCP_HOST% --port %MCP_PORT%"
+start "JokerForge MCP Server :8765" cmd /k "cd /d ""%ANA%"" && python main.py --host %MCP_HOST% --port %MCP_PORT%"
 
 timeout /t 3 /nobreak >nul
 
 echo Starting Chat Voice Bridge window...
-start "Arhitectura Neuro Avansata Chat Voice Bridge" cmd /k "cd /d ""%ANA%"" && python chat_voice_bridge.py"
+start "JokerForge Chat Voice Bridge" cmd /k "cd /d ""%ANA%"" && python chat_voice_bridge.py"
 
 timeout /t 2 /nobreak >nul
 
 echo Starting Desktop Vision Diagnostic window...
-start "Arhitectura Neuro Avansata Desktop Vision Diagnostic" cmd /k "cd /d ""%ANA%"" && python desktop_vision_diag.py"
+start "JokerForge Desktop Vision Diagnostic" cmd /k "cd /d ""%ANA%"" && python desktop_vision_diag.py"
 
 echo.
 echo ============================================================
