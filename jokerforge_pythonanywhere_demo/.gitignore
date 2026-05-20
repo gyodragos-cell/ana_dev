@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+feedback.sqlite3
+.env
