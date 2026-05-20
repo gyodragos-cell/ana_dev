@@ -64,12 +64,28 @@ Always check required parameters first. If a tool says `action` is required, pas
 Stop and review if an agent:
 
 - says "everything works" while terminal output shows `Traceback`, `ModuleNotFoundError`, `[BAD]`, or exit code 1
+- uses a fragile PowerShell regex for non-ASCII scanning instead of a byte scan
 - changes dependencies without proving the exact compatibility issue
 - edits many files for a small warning
 - adds global `logging.basicConfig(level=logging.DEBUG)`
 - introduces Unicode/emoji into Windows console scripts or core source
 - deletes files without a direct request
 - ignores `git status`
+
+## PowerShell Text Scan Rule
+
+For non-ASCII checks on Windows, use byte scanning or the ASCII guard in
+`RUN_ANA_QUALITY_GATE.ps1`.
+
+Do not trust a failed inline regex command as a clean scan. PowerShell can break
+quoted regex ranges before the search tool runs.
+
+Safe byte-scan pattern:
+
+```powershell
+$bytes=[System.IO.File]::ReadAllBytes($path)
+$bad=$bytes | Where-Object { $_ -gt 127 } | Select-Object -First 1
+```
 
 ## Dependency Rule
 

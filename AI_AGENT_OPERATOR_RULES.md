@@ -171,6 +171,35 @@ Recommended tool usage:
 
 Do not expose MCP ports publicly.
 
+## PowerShell Non-ASCII Scan Rule
+
+Warning for all agents: do not use inline regex tricks to scan non-ASCII text in
+PowerShell.
+
+This kind of command is fragile because shell quoting, ranges, and control
+characters can be parsed incorrectly before the regex ever runs.
+
+Avoid:
+
+```powershell
+rg -n "[^\u0000-\u007F]" file.md
+```
+
+Use a byte scan instead:
+
+```powershell
+$files=@('README.md','SAFE_AGENT_RULES.md')
+foreach($f in $files){
+  $bytes=[System.IO.File]::ReadAllBytes((Join-Path (Get-Location) $f))
+  $bad=$bytes | Where-Object { $_ -gt 127 } | Select-Object -First 1
+  if($null -ne $bad){ Write-Host "BAD $f" } else { Write-Host "OK $f" }
+}
+```
+
+For permanent checks, prefer the ASCII guard inside
+`RUN_ANA_QUALITY_GATE.ps1`. If a quick regex command fails with a parser error,
+do not treat that as proof that the file is clean.
+
 ## Prompt Template For Any Agent
 
 Use this before asking another agent to work:
@@ -256,4 +285,3 @@ Until then:
 - document what is real;
 - verify before claiming success;
 - use each AI agent for the role where it is strongest.
-
