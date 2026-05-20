@@ -373,7 +373,8 @@
           name: "edge_tts_voice",
           arguments: {
             operation: "speak",
-            text: "Hello teachers. This HTML page is connected to JokerForge through MCP."
+            text: "Hello teachers. This HTML page is connected to JokerForge through MCP.",
+            async: true
           }
         });
         const text = data.result && data.result.content ? data.result.content[0].text : JSON.stringify(data);

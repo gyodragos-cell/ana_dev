@@ -398,6 +398,14 @@ def _start_mcp_server(host: str, port: int):
 
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
+    @app.after_request
+    def add_local_cors_headers(response):
+        """Allow local HTML demos to call the local MCP server."""
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        return response
+
     def _get_runtime_agent():
         backend = config.get("ai.primary_backend", "gemini")
         if backend in (None, "", "none"):
@@ -488,9 +496,12 @@ def _start_mcp_server(host: str, port: int):
             logging.getLogger(__name__).exception("HTTP /execute failed tool=%s", tool_name)
             return jsonify({"success": False, "error": str(e)}), 500
 
-    @app.route('/mcp', methods=['GET', 'POST'])
+    @app.route('/mcp', methods=['GET', 'POST', 'OPTIONS'])
     def mcp_handler():
         """MCP JSON-RPC endpoint - suporta si GET pentru health check."""
+        if request.method == 'OPTIONS':
+            return ("", 204)
+
         if request.method == 'GET':
             return jsonify({
                 "status": "mcp_online",

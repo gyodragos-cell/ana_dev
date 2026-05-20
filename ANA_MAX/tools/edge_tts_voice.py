@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import Optional
@@ -107,6 +108,13 @@ class EdgeTTSVoice(Tool):
                     type="string",
                     required=False,
                 ),
+                ToolParameter(
+                    name="async",
+                    description="Speak in a background thread and return immediately (default: true)",
+                    type="boolean",
+                    required=False,
+                    default="true",
+                ),
             ],
             category="voice",
         )
@@ -120,6 +128,20 @@ class EdgeTTSVoice(Tool):
     ) -> ToolResult:
         try:
             if operation == "speak" and text:
+                async_mode = str(kwargs.get("async", "true")).lower() != "false"
+                if async_mode:
+                    thread = threading.Thread(
+                        target=self._speak,
+                        args=(text, voice or self.voice_name),
+                        daemon=True,
+                    )
+                    thread.start()
+                    return ToolResult(
+                        status=ToolStatus.SUCCESS,
+                        data={"queued": text},
+                        message=f"Queued speech: {text[:50]}...",
+                    )
+
                 self._speak(text, voice or self.voice_name)
                 return ToolResult(
                     status=ToolStatus.SUCCESS,
