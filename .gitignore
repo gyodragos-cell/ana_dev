@@ -11,6 +11,7 @@ __pycache__/
 # Runtime output
 logs/
 screenshots/
+ANA_MAX/desktop_vision_diag_report.txt
 *.tmp
 *.bak
 
