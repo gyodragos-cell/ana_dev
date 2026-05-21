@@ -134,6 +134,11 @@ try:
 except Exception:
     ForegroundUISnapshotTool = None  # type: ignore
 
+try:
+    from tools.workspace_situational_awareness import WorkspaceSituationalAwarenessTool
+except Exception:
+    WorkspaceSituationalAwarenessTool = None  # type: ignore
+
 # Voice tools (2026-05-14)
 try:
     from tools.edge_tts_voice import EdgeTTSVoice
@@ -187,7 +192,7 @@ __all__ = [
     'ADBTool', 'FridaTool', 'APKAnalyzerTool', 'CodeSearchTool', 'WebScraperTool',
     # Desktop control
     'DesktopCaptureTool', 'LiveDesktopViewerTool', 'DesktopControlTool',
-    'WindowsInsightTool', 'WindowsUiaBridgeTool', 'WindowsDeepSightTool', 'ForegroundUISnapshotTool',
+    'WindowsInsightTool', 'WindowsUiaBridgeTool', 'WindowsDeepSightTool', 'ForegroundUISnapshotTool', 'WorkspaceSituationalAwarenessTool',
     # Voice tools
     'EdgeTTSVoice',
     # Ruflo Integration

@@ -194,6 +194,7 @@ def _register_all_tools():
         ("tools.windows_insight_tool", "WindowsInsightTool"),
         ("tools.windows_uia_bridge", "WindowsUiaBridgeTool"),
         ("tools.foreground_ui_snapshot", "ForegroundUISnapshotTool"),  # NEW: Structural Eyes
+        ("tools.workspace_situational_awareness", "WorkspaceSituationalAwarenessTool"),  # NEW: Structural Awareness
     ]
     
     # Live Tool Healer (2026-05-19) - intelligent supervision

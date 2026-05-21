@@ -38,3 +38,5 @@ ANA_MAX/API_KEY.txt
 ANA_MAX/keys/
 *.pem
 *.key
+script1.js
+
