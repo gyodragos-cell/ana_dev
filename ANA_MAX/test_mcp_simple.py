@@ -57,7 +57,7 @@ while time.time() - start < 10:
         response = proc.stdout.readline()
         if response:
             break
-    except:
+    except Exception as e:
         pass
     time.sleep(0.1)
 
@@ -79,7 +79,7 @@ else:
 proc.terminate()
 try:
     proc.wait(timeout=2)
-except:
+except Exception as e:
     proc.kill()
 
 print("=" * 50)

@@ -7,9 +7,9 @@ assignees: ''
 ---
 
 ## Descriere
-Ce modificări ai făcut și de ce?
+Ce modificari ai facut si de ce?
 
-## Tipul Modificării
+## Tipul Modificarii
 - [ ] Bug fix (non-breaking)
 - [ ] New feature (non-breaking)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -18,26 +18,26 @@ Ce modificări ai făcut și de ce?
 - [ ] Performance improvement
 
 ## Tool-uri Afectate
-Listează tool-urile modificate:
+Listeaza tool-urile modificate:
 - [ ] `tools/` 
 - [ ] `core/`
 - [ ] `main.py`
 - [ ] Altele: _____
 
 ## Testare
-- [ ] Am rulat `python main.py --test` și testele trec
-- [ ] Am rulat `python main.py --list-tools` și tool-ul se încarcă
-- [ ] Am testat manual funcționalitatea
-- [ ] Am adăugat teste unitare (dacă e relevant)
+- [ ] Am rulat `python main.py --test` si testele trec
+- [ ] Am rulat `python main.py --list-tools` si tool-ul se incarca
+- [ ] Am testat manual functionalitatea
+- [ ] Am adaugat teste unitare (daca e relevant)
 
 ## Checklist
-- [ ] Codul urmează "The ANA MAX Way" (PROJECT_MAP_AI_GUIDE.md)
-- [ ] Fără "zgomot" (log-level DEBUG pentru evenimente recurente)
+- [ ] Codul urmeaza "The ANA MAX Way" (PROJECT_MAP_AI_GUIDE.md)
+- [ ] Fara "zgomot" (log-level DEBUG pentru evenimente recurente)
 - [ ] API-uri Native > Subprocesses
 - [ ] Nu am spart securitatea (MCP endpoints protejate)
-- [ ] Tool-ul e înregistrat în `tools/__init__.py` și `main.py`
-- [ ] Am actualizat documentația (dacă e necesar)
+- [ ] Tool-ul e inregistrat in `tools/__init__.py` si `main.py`
+- [ ] Am actualizat documentatia (daca e necesar)
 
-## Screenshots (dacă e relevant)
+## Screenshots (daca e relevant)
 
 ## Additional Notes

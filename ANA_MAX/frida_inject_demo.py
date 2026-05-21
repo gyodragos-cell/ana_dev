@@ -13,7 +13,7 @@ def tool(name, op, **kw):
     if r:
         try:
             return json.loads(json.loads(r)['result']['content'][0]['text'])
-        except:
+        except Exception as e:
             return None
     return None
 
@@ -27,22 +27,22 @@ print('FRIDA INJECTION DEMO')
 print('=' * 70)
 
 # 1. List processes
-print('\n[1] Listez procesele care rulează...')
+print('\n[1] Listez procesele care ruleaza...')
 r = tool('frida_instrument', 'list_processes')
 if r and r.get('success'):
     processes = r['data']['processes']
-    print(f'    Găsite {r["data"]["count"]} procese')
+    print(f'    Gasite {r["data"]["count"]} procese')
     
     # Find explorer.exe
     explorer_pid = None
     for p in processes:
         if 'explorer' in p['name'].lower():
             explorer_pid = p['pid']
-            print(f'    ✓ Găsit explorer.exe (PID {explorer_pid})')
+            print(f'    ✓ Gasit explorer.exe (PID {explorer_pid})')
             break
     
     if not explorer_pid:
-        print('    ! explorer.exe nu găsit, folosesc alt proces')
+        print('    ! explorer.exe nu gasit, folosesc alt proces')
         explorer_pid = processes[0]['pid']
         print(f'    ✓ Folosesc {processes[0]["name"]} (PID {explorer_pid})')
 
@@ -59,16 +59,16 @@ print('\n[3] Listez modulele din proces...')
 r = tool('frida_instrument', 'list_modules', target=str(explorer_pid))
 if r and r.get('success'):
     modules = r['data']['modules']
-    print(f'    ✓ Găsite {r["data"]["count"]} module')
+    print(f'    ✓ Gasite {r["data"]["count"]} module')
     for m in modules[:5]:
         print(f'      - {m["name"]}')
 
 # 4. Find functions
-print('\n[4] Caut funcții în kernel32.dll...')
+print('\n[4] Caut functii in kernel32.dll...')
 r = tool('frida_instrument', 'find_functions', target=str(explorer_pid), module='kernel32.dll', pattern='Create')
 if r and r.get('success'):
     functions = r['data']['functions']
-    print(f'    ✓ Găsite {r["data"]["count"]} funcții cu "Create"')
+    print(f'    ✓ Gasite {r["data"]["count"]} functii cu "Create"')
     for f in functions[:5]:
         print(f'      - {f["name"]} @ {f["address"]}')
 else:

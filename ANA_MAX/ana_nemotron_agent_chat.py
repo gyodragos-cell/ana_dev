@@ -379,13 +379,13 @@ def get_autonomous_agent() -> AutonomousAgent:
 def looks_like_execution_request(message: str) -> bool:
     lowered = message.lower()
     action_terms = (
-        "creeaza", "creaza", "create", "fa", "fă", "executa", "execută", "ruleaza", "rulează",
-        "analizeaza", "analizează", "gaseste", "găsește", "cauta", "caută", "editeaza", "editează",
-        "modifica", "modifică", "scrie", "sterge", "șterge", "delete", "porneste", "pornește",
+        "creeaza", "creaza", "create", "fa", "fa", "executa", "executa", "ruleaza", "ruleaza",
+        "analizeaza", "analizeaza", "gaseste", "gaseste", "cauta", "cauta", "editeaza", "editeaza",
+        "modifica", "modifica", "scrie", "sterge", "sterge", "delete", "porneste", "porneste",
     )
     target_terms = (
-        "folder", "director", "fisier", "fișier", "proiect", "workspace", "desktop",
-        "terminal", "comanda", "comandă", "tool", "tool-uri", "tools", "cod", "codebase",
+        "folder", "director", "fisier", "fisier", "proiect", "workspace", "desktop",
+        "terminal", "comanda", "comanda", "tool", "tool-uri", "tools", "cod", "codebase",
     )
     return any(term in lowered for term in action_terms) and any(term in lowered for term in target_terms)
 

@@ -77,7 +77,9 @@ $asciiFiles = @(
     "RUN_ANA_MCP_VOICE_COCKPIT.bat",
     "RUN_JOKERFORGE_COCKPIT.bat",
     "ANA_SCHOOL_DEMO.html",
-    "OPEN_ANA_SCHOOL_DEMO.bat"
+    "OPEN_ANA_SCHOOL_DEMO.bat",
+    "ANA_MAX\health_check.py",
+    "ANA_MAX\tool_validate.py"
 )
 
 foreach ($relative in $asciiFiles) {
@@ -97,8 +99,10 @@ foreach ($relative in $asciiFiles) {
     }
 }
 
-Run-Step "3. Compile Core Files" $ana "python -m compileall -q main.py tools test_mcp_frida_call.py test_frida.py voice_toggle.py chat_voice_bridge.py desktop_vision_diag.py"
+Run-Step "3. Compile Core Files" $ana "python -m compileall -q main.py tools test_mcp_frida_call.py test_frida.py voice_toggle.py chat_voice_bridge.py desktop_vision_diag.py health_check.py tool_validate.py"
 Run-Step "4. ANA Smoke Test" $ana "python main.py --test"
+Run-Step "4B. Health Check" $ana "python health_check.py"
+Run-Step "4C. Tool Verification" $ana "python tool_validate.py"
 Run-Step "5. MCP Tool List" $ana "python test_mcp_tools.py"
 Run-Step "6. Frida Through MCP" $ana "python test_mcp_frida_call.py"
 

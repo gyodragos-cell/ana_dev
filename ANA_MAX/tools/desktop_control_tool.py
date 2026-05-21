@@ -168,7 +168,7 @@ class DesktopControlTool(Tool):
             try:
                 win.activate()
                 time.sleep(0.5)
-            except:
+            except Exception as e:
                 pass
             
             # Definim regiunea fix pe coordonatele ferestrei
@@ -211,7 +211,7 @@ class DesktopControlTool(Tool):
             try:
                 win.activate()
                 time.sleep(0.5)
-            except:
+            except Exception as e:
                 pass
             region = (win.left, win.top, win.width, win.height)
             offset_x, offset_y = win.left, win.top

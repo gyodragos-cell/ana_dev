@@ -11,6 +11,9 @@ __pycache__/
 # Runtime output
 logs/
 screenshots/
+memory/
+*.db
+ANA_MAX/data/*.db
 ANA_MAX/desktop_vision_diag_report.txt
 ANA_MAX/analysis_output.txt
 ANA_MAX/bug_report.txt

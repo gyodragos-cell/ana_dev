@@ -72,7 +72,7 @@ else:
 proc.terminate()
 try:
     proc.wait(timeout=2)
-except:
+except Exception as e:
     proc.kill()
 
 print("\n" + "=" * 60)

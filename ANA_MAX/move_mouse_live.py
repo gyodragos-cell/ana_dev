@@ -13,7 +13,7 @@ def tool(name, op, **kw):
     if r:
         try:
             return json.loads(json.loads(r)['result']['content'][0]['text'])
-        except:
+        except Exception as e:
             return None
     return None
 

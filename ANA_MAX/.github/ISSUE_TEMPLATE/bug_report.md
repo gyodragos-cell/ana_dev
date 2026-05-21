@@ -1,28 +1,28 @@
 ---
 name: 🐛 Bug Report
-about: Raportează un bug în ANA MAX
+about: Raporteaza un bug in ANA MAX
 title: '[BUG] '
 labels: 'bug'
 assignees: ''
 ---
 
 ## Descriere Bug
-O descriere clară și concisă a bug-ului.
+O descriere clara si concisa a bug-ului.
 
-## Pași pentru Reproducere
+## Pasi pentru Reproducere
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-## Comportament Așteptat
-Ce ar fi trebuit să se întâmple?
+## Comportament Asteptat
+Ce ar fi trebuit sa se intample?
 
 ## Comportament Actual
-Ce s-a întâmplat de fapt?
+Ce s-a intamplat de fapt?
 
 ## Screenshots
-Dacă e relevant, adaugă screenshot-uri.
+Daca e relevant, adauga screenshot-uri.
 
 ## Environment:
  - OS: [e.g. Windows 11]
@@ -31,8 +31,8 @@ Dacă e relevant, adaugă screenshot-uri.
 
 ## Logs
 ```
-Adaugă log-uri relevante din logs/ana_max.log
+Adauga log-uri relevante din logs/ana_max.log
 ```
 
 ## Additional Context
-Orice alte informații relevante.
+Orice alte informatii relevante.

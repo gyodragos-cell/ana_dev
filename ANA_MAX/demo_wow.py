@@ -13,7 +13,7 @@ def tool(name, op, **kw):
     if r:
         try:
             return json.loads(json.loads(r)['result']['content'][0]['text'])
-        except:
+        except Exception as e:
             return None
     return None
 
@@ -75,7 +75,7 @@ if r and r.get('success'):
             if isinstance(data, list):
                 for p in data[:3]:
                     print(f'      - {p.get("name", "Unknown")}')
-        except:
+        except Exception as e:
             pass
 
 # 6. Final screenshot

@@ -3,7 +3,7 @@ ANA MAX - Window Management Tool
 tools/window_manager.py
 
 Gestionare ferestre: listare, snap, move, tile, focus
-Win32 nativ, zero dependențe noi
+Win32 nativ, zero dependente noi
 """
 
 import logging

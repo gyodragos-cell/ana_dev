@@ -266,8 +266,8 @@ class OcrToolAdapter(Tool):
 
 
 # ============================================================================
-# Lista centralizată de adaptoare AI Core
-# Folosită de main.py pentru înregistrarea automată în registry
+# Lista centralizata de adaptoare AI Core
+# Folosita de main.py pentru inregistrarea automata in registry
 # ============================================================================
 ANA_ADAPTER_CLASSES = [
     ContextEngineAdapter,

@@ -7,15 +7,15 @@
 Acest fisier defineste regula de lucru pentru orice AI sau asistent care modifica proiectul `ANA_MAX`.
 
 ## 📌 Cuprins
-- [Regula de bază](#regula-de-bază)
+- [Regula de baza](#regula-de-baza)
 - [Regula anti-inventat](#regula-anti-inventat)
 - [Ordinea obligatorie de lucru](#ordinea-obligatorie-de-lucru)
-- [Ce nu are voie să facă](#ce-nu-are-voie-să-facă)
+- [Ce nu are voie sa faca](#ce-nu-are-voie-sa-faca)
 - [Stil de lucru recomandat](#stil-de-lucru-recomandat)
 - [Prompt pentru alt AI](#prompt-scurt-pentru-alt-ai)
 
 > [!NOTE]
-> Scopul acestor reguli este să lucrăm curat, să urmăm aceeași ordine de pași și să păstrăm proiectul ușor de înțeles și reparat.
+> Scopul acestor reguli este sa lucram curat, sa urmam aceeasi ordine de pasi si sa pastram proiectul usor de inteles si reparat.
 
 ## Regula de baza
 
@@ -29,7 +29,7 @@ Orice AI care lucreaza in acest proiect trebuie sa:
 ## Regula anti-inventat
 
 > [!CAUTION]
-> Dacă nu știi, nu poți verifica sau nu ești sigur, SPUNE EXPLICIT. Nu inventa explicații doar pentru a părea sigur.
+> Daca nu stii, nu poti verifica sau nu esti sigur, SPUNE EXPLICIT. Nu inventa explicatii doar pentru a parea sigur.
 
 Daca AI-ul:
 - nu stie
@@ -61,7 +61,7 @@ Inainte de modificari, AI-ul trebuie sa citeasca:
 - ultimul worklog din `docs/`
 
 > [!IMPORTANT]
-> Daca task-ul tine de setup sau reinstalare, trebuie sa verifice si scripturile de BOOTSTRAP si SETUP din rădăcină.
+> Daca task-ul tine de setup sau reinstalare, trebuie sa verifice si scripturile de BOOTSTRAP si SETUP din radacina.
 
 ### 2. Inspecteaza exact zona afectata
 
@@ -78,7 +78,7 @@ Reguli:
 ### 4. Pastreaza compatibilitatea
 
 > [!WARNING]
-> Evită ruperea fluxurilor existente. Dacă un script vechi este folosit des, preferabil devine wrapper, nu este eliminat.
+> Evita ruperea fluxurilor existente. Daca un script vechi este folosit des, preferabil devine wrapper, nu este eliminat.
 
 ### 5. Verifica dupa schimbare
 
@@ -89,7 +89,7 @@ Dupa orice modificare, AI-ul trebuie sa faca verificarea minima utila:
 
 ### 6. Documenteaza daca schimbarea conteaza operational
 
-Actualizeaza `README.md` (vedere rapidă) și `docs/WORKLOG_YYYY-MM-DD.md` (istoric).
+Actualizeaza `README.md` (vedere rapida) si `docs/WORKLOG_YYYY-MM-DD.md` (istoric).
 
 ## Ce nu are voie sa faca
 
@@ -101,7 +101,7 @@ AI-ul nu trebuie sa:
 
 ## Stil de lucru recomandat
 
-Comportamentul dorit este: **calm, clar, incremental și orientat pe mentenanță.**
+Comportamentul dorit este: **calm, clar, incremental si orientat pe mentenanta.**
 
 ## Prompt scurt pentru alt AI
 
@@ -110,12 +110,12 @@ Poti da altui AI acest prompt:
 ```text
 Lucrezi in proiectul ANA_MAX. Respecta fisierul AI_RULES.md.
 Ordinea obligatorie este:
-1. Citeste README.md, QUICK_START și ultimul worklog.
+1. Citeste README.md, QUICK_START si ultimul worklog.
 2. Inspecteaza fisierele direct afectate.
 3. Fa schimbarea minima necesara, fara sa rupi fluxurile existente.
 4. Pastreaza compatibilitatea scripturilor deja folosite.
 5. Verifica schimbarea prin citire, rulare safe sau test punctual.
-6. Daca schimbarea afecteaza workflow-ul, actualizeaza README.md și worklog-ul.
+6. Daca schimbarea afecteaza workflow-ul, actualizeaza README.md si worklog-ul.
 
 Evita refactorizarile mari. Lucreaza curat, incremental si fara sa inventezi informatii.
 ```

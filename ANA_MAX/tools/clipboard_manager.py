@@ -2,8 +2,8 @@
 ANA MAX - Clipboard Intelligence Tool
 tools/clipboard_manager.py
 
-Clipboard: citire, scriere, istoric, monitorizare, transformări
-Win32 nativ + threading stdlib, zero dependențe noi
+Clipboard: citire, scriere, istoric, monitorizare, transformari
+Win32 nativ + threading stdlib, zero dependente noi
 """
 
 import logging
@@ -174,7 +174,7 @@ def _start_monitor() -> Dict[str, Any]:
             win32clipboard.OpenClipboard()
             _last_clipboard = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
             win32clipboard.CloseClipboard()
-        except:
+        except Exception as e:
             _last_clipboard = ""
         
         def monitor_loop():
@@ -190,7 +190,7 @@ def _start_monitor() -> Dict[str, Any]:
                         with _lock:
                             _history.append(current)
                         logger.info(f"Clipboard changed: {current[:50]}...")
-                except:
+                except Exception as e:
                     pass
                 
                 time.sleep(0.5)

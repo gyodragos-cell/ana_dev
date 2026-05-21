@@ -13,7 +13,7 @@ def tool(name, op, **kw):
     if r:
         try:
             return json.loads(json.loads(r)['result']['content'][0]['text'])
-        except:
+        except Exception as e:
             return None
     return None
 
@@ -27,7 +27,7 @@ print('REAL DEMO - MUTA MOUSEUL PE ECRAN')
 print('=' * 70)
 
 # 1. Screenshot INAINTE
-print('\n[INAINTE] Screenshot 1 - Văd desktop-ul...')
+print('\n[INAINTE] Screenshot 1 - Vad desktop-ul...')
 r = tool('desktop_capture', 'capture')
 if r and r.get('success'):
     file1 = r['data']['file']
@@ -36,7 +36,7 @@ if r and r.get('success'):
 time.sleep(1)
 
 # 2. Muta mouseul - REAL
-print('\n[MUTA] Mișc mouseul pe ecran...')
+print('\n[MUTA] Misc mouseul pe ecran...')
 positions = [
     (100, 100, 'top-left'),
     (1800, 100, 'top-right'),
@@ -54,7 +54,7 @@ for x, y, desc in positions:
 time.sleep(1)
 
 # 3. Screenshot DUPA
-print('\n[DUPA] Screenshot 2 - Verific poziția finală...')
+print('\n[DUPA] Screenshot 2 - Verific pozitia finala...')
 r = tool('desktop_capture', 'capture')
 if r and r.get('success'):
     file2 = r['data']['file']

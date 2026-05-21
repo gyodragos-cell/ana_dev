@@ -120,6 +120,66 @@ class ToolDefinition:
         }
 
 
+import json
+import datetime
+import time
+
+_manifest = None
+def _load_permission_manifest():
+    global _manifest
+    if _manifest is not None:
+        return _manifest
+    
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), "..", "config", "permission_manifest.json"),
+        os.path.join("config", "permission_manifest.json"),
+        "permission_manifest.json"
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    _manifest = json.load(f)
+                    return _manifest
+            except Exception as e:
+                logger.error(f"Error loading permission manifest: {e}")
+                
+    _manifest = {
+        "global_settings": {"readonly_mode": False, "allowlist": []},
+        "tools": {}
+    }
+    return _manifest
+
+
+def _log_observability(tool_name: str, args: Dict[str, Any], start_time: float, latency: float, status: ToolStatus, error: Optional[str] = None):
+    try:
+        log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "observability.jsonl")
+        
+        masked_args = {}
+        sensitive_keys = {"password", "token", "key", "api_key", "secret"}
+        for k, v in args.items():
+            if any(s in k.lower() for s in sensitive_keys):
+                masked_args[k] = "********"
+            else:
+                masked_args[k] = _summarize_value(v, max_len=60)
+                
+        entry = {
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "tool": tool_name,
+            "args": masked_args,
+            "latency_sec": round(latency, 4),
+            "status": status.value,
+            "error": error
+        }
+        
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=True) + "\n")
+    except Exception as e:
+        logger.error(f"Failed to write observability log: {e}")
+
+
 class Tool(ABC):
     """
     Clasa de baza pentru toate tool-urile.
@@ -162,39 +222,83 @@ class Tool(ABC):
     
     def safe_execute(self, **kwargs) -> ToolResult:
         """Executa cu validare si error handling."""
-        # Validare parametri
+        manifest = _load_permission_manifest()
+        global_settings = manifest.get("global_settings", {})
+        tool_manifests = manifest.get("tools", {})
+        
+        tool_conf = tool_manifests.get(self.name, {})
+        
+        allowed = tool_conf.get("allowed", True)
+        allowlist = global_settings.get("allowlist", [])
+        
+        if allowlist and self.name not in allowlist:
+            allowed = False
+            
+        if not allowed:
+            res = ToolResult(
+                status=ToolStatus.BLOCKED,
+                error=f"Tool-ul '{self.name}' este dezactivat prin permission manifest"
+            )
+            _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.BLOCKED, res.error)
+            return res
+            
+        global_readonly = global_settings.get("readonly_mode", False)
+        is_tool_readonly = tool_conf.get("readonly", False)
+        
+        if global_readonly and not is_tool_readonly:
+            res = ToolResult(
+                status=ToolStatus.BLOCKED,
+                error=f"Tool-ul '{self.name}' este blocat deoarece ruleaza in mod Read-Only"
+            )
+            _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.BLOCKED, res.error)
+            return res
+            
         error = self.validate_params(**kwargs)
         if error:
-            return ToolResult(
+            res = ToolResult(
                 status=ToolStatus.ERROR,
                 error=error
             )
+            _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.ERROR, error)
+            return res
+            
+        requires_confirm = tool_conf.get("requires_confirmation", self.requires_confirmation)
+        if requires_confirm:
+            if not kwargs.get("confirm", False):
+                res = ToolResult(
+                    status=ToolStatus.REQUIRES_CONFIRMATION,
+                    message=f"Tool-ul '{self.name}' necesita confirmare. Apeleaza cu confirm=True"
+                )
+                _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.REQUIRES_CONFIRMATION, res.message)
+                return res
         
-        # Verifica confirmare
-        if self.requires_confirmation:
-            return ToolResult(
-                status=ToolStatus.REQUIRES_CONFIRMATION,
-                message=f"Tool-ul '{self.name}' necesita confirmare"
-            )
-        
-        # Executie cu timeout
-        timeout = kwargs.get('timeout', 60) # Default 60s
+        timeout = kwargs.get('timeout', 60)
+        started_time = time.time()
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(self.execute, **kwargs)
-                return future.result(timeout=timeout)
+                res = future.result(timeout=timeout)
+                latency = time.time() - started_time
+                _log_observability(self.name, kwargs, started_time, latency, res.status, res.error or res.message if not res.is_success else None)
+                return res
         except (concurrent.futures.TimeoutError, TimeoutError):
             logger.error(f"Timeout in {self.name} (> {timeout}s)")
-            return ToolResult(
+            res = ToolResult(
                 status=ToolStatus.ERROR,
                 error=f"Timeout: Operatiunea {self.name} a durat prea mult (> {timeout}s)"
             )
+            latency = time.time() - started_time
+            _log_observability(self.name, kwargs, started_time, latency, ToolStatus.ERROR, res.error)
+            return res
         except Exception as e:
             logger.error(f"Eroare in {self.name}: {e}")
-            return ToolResult(
+            res = ToolResult(
                 status=ToolStatus.ERROR,
                 error=str(e)
             )
+            latency = time.time() - started_time
+            _log_observability(self.name, kwargs, started_time, latency, ToolStatus.ERROR, res.error)
+            return res
 
 
 class ToolRegistry:

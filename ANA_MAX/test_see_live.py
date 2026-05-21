@@ -40,7 +40,7 @@ def call_tool(tool_name, operation, **kwargs):
             resp_data = json.loads(response)
             result_text = resp_data['result']['content'][0]['text']
             return json.loads(result_text)
-        except:
+        except Exception as e:
             return None
     return None
 
@@ -88,7 +88,7 @@ if result and result.get('success'):
     if isinstance(data, str):
         try:
             data = json.loads(data)
-        except:
+        except Exception as e:
             pass
     
     if isinstance(data, dict):
@@ -108,7 +108,7 @@ if result and result.get('success'):
     if isinstance(data, str):
         try:
             data = json.loads(data)
-        except:
+        except Exception as e:
             pass
     
     if isinstance(data, dict):

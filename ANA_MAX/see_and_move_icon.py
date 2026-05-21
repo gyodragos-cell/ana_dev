@@ -13,7 +13,7 @@ def tool(name, op, **kw):
     if r:
         try:
             return json.loads(json.loads(r)['result']['content'][0]['text'])
-        except:
+        except Exception as e:
             return None
     return None
 
@@ -27,15 +27,15 @@ print('MUTAND ICONITA KIRO LA DREAPTA')
 print('=' * 70)
 
 # 1. Screenshot
-print('\n[1] Văd desktop-ul tău...')
+print('\n[1] Vad desktop-ul tau...')
 r = tool('desktop_capture', 'capture')
 if r and r.get('success'):
     print(f'    ✓ Screenshot: {r["data"]["file"]}')
-    print('    ✓ Văd iconita Kiro pe ecran!')
+    print('    ✓ Vad iconita Kiro pe ecran!')
 
 # 2. Muta iconita la dreapta
-print('\n[2] Mișc iconita Kiro la dreapta...')
-print('    Apuc iconita la poziția actuală...')
+print('\n[2] Misc iconita Kiro la dreapta...')
+print('    Apuc iconita la pozitia actuala...')
 r = tool('desktop_control', 'click_at', target='1850,10')
 if r and r.get('success'):
     print(f'    ✓ {r["message"]}')
@@ -50,7 +50,7 @@ if r and r.get('success'):
 time.sleep(0.5)
 
 # 3. Screenshot final
-print('\n[3] Verific poziția finală...')
+print('\n[3] Verific pozitia finala...')
 r = tool('desktop_capture', 'capture')
 if r and r.get('success'):
     print(f'    ✓ Screenshot final: {r["data"]["file"]}')
@@ -59,5 +59,5 @@ if r and r.get('success'):
 proc.terminate()
 
 print('\n' + '=' * 70)
-print('✨ GATA! Iconita Kiro mutată la dreapta!')
+print('✨ GATA! Iconita Kiro mutata la dreapta!')
 print('=' * 70)

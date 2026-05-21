@@ -140,6 +140,10 @@ DESKTOP_PROJECT_MAP.md           Local workspace map
 
 ## Current Status
 
-This is an active research and development workspace. The core direction is clear, but the project is still being cleaned, documented, and separated into public-safe and local-only layers.
+This is the active JokerForge / ANA MAX parent workspace (`ana_dev`). It contains the full history, local configurations, testing tools, and private assets.
 
-The current priority is not marketing polish. The priority is a trustworthy engineer-first demo that proves the tools work without exposing private machine capabilities.
+> [!NOTE]
+> The clean public release of ANA MAX is deployed from the `ANA_MAX_GitHub_Release` repository.
+> Do not publish private integrations, DB files, or tokens from this workspace to the public repository.
+
+The current priority is maintaining a stable 64-tool runtime and preparing for CI/CD automation.

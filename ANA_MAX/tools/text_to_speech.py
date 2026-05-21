@@ -24,7 +24,7 @@ class TextToSpeechTool(Tool):
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="text_to_speech",
-            description="🎙️ Read text aloud using Windows text-to-speech. Citește textul pe glas.",
+            description="🎙️ Read text aloud using Windows text-to-speech. Citeste textul pe glas.",
             parameters=[
                 ToolParameter(
                     name="text",

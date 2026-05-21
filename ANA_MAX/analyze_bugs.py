@@ -232,7 +232,7 @@ class BugAnalyzer:
                     content = f.read()
                     if 'API_KEY = "' in content or 'SECRET = "' in content:
                         self.warnings.append(f"Possible hardcoded secret in {py_file.name}")
-            except:
+            except Exception as e:
                 pass
         
         print(f"  ✅ Security scan complete\n")

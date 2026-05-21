@@ -1,35 +1,35 @@
 ---
 name: ✨ Feature Request
-about: Sugerează o funcționalitate nouă pentru ANA MAX
+about: Sugereaza o functionalitate noua pentru ANA MAX
 title: '[FEATURE] '
 labels: 'enhancement'
 assignees: ''
 ---
 
-## Descriere Funcționalitate
-Ce ar trebui să facă această funcționalitate?
+## Descriere Functionalitate
+Ce ar trebui sa faca aceasta functionalitate?
 
-## Motivație
-De ce ai nevoie de această funcționalitate? Ce problemă rezolvă?
+## Motivatie
+De ce ai nevoie de aceasta functionalitate? Ce problema rezolva?
 
-## Soluție Propusă
-Cum crezi că ar trebui implementată?
+## Solutie Propusa
+Cum crezi ca ar trebui implementata?
 
 ## Alternative
-Ai considerat alte soluții?
+Ai considerat alte solutii?
 
 ## Impact asupra Sistemului
-- [ ] Necesită tool nou în `tools/`
-- [ ] Modifică `core/`
-- [ ] Necesită dependențe noi
-- [ ] Modifică API-ul MCP
+- [ ] Necesita tool nou in `tools/`
+- [ ] Modifica `core/`
+- [ ] Necesita dependente noi
+- [ ] Modifica API-ul MCP
 
 ## Exemplu de Utilizare
 ```
-# Cum ar arăta utilizarea noii funcționalități?
-User: "ANA, [ceea ce vrei să facă]"
-ANA: [răspunsul așteptat]
+# Cum ar arata utilizarea noii functionalitati?
+User: "ANA, [ceea ce vrei sa faca]"
+ANA: [raspunsul asteptat]
 ```
 
 ## Additional Context
-Orice alte informații relevante.
+Orice alte informatii relevante.
