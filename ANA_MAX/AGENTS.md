@@ -124,3 +124,9 @@ Next high-value implementation target:
 It should return a compact JSON state containing active app/window, UIA quality,
 visible error signals, repo/git state, relevant open files if detectable, and a
 recommended next step.
+
+For daily polish and bug-hunt sessions, use:
+
+```text
+docs/MINT_CONDITION_DAILY_LOOP.md
+```
