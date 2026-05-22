@@ -75,7 +75,7 @@ class AnomalyReport:
 
 class LiveToolHealer(Tool):
     """
-    🧠 Intelligent real-time supervision for ANA_MAX tools
+    Intelligent real-time supervision for ANA_MAX tools
     
     The "collaboration superpower": I monitor, detect, diagnose, propose fixes.
     You approve. We both learn.
@@ -97,7 +97,7 @@ class LiveToolHealer(Tool):
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="live_tool_healer",
-            description="🧠 Intelligent real-time supervision: detect bugs, auto-diagnose, propose fixes. The WOW tool for AI+Developer collaboration.",
+            description="Intelligent real-time supervision: detect bugs, auto-diagnose, and propose fixes for AI plus developer collaboration.",
             parameters=[
                 ToolParameter(
                     name="action",
@@ -111,10 +111,10 @@ class LiveToolHealer(Tool):
                         "explain_issue",       # Explain root cause
                         "list_patterns",       # Show learned patterns
                         "test_health",         # Generate health check
-                        "predict_issues",      # 🔮 NEW: Predict future issues
-                        "set_thresholds",      # ⚙️ NEW: Configure detection thresholds
-                        "get_thresholds",      # ⚙️ NEW: View current thresholds
-                        "deep_inspect"         # 🔬 NEW: Frida deep inspection
+                        "predict_issues",      # Predict future issues
+                        "set_thresholds",      # Configure detection thresholds
+                        "get_thresholds",      # View current thresholds
+                        "deep_inspect"         # Frida deep inspection
                     ]
                 ),
                 ToolParameter(

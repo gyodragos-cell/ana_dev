@@ -54,8 +54,8 @@ port, and performs MCP health checks.
   live desktop viewing, desktop control, local logs, event databases, and memory.
 - These are allowed here, but must be filtered before public release.
 - `desktop_capture` is a free Vision AI feature in v0.2.0.
-- Public release docs use `43 Free + 4 Premium + 9 AI Core` as the clean release
-  count.
+- Public release docs use `64 loaded tools, 4 premium-gated tools, 9 AI Core
+  adapters` as the clean release count.
 - Local full workspace counts may differ because internal tools are enabled.
 
 ## Safety Rules
@@ -69,6 +69,32 @@ port, and performs MCP health checks.
   simple file/process/UI inspection if a native API exists.
 - Any automation that clicks, types, changes files, kills processes, or pushes
   Git should support confirmation or `dry_run` unless explicitly requested.
+
+## Lab-To-Release Sync Discipline
+
+Any code, tool, config, runtime behavior, launch behavior, auth, environment
+variable, premium gate, tool count, or public messaging change in the mother
+workspace must get an explicit sync decision before handoff:
+
+```text
+ship-safe -> sync the safe part into ANA_MAX_GitHub_Release
+lab-only -> document as private/internal and do not copy
+```
+
+For ship-safe changes, update the public release surfaces in the same work
+cycle:
+
+- `docs/PROJECT_MAP_AI_GUIDE.md`
+- `README.md`
+- `SETUP_AND_RUN.md`
+- `CHANGELOG.md`
+- `.env.example` when env vars, auth, ports, provider keys, or launch settings
+  change
+- tests that protect the behavior or release hygiene
+- VS Code extension docs/config when extension behavior changes
+
+Do not let GitHub release docs drift behind the mother lab. Do not copy private
+runtime data while syncing.
 
 ## Checks Before Handoff
 

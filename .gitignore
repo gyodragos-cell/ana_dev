@@ -39,4 +39,8 @@ ANA_MAX/keys/
 *.pem
 *.key
 script1.js
-
+ANA_MAX/analyze_rihanna.py
+ANA_MAX/full_analysis.py
+ANA_MAX/read_subs.py
+ANA_MAX/voice_queue.txt
+voice_queue.txt

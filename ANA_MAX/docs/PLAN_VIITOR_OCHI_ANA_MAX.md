@@ -1,52 +1,112 @@
-# Plan de Viitor: "Ochi" Sistematici pentru ANA MAX
+# Plan Viitor: Ochi Sistematici Pentru ANA MAX
 
 ## Obiectiv Principal
-Inlocuirea sistemului vizual bazat pe OCR (Tesseract) cu **Microsoft UI Automation (UIA)** prin intermediul librariei `pywinauto`. Aceasta schimbare ii va oferi lui ANA o intelegere nativa, semantica si perfecta a intregului mediu desktop Windows (similar modului in care un browser proceseaza DOM-ul HTML), reducand erorile vizuale la zero.
 
-## 1. Limitari ale Solutiei Actuale (OCR + Screenshots)
-- **Viteza scazuta:** Generarea de capturi de ecran si trecerea lor prin Tesseract dureaza mult si pune presiune pe I/O.
-- **Fiabilitate redusa:** Rezolutia ecranului, culorile fondului sau anti-aliasing-ul pot face textele indescifrabile pentru OCR ("I" vs "1", "O" vs "0").
-- **Lipsa de Context Structural:** OCR-ul stie *unde* e textul, dar nu stie ce *rol* are acel text (daca e un buton, o bara de titlu, o lista derulanta etc.).
+ANA MAX trebuie sa vada calculatorul ca un agent QA, nu ca un script orb.
+Directia corecta este combinarea Microsoft UI Automation, capturi desktop,
+OCR fallback, browser observation si verificari runtime intr-un strat compact
+de observatie.
 
-## 2. Abordarea Viitoare: Microsoft UI Automation (UIA)
-Microsoft UIA expune o harta completa a absolut tuturor elementelor grafice desenate pe ecran.
-Pentru ANA MAX, vom crea un bridge special (ex: `windows_uia_bridge.py`):
-1. **Citire Nativa:** ANA va interoga direct API-ul sistemului pentru a citi interfata:
-   - Ex: *Aplicatia "Chrome" -> Fereastra Principala -> Meniul "File" -> Butonul "Save"*
-2. **Interactiune ("Maini" Precise):** In loc sa emita click-uri "oarbe" pe coordonate (X,Y) estimate de OCR, ANA va cere direct OS-ului: *"Apasa elementul `submit_btn`"*.
-3. **Imunitate Vizuala:** Daca un element isi schimba pozitia pe ecran, fereastra este mutata sau tema (Dark/Light Mode) este schimbata, ANA il va gasi instant pe baza ID-ului si numelui sau structural.
+Regula:
 
-## 3. Status Actual (v0.2.0 - 2026-05-15)
+```text
+structural first -> screenshot/OCR fallback -> act only when confidence is good -> verify
+```
 
-### ✅ Ce s-a realizat deja:
-- **pywinauto** este deja instalat si functional
-- **windows_uia_bridge.py** a fost creat si este FREE
-- **UI Automation** functioneaza pentru aplicatii Windows (Calculator, Notepad, etc.)
-- **desktop_capture** este FREE (Vision AI activat)
-- **OCR cu PaddleOCR** este activat si functional
-- **56 MCP Tools** sunt disponibile (43 Free + 4 Premium + 9 AI Core)
+## De Ce Nu Ajunge OCR Singur
 
-### 🔧 Ce mai trebuie facut (Next Tasks):
-- [ ] **Etapa 2:** Imbunatatirea `windows_uia_bridge.py` pentru a genera rapid arborele UIA al aplicatiei din foreground
-- [ ] **Etapa 3:** Crearea de "Actiuni Nemaivazute" (Click pe nume, Selectare meniu, Introducere text exact) apelabile direct din interfata MCP / `execute_task`
-- [ ] **Etapa 4:** Integrarea completa cu `windows_deep_sight.py` pentru o vedere completa "Deasupra si Sub Capota"
+OCR si screenshot-urile raman utile, dar nu trebuie sa fie prima alegere:
 
-## 4. Roadmap Viitor (v0.3.0+)
+- sunt mai lente decat citirea structurala;
+- pot confunda caractere similare;
+- nu stiu daca un text este buton, tab, meniu, eroare sau simpla descriere;
+- pot rata contextul atunci cand fereastra este mutata sau tema se schimba.
 
-### 🎯 Obiective pe termen lung:
-1. **UIA Avansat:**
-   - Scanare UIA in timp real pentru toate aplicatiile deschise
-   - Arbore UIA complet exportat ca JSON pentru AI
-   - Actiuni precise bazate pe nume/rol, nu pe coordonate
+## Directia Corecta: UIA + Vision + Runtime Context
 
-2. **Vision AI Imbunatatit:**
-   - OCR mai rapid cu PaddleOCR optimizat
-   - Detectie automata a tipului de element (buton, text, imagine)
-   - Intelegere semantica a interfetei
+ANA trebuie sa foloseasca mai multe simturi, in ordinea potrivita:
 
-3. **Automatizare Completa:**
-   - AI-ul sa poata executa task-uri complexe pe orice aplicatie Windows
-   - Fara interventie umana pentru click-uri sau tastare
-   - Rezistenta la schimbari de UI (teme, rezolutii, pozitii)
+1. `foreground_ui_snapshot` si `windows_uia_bridge` pentru structura ferestrei.
+2. `desktop_capture` pentru confirmare vizuala cand UIA este partial.
+3. `ocr_tool` cand textul nu este disponibil structural.
+4. `browser_control` pentru pagini web, linkuri, titlu si stare vizibila.
+5. `workspace_situational_awareness` pentru repo, git, fereastra activa si
+   semnale de blocaj.
+6. `frida_instrument` numai pentru instrumentare runtime autorizata, cand
+   inspectia statica si structurala nu pot raspunde.
 
-Acest sistem combinat va da agentului ANA capacitatea de a executa task-uri desktop de o complexitate masiva, cu viteza la care executa astazi scripturi de consola.
+## Baseline Lab Curent
+
+Ultima verificare documentata in lab:
+
+```text
+67 loaded tools
+2 PASS / 0 FAIL
+```
+
+Public release-ul are un baseline separat si nu trebuie amestecat cu lab-ul.
+Nu copia in GitHub loguri, screenshots, baze de date, chei, fisiere `.env`,
+payload-uri private sau note de test care pot fi abuzate.
+
+## MVP Pentru Ochii ANA
+
+Urmatorul obiectiv bun este un snapshot compact, sub 8 KB, care spune:
+
+- ce aplicatie/fereastra este activa;
+- ce controale importante sunt vizibile;
+- daca exista erori sau pop-up-uri;
+- ce repo este activ si daca git este murdar;
+- ce teste/loguri recente par relevante;
+- ce poate vedea ANA si ce ramane blind spot;
+- care este urmatorul pas sigur.
+
+Format tinta:
+
+```json
+{
+  "schema": "ana.eyes.snapshot.v1",
+  "active_window": {
+    "app": "Code.exe",
+    "title": "ANA_MAX",
+    "visibility_quality": "good"
+  },
+  "signals": {
+    "errors": [],
+    "warnings": [],
+    "visible_blockers": []
+  },
+  "recommended_next_step": "Read the owning file, make a scoped change, then run tests.",
+  "confidence": 0.86,
+  "blind_spots": []
+}
+```
+
+## Live Browser Lessons
+
+Din testele live cu YouTube si Chrome:
+
+- confirma browserul real cu `chrome://version` sau calea procesului;
+- nu presupune ca `Skip` inseamna reclama, poate fi `Skip navigation`;
+- cookie pop-up-urile trebuie tratate ca stare vizibila, nu ignorate;
+- dupa fiecare pas critic, salveaza screenshot sau stare structurala;
+- daca Playwright/MCP pierde thread affinity, browser runtime are nevoie de
+  worker dedicat sau de actiuni grupate intr-o singura sesiune.
+
+## Safety Si QA
+
+Ochi buni nu inseamna abuz. ANA trebuie sa ajute la lucru curat:
+
+- testare pe propriul lab sau pe sisteme autorizate;
+- responsible disclosure pentru buguri reale;
+- fara retete publice de abuz;
+- fara live pentest pe aplicatii third-party fara scope clar;
+- fara copiere de date private in release-ul public.
+
+## Roadmap Scurt
+
+- [ ] Stabilizeaza `workspace_situational_awareness` ca snapshot principal.
+- [ ] Adauga browser session worker pentru actiuni vizibile persistente.
+- [ ] Imbunatateste detectia de pop-up-uri si erori vizibile.
+- [ ] Leaga voice status de verificari reale, nu de presupuneri.
+- [ ] Pastreaza lab-ul puternic, dar exporta public doar ce este safe,
+      documentat si verificat.
