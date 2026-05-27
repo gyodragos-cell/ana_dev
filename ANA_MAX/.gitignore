@@ -40,6 +40,9 @@ logs/
 scratch/
 browser_snapshots/
 screenshots/
+!sandbox/screenshots/
+sandbox/screenshots/*
+!sandbox/screenshots/README.md
 payloads/
 archives/
 backups/

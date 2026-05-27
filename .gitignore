@@ -24,6 +24,9 @@ ANA_MAX/memory/session_manifest.json
 ANA_MAX/memory/*.jsonl
 ANA_MAX/sandbox/*
 !ANA_MAX/sandbox/README.md
+!ANA_MAX/sandbox/screenshots/
+ANA_MAX/sandbox/screenshots/*
+!ANA_MAX/sandbox/screenshots/README.md
 *.vsix
 extension.vsixmanifest
 vscode_extension/extension/
