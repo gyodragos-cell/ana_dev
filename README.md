@@ -146,4 +146,6 @@ This is the active JokerForge / ANA MAX parent workspace (`ana_dev`). It contain
 > The clean public release of ANA MAX is deployed from the `ANA_MAX_GitHub_Release` repository.
 > Do not publish private integrations, DB files, or tokens from this workspace to the public repository.
 
-The current priority is maintaining a stable 64-tool runtime and preparing for CI/CD automation.
+The current priority is maintaining the ANA MAX v1.0.12 cockpit baseline:
+86 tools in the mother-lab runtime, 85 public tools in the clean release, and
+clear CI/CD plus release-quality automation.
