@@ -1,0 +1,16 @@
+*.vsix
+**/*.vsix
+.git/**
+.vscode/**
+node_modules/**
+npm-debug.log
+yarn.lock
+pnpm-lock.yaml
+*.map
+*.log
+test/**
+tests/**
+dev_artifacts/**
+screenshots/**
+video/**
+MARKETPLACE.md

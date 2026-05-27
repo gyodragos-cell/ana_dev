@@ -1,0 +1,181 @@
+{
+  "name": "ana-antigravity-chat",
+  "displayName": "ANA MAX - Hybrid AI Cockpit",
+  "description": "Local-first MCP cockpit that helps AI coding agents observe, route, act, verify and remember with ANA MAX.",
+  "version": "1.0.9",
+  "publisher": "d4d8176a-bb85-66ef-93dd-a58bc9ddfdad",
+  "preview": true,
+  "author": {
+    "name": "Dragos / gyodragos-cell with Codex",
+    "email": "gyodragos@gmail.com",
+    "url": "https://github.com/gyodragos-cell"
+  },
+  "contributors": [
+    {
+      "name": "Codex",
+      "url": "https://openai.com/codex"
+    }
+  ],
+  "license": "MIT",
+  "icon": "assets/ana-max-icon.png",
+  "homepage": "https://gyodragos-cell.github.io/ANA-MAX-v0.1.0-beta---Advanced-Neural-Architecture/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gyodragos-cell/ANA-MAX-v0.1.0-beta---Advanced-Neural-Architecture.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gyodragos-cell/ANA-MAX-v0.1.0-beta---Advanced-Neural-Architecture/issues"
+  },
+  "categories": [
+    "Machine Learning",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-agent",
+    "agent-ide",
+    "codex",
+    "antigravity",
+    "qoder",
+    "windsurf",
+    "vscode",
+    "local-ai",
+    "windows-automation",
+    "qa",
+    "debugging",
+    "tool-router",
+    "desktop-ai",
+    "ai-coding-assistant",
+    "local-first",
+    "agent-tools",
+    "ana-max"
+  ],
+  "galleryBanner": {
+    "color": "#101820",
+    "theme": "dark"
+  },
+  "qna": false,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onCommand:ana.openChat",
+    "onCommand:ana.callTool",
+    "onCommand:ana.showHybridConfig",
+    "onCommand:anaMax.startRuntime",
+    "onCommand:anaMax.showHealth",
+    "onCommand:anaMax.runScenario",
+    "onCommand:anaMax.executeTool",
+    "onCommand:anaMax.inspectRuntime",
+    "onCommand:anaMax.showRouterDecisions",
+    "onCommand:anaMax.runRemSleep",
+    "onCommand:anaMax.showObservability",
+    "onCommand:anaMax.openDashboard"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ana.openChat",
+        "title": "ANA & Antigravity: Open Cockpit",
+        "category": "ANA"
+      },
+      {
+        "command": "ana.callTool",
+        "title": "ANA & Antigravity: Call MCP Tool",
+        "category": "ANA"
+      },
+      {
+        "command": "ana.showHybridConfig",
+        "title": "ANA & Antigravity: Show Hybrid MCP Config",
+        "category": "ANA"
+      },
+      {
+        "command": "anaMax.startRuntime",
+        "title": "ANA MAX: Start Runtime"
+      },
+      {
+        "command": "anaMax.showHealth",
+        "title": "ANA MAX: Show Health"
+      },
+      {
+        "command": "anaMax.runScenario",
+        "title": "ANA MAX: Run Scenario"
+      },
+      {
+        "command": "anaMax.executeTool",
+        "title": "ANA MAX: Execute Tool"
+      },
+      {
+        "command": "anaMax.inspectRuntime",
+        "title": "ANA MAX: Inspect Runtime"
+      },
+      {
+        "command": "anaMax.showRouterDecisions",
+        "title": "ANA MAX: Show Router Decisions"
+      },
+      {
+        "command": "anaMax.runRemSleep",
+        "title": "ANA MAX: Run REM Sleep"
+      },
+      {
+        "command": "anaMax.showObservability",
+        "title": "ANA MAX: Show Observability"
+      },
+      {
+        "command": "anaMax.openDashboard",
+        "title": "ANA MAX: Open Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "ANA MAX",
+      "properties": {
+        "anaMax.safeMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Keep ANA MAX extension actions in safe-mode."
+        },
+        "anaMax.runtimeUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8766/mcp",
+          "description": "ANA MAX MCP or runtime endpoint."
+        },
+        "anaMax.runtimeRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Local ANA MAX runtime root used by the start command. Defaults to the open workspace folder."
+        },
+        "anaMax.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional Python executable path. Defaults to runtimeRoot\\venv\\Scripts\\python.exe."
+        },
+        "anaMax.runtimePort": {
+          "type": "number",
+          "default": 8766,
+          "description": "ANA MAX MCP port used by the start command."
+        },
+        "anaMax.dashboardUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8787",
+          "description": "ANA MAX Control Center dashboard endpoint."
+        },
+        "anaMax.codexServerName": {
+          "type": "string",
+          "default": "anamax",
+          "description": "Codex MCP server name for the shared ANA MAX runtime."
+        },
+        "anaMax.antigravityServerName": {
+          "type": "string",
+          "default": "anamax",
+          "description": "Antigravity/Qoder/Windsurf MCP server name for the shared ANA MAX runtime."
+        }
+      }
+    }
+  }
+}

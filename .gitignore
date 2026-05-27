@@ -12,6 +12,8 @@ __pycache__/
 logs/
 screenshots/
 memory/
+*.vsix
+extension.vsixmanifest
 *.db
 ANA_MAX/data/*.db
 ANA_MAX/desktop_vision_diag_report.txt
