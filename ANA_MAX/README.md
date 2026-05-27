@@ -28,6 +28,19 @@ ANA MAX separates the "Brain" from the "Hands".
 
 See `docs/PROJECT_MAP_AI_GUIDE.md` for the complete architectural map.
 
+## Resource System
+
+ANA MAX includes a lightweight resource system for dashboard-facing UI
+resources:
+
+- `resources/texts/` stores localization JSON files for English and Romanian.
+- `resources/themes/` stores light and dark theme JSON files.
+- `core/resource_loader.py` loads texts, themes, and optional icons with safe
+  fallback behavior.
+
+Missing or invalid text files fall back to English, missing or invalid themes
+fall back to the light theme, and missing icons return an empty string.
+
 ## 📦 Installation & Setup
 
 1. **Clone the repository:**
@@ -64,3 +77,10 @@ ANA MAX operates in "God Mode" and has full control over your Windows environmen
 
 ---
 **Built with 💻 and ☕ for the AI revolution.**
+
+## v21 Foundations
+
+v21 foundations add resource-only hooks for theme switching, future dashboard
+layout blocks, dev-mode messaging, Resource Inspector, Dashboard v2, and Tool
+Health Visualizer placeholders. These hooks do not expose private lab data and
+do not add new tool logic.

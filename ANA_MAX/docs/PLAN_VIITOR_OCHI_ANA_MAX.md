@@ -40,7 +40,7 @@ ANA trebuie sa foloseasca mai multe simturi, in ordinea potrivita:
 Ultima verificare documentata in lab:
 
 ```text
-67 loaded tools
+74 loaded tools
 2 PASS / 0 FAIL
 ```
 
@@ -105,6 +105,8 @@ Ochi buni nu inseamna abuz. ANA trebuie sa ajute la lucru curat:
 ## Roadmap Scurt
 
 - [ ] Stabilizeaza `workspace_situational_awareness` ca snapshot principal.
+- [ ] Stabilizeaza `error_radar`, `vision_region_capture` si
+      `vision_find_element` ca strat compact de observatie vizuala.
 - [ ] Adauga browser session worker pentru actiuni vizibile persistente.
 - [ ] Imbunatateste detectia de pop-up-uri si erori vizibile.
 - [ ] Leaga voice status de verificari reale, nu de presupuneri.

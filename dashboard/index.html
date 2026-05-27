@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ANA MAX Control Center</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #101418; color: #eef3f7; }
+    header { padding: 18px 24px; border-bottom: 1px solid #2b3640; }
+    main { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); padding: 20px; }
+    section { border: 1px solid #2b3640; border-radius: 8px; padding: 16px; background: #151b21; }
+    h1, h2 { margin: 0 0 12px; }
+    .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #6ee7b7; margin-right: 8px; }
+    pre { white-space: pre-wrap; color: #cbd5df; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ANA MAX Control Center</h1>
+    <p>Safe-mode dashboard shell for nodes, agents, sessions, services, tools, and events.</p>
+  </header>
+  <main>
+    <section><h2><span class="status"></span>Cluster</h2><pre id="cluster">Waiting for API snapshot...</pre></section>
+    <section><h2><span class="status"></span>Agents</h2><pre id="agents">Safe-mode scaffold</pre></section>
+    <section><h2><span class="status"></span>Sessions</h2><pre id="sessions">Safe-mode scaffold</pre></section>
+    <section><h2><span class="status"></span>Services</h2><pre id="services">Waiting for API snapshot...</pre></section>
+    <section><h2><span class="status"></span>Events</h2><pre id="events">Waiting for API snapshot...</pre></section>
+  </main>
+  <script>
+    async function refresh() {
+      try {
+        const response = await fetch("/snapshot");
+        const data = await response.json();
+        document.getElementById("cluster").textContent = JSON.stringify(data.nodes, null, 2);
+        document.getElementById("services").textContent = JSON.stringify(data.services, null, 2);
+        document.getElementById("events").textContent = JSON.stringify(data.events, null, 2);
+      } catch (error) {
+        document.getElementById("events").textContent = "Dashboard API offline: " + error.message;
+      }
+    }
+    refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>

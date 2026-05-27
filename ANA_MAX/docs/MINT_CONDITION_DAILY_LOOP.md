@@ -72,7 +72,7 @@ python main.py --list-tools
 Current expected lab baseline:
 
 ```text
-67 loaded tools
+74 loaded tools
 2 PASS / 0 FAIL
 ```
 
