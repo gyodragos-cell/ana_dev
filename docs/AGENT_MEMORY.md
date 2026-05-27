@@ -11,7 +11,7 @@ For fastest chat recovery, read `docs/NEXT_SESSION_BOOTSTRAP.md` first, then thi
 - Codex is the primary project manager and implementation agent for this workspace.
 - Antigravity is also installed and may work in parallel. Treat the workspace as multi-agent.
 - MCP should be used first whenever it provides relevant project context, tools, diagnostics, or structured knowledge.
-- After the latest MCP restart, the server recovered and discovered 85 tools, including `tool_router` and `session_rem_sleep`.
+- After the latest MCP restart, the mother-lab server recovered and discovered 86 tools, including `tool_router`, `session_rem_sleep`, and `session_lifecycle`.
 - Do not rely on raw chat history being available. Use this file, handoff docs, session history, and checkpoints as durable memory.
 
 ## Project Vision
@@ -85,7 +85,7 @@ Public release surfaces must not contain secrets, memory databases, private logs
 - `agent_coach action=recommend` combines recent telemetry with `tool_router` and returns `schema=ana.agent_coach.recommend.v1`, `primary_tool`, `tool_stack`, `router`, `coach`, and `next_action`.
 - `session_rem_sleep` is ANA's deterministic between-session recalibration tool. It reads recent checkpoints, observability telemetry, and conversation lessons, then reports what worked, mistakes/friction, patterns, recommendations, and a next-session prompt. `action=consolidate` writes `ANA_MAX/docs/rem_sleep/REM_SLEEP_REPORT_*.md` and saves compact lessons into `conversation_learning` and `ana_memory`.
 - Latest REM report: `ANA_MAX/docs/rem_sleep/REM_SLEEP_REPORT_2026-05-27T043327+0000.md`.
-- MCP smoke is clean as of `ANA_MAX/dev_artifacts/reports/mcp_smoke_report_20260527_071334.json`: 65 pass, 20 skipped unsafe, 0 fail on the live 85-tool server.
+- MCP smoke was clean as of `ANA_MAX/dev_artifacts/reports/mcp_smoke_report_20260527_071334.json`: 65 pass, 20 skipped unsafe, 0 fail on the then-live 85-tool server. After the v1.0.12 lifecycle restart, live MCP `tools/list` reports 86 tools and `session_lifecycle action=wake/rest` passes.
 - No-reload quality gate is clean as of `ANA_MAX/dev_artifacts/reports/no_reload_quality_gate_20260527_080630.json`: compileall, focused pytest including `session_rem_sleep`, MCP readiness, MCP smoke, and cockpit VSIX packaging all passed.
 - `session_rem_sleep` is MCP-visible after restart. `mcp_readiness_check.py --expect-tool session_rem_sleep` passes, and direct MCP `session_rem_sleep action=latest` returns the latest REM report.
 - MCP readiness is now contract-based: see `docs/MCP_AGENT_READINESS_CONTRACT.md` and `ANA_MAX_Launcher/mcp_readiness_check.py`. Readiness means health is online, `tool_router` is callable, and `agent_coach action=recommend` returns a `primary_tool`.

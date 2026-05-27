@@ -30,7 +30,7 @@ displayName: ANA MAX - Hybrid AI Cockpit
 
 ## Confirmed Behavior
 
-- ANA MAX exposes 85 tools in the current public runtime.
+- ANA MAX exposes 85 tools in the clean public runtime and 86 tools in the current mother-lab runtime after MCP restart.
 - `session_lifecycle` is now a real MCP tool.
 - `Smart Ready`, `tool_router`, `agent_coach`, `ana_identity`, and read-only
   guidance flows are calm and do not show generic confirmation popups.
@@ -66,4 +66,3 @@ Pages deployment #90: success
 6. Confirm no generic `Allow tool execution?` popup appears for read-only flows.
 7. Ask an agent to call `ana_identity`, `tool_router`, and
    `session_lifecycle action=wake`.
-

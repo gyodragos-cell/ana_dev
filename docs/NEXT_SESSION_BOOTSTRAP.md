@@ -32,13 +32,14 @@ server must remain live after the command returns.
 
 - MCP URL: `http://127.0.0.1:8766/mcp`
 - Health URL: `http://127.0.0.1:8766/health`
-- Expected MCP health: `status=online`, `mcp_ready=True`, `tools_count=85`
+- Expected MCP health in mother lab: `status=online`, `mcp_ready=True`, `tools_count=86`
 - `tool_router` is visible in `tools/list`.
 - `agent_coach` supports `action=coach`, `action=recommend`, `action=lessons`, and `action=reset`.
 - `agent_coach action=recommend` returns `schema=ana.agent_coach.recommend.v1`, `primary_tool`, `tool_stack`, `router`, `coach`, and `next_action`.
 - `session_rem_sleep` is MCP-visible. It analyzes recent checkpoints, telemetry, and lessons, then writes a REM-style retrospective report plus memory lessons.
+- `session_lifecycle` is MCP-visible after server restart. `action=wake` resumes from the latest REM report or performs first-run situational awareness; `action=rest consolidate=false` previews REM without writing; `consolidate=true` saves REM.
 - Optional MCP discovery methods are handled: `resources/list`, `resources/templates/list`, and `prompts/list` return empty lists instead of HTTP 404.
-- Last clean MCP smoke: `ANA_MAX/dev_artifacts/reports/mcp_smoke_report_20260527_071334.json` with 65 pass, 20 skipped unsafe, 0 fail on the live 85-tool server.
+- Last full MCP smoke artifact: `ANA_MAX/dev_artifacts/reports/mcp_smoke_report_20260527_071334.json` with 65 pass, 20 skipped unsafe, 0 fail on the then-live 85-tool server. Current v1.0.12 live smoke confirms 86 tools and `session_lifecycle`.
 - Last clean no-reload quality gate: `ANA_MAX/dev_artifacts/reports/no_reload_quality_gate_20260527_080630.json` with 5 pass, 0 fail.
 - Latest REM sleep report: `ANA_MAX/docs/rem_sleep/REM_SLEEP_REPORT_2026-05-27T043327+0000.md`.
 
@@ -77,8 +78,8 @@ qa_testing
 - MCP real smoke is clean.
 - No-reload quality gate is clean and repeatable.
 - `session_rem_sleep` was added as ANA's between-session recalibration tool.
-- Marketplace extension 1.0.9 is live as `ANA MAX - Hybrid AI Cockpit`: `https://marketplace.visualstudio.com/items?itemName=d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat`.
-- Cockpit VSIX 1.0.9 uses publisher `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad`, includes the marketplace icon, repo/author-with-Codex credit/license/homepage/keywords, workspace-relative runtime defaults, `Checkpoint`, `REM Sleep`, Smart Ready, and hybrid Codex/Qoder/Windsurf config helpers. Local artifact: `vscode_extension/ana-antigravity-chat-1.0.9.vsix`.
+- Marketplace extension 1.0.12 is the target stable beginner cockpit release as `ANA MAX - Hybrid AI Cockpit`: `https://marketplace.visualstudio.com/items?itemName=d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat`.
+- Cockpit VSIX 1.0.12 uses publisher `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad`, includes the marketplace icon, repo/author-with-Codex credit/license/homepage/keywords, workspace-relative runtime defaults, Smart Ready, Wake, Recommend, Checkpoint, Rest Preview, Save REM, and hybrid Codex/Qoder/Windsurf config helpers. Local artifact: `vscode_extension/ana-antigravity-chat-1.0.12.vsix`.
 - Public GitHub and GitHub Pages were updated after Marketplace publish:
   - `57d2330` explains the agent workflow and clarifies "Agent OS layer".
   - `829fe1b` adds one-click Marketplace install links to README and site.
@@ -89,12 +90,12 @@ qa_testing
 ## Next Good Work
 
 1. Use `agent_coach action=recommend` automatically in more runtime paths.
-2. `session_rem_sleep` is now MCP-visible; keep it in smoke/readiness checks when changing MCP registration.
+2. `session_rem_sleep` and `session_lifecycle` are now MCP-visible; keep them in smoke/readiness checks when changing MCP registration.
 
 ```powershell
-python ANA_MAX_Launcher/mcp_readiness_check.py --mcp-url http://127.0.0.1:8766/mcp --expect-tool session_rem_sleep
+python ANA_MAX_Launcher/mcp_readiness_check.py --mcp-url http://127.0.0.1:8766/mcp --expect-tool session_rem_sleep --expect-tool session_lifecycle
 ```
-3. Do not force IDE reload if preserving the active chat matters. Version `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat@1.0.9` is packaged and published; reload manually only after important chat context is safe.
+3. Do not force IDE reload if preserving the active chat matters. Version `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat@1.0.12` is packaged; reload manually only after important chat context is safe.
 4. Use `docs/MCP_AGENT_READINESS_CONTRACT.md` when changing MCP launcher, IDE, or smoke behavior.
 5. Keep lab-only/private memory out of public release sync.
 

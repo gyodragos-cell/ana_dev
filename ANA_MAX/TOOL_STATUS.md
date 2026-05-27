@@ -1,12 +1,12 @@
 # ANA MAX Tool Status - Mother Lab
 
-Date: 2026-05-24
+Date: 2026-05-27
 
 Baseline:
 
 ```text
-74 loaded tools
-2 PASS / 0 FAIL
+86 loaded tools in mother lab after MCP restart
+session_lifecycle visible through HTTP /mcp tools/list and /execute
 ```
 
 Legend:
@@ -21,7 +21,7 @@ Legend:
 ## Summary
 
 ```text
-OK: core compile, quick test, list-tools, safe healthcheck
+OK: core compile, quick test, list-tools, safe healthcheck, lifecycle wake/rest smoke
 Broken: none confirmed in this pass
 In progress: live desktop, UI mutation, template matching, broader MCP tests
 ```
@@ -80,7 +80,9 @@ In progress: live desktop, UI mutation, template matching, broader MCP tests
 | `security_audit` | OK | Registered. |
 | `self_evolving_tool` | In progress | Registered adapter; high-risk auto-change behavior needs controls. |
 | `session_checkpoint` | OK | Registered; existing handoff tool. |
+| `session_lifecycle` | OK | v1.0.12 lifecycle coordinator; MCP-visible after restart; `wake` and `rest consolidate=false` smoke PASS. |
 | `session_log_miner` | In progress | Registered; private logs not mined in this pass. |
+| `session_rem_sleep` | OK | Between-session retrospective tool; preview/save flow used by lifecycle rest. |
 | `smart_search` | OK | Used in safe healthcheck. |
 | `swarm_orchestrator` | In progress | Registered; not exercised. |
 | `system_control` | OK | Quick test PASS. |
