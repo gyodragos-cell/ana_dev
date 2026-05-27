@@ -16,6 +16,23 @@ import os
 logger = logging.getLogger(__name__)
 
 
+AUTO_GUIDANCE_EXCLUDED_TOOLS = {
+    "agent_coach",
+    "ana_memory",
+    "conversation_learning",
+    "session_checkpoint",
+    "session_rem_sleep",
+    "memory_cortex",
+    "tool_router",
+    "vector_memory",
+}
+
+
+def _is_vscode_agent_session() -> bool:
+    value = os.environ.get("VSCODE_AGENT", "")
+    return value.strip().lower() not in {"", "0", "false", "no"}
+
+
 def _summarize_value(value: Any, max_len: int = 120) -> str:
     """Produce un rezumat scurt si sigur pentru logging."""
     text = repr(value)
@@ -26,6 +43,67 @@ def _summarize_value(value: Any, max_len: int = 120) -> str:
 
 def _summarize_kwargs(kwargs: Dict[str, Any]) -> Dict[str, str]:
     return {key: _summarize_value(value) for key, value in kwargs.items()}
+
+
+def _compact_error(error: Any, max_len: int = 500) -> str:
+    text = str(error or "").replace("\r", " ").replace("\n", " ").strip()
+    if len(text) > max_len:
+        return text[: max_len - 3] + "..."
+    return text
+
+
+def _auto_guidance_enabled() -> bool:
+    value = os.environ.get("ANA_AUTO_GUIDANCE", "1")
+    return value.strip().lower() not in {"", "0", "false", "no", "off"}
+
+
+def _is_bool_like(value: Any) -> bool:
+    if isinstance(value, bool):
+        return True
+    if isinstance(value, (int, float)):
+        return value in {0, 1}
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "0", "true", "false", "yes", "no", "on", "off"}
+    return False
+
+
+def _matches_param_type(value: Any, expected: str) -> bool:
+    expected = (expected or "string").lower()
+    if value is None or expected == "any":
+        return True
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "integer":
+        if isinstance(value, bool):
+            return False
+        if isinstance(value, int):
+            return True
+        if isinstance(value, str):
+            try:
+                int(value.strip())
+                return True
+            except ValueError:
+                return False
+        return False
+    if expected == "number":
+        if isinstance(value, bool):
+            return False
+        if isinstance(value, (int, float)):
+            return True
+        if isinstance(value, str):
+            try:
+                float(value.strip())
+                return True
+            except ValueError:
+                return False
+        return False
+    if expected == "boolean":
+        return _is_bool_like(value)
+    if expected in {"array", "list"}:
+        return isinstance(value, list)
+    if expected in {"object", "dict"}:
+        return isinstance(value, dict)
+    return True
 
 
 class ToolStatus(Enum):
@@ -166,7 +244,7 @@ def _log_observability(tool_name: str, args: Dict[str, Any], start_time: float, 
                 masked_args[k] = _summarize_value(v, max_len=60)
                 
         entry = {
-            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z"),
             "tool": tool_name,
             "args": masked_args,
             "latency_sec": round(latency, 4),
@@ -205,6 +283,11 @@ class Tool(ABC):
     def requires_confirmation(self) -> bool:
         """Daca necesita confirmare inainte de executie."""
         return self.get_definition().requires_confirmation
+
+    @property
+    def run_in_worker_thread(self) -> bool:
+        """Whether safe_execute may wrap this tool in a worker thread."""
+        return True
     
     def validate_params(self, **kwargs) -> Optional[str]:
         """Valideaza parametrii. Returneaza eroare sau None daca e OK."""
@@ -212,11 +295,14 @@ class Tool(ABC):
         
         for param in definition.parameters:
             if param.required and param.name not in kwargs:
-                return f"Parametrul '{param.name}' este obligatoriu"
+                return f"Missing required parameter: {param.name}"
             
             if param.choices and param.name in kwargs:
                 if kwargs[param.name] not in param.choices:
-                    return f"Valoarea '{kwargs[param.name]}' nu e valida pentru '{param.name}'. Optiuni: {param.choices}"
+                    return f"Invalid value for {param.name}: {kwargs[param.name]!r}. Choices: {param.choices}"
+
+            if param.name in kwargs and not _matches_param_type(kwargs[param.name], param.type):
+                return f"Invalid type for {param.name}: expected {param.type}, got {type(kwargs[param.name]).__name__}"
         
         return None
     
@@ -237,7 +323,7 @@ class Tool(ABC):
         if not allowed:
             res = ToolResult(
                 status=ToolStatus.BLOCKED,
-                error=f"Tool-ul '{self.name}' este dezactivat prin permission manifest"
+                error=f"Tool disabled by permission manifest: {self.name}"
             )
             _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.BLOCKED, res.error)
             return res
@@ -248,7 +334,7 @@ class Tool(ABC):
         if global_readonly and not is_tool_readonly:
             res = ToolResult(
                 status=ToolStatus.BLOCKED,
-                error=f"Tool-ul '{self.name}' este blocat deoarece ruleaza in mod Read-Only"
+                error=f"Tool blocked by read-only mode: {self.name}"
             )
             _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.BLOCKED, res.error)
             return res
@@ -267,17 +353,44 @@ class Tool(ABC):
             if not kwargs.get("confirm", False):
                 res = ToolResult(
                     status=ToolStatus.REQUIRES_CONFIRMATION,
-                    message=f"Tool-ul '{self.name}' necesita confirmare. Apeleaza cu confirm=True"
+                    message=f"Tool requires confirmation: call {self.name} with confirm=True"
                 )
                 _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.REQUIRES_CONFIRMATION, res.message)
                 return res
         
         timeout = kwargs.get('timeout', 60)
+        execute_kwargs = kwargs
+        try:
+            execute_signature = inspect.signature(self.execute)
+            accepts_extra_kwargs = any(
+                param.kind == inspect.Parameter.VAR_KEYWORD
+                for param in execute_signature.parameters.values()
+            )
+            if not accepts_extra_kwargs:
+                accepted_names = set(execute_signature.parameters)
+                execute_kwargs = {
+                    key: value
+                    for key, value in kwargs.items()
+                    if key in accepted_names
+                }
+        except (TypeError, ValueError):
+            execute_kwargs = kwargs
+
         started_time = time.time()
         try:
+            if not self.run_in_worker_thread:
+                res = self.execute(**execute_kwargs)
+                if not isinstance(res, ToolResult):
+                    res = ToolResult(status=ToolStatus.SUCCESS, data=res)
+                latency = time.time() - started_time
+                _log_observability(self.name, kwargs, started_time, latency, res.status, res.error or res.message if not res.is_success else None)
+                return res
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(self.execute, **kwargs)
+                future = executor.submit(self.execute, **execute_kwargs)
                 res = future.result(timeout=timeout)
+                if not isinstance(res, ToolResult):
+                    res = ToolResult(status=ToolStatus.SUCCESS, data=res)
                 latency = time.time() - started_time
                 _log_observability(self.name, kwargs, started_time, latency, res.status, res.error or res.message if not res.is_success else None)
                 return res
@@ -285,7 +398,7 @@ class Tool(ABC):
             logger.error(f"Timeout in {self.name} (> {timeout}s)")
             res = ToolResult(
                 status=ToolStatus.ERROR,
-                error=f"Timeout: Operatiunea {self.name} a durat prea mult (> {timeout}s)"
+                error=f"Timeout: {self.name} exceeded {timeout}s"
             )
             latency = time.time() - started_time
             _log_observability(self.name, kwargs, started_time, latency, ToolStatus.ERROR, res.error)
@@ -294,7 +407,7 @@ class Tool(ABC):
             logger.error(f"Eroare in {self.name}: {e}")
             res = ToolResult(
                 status=ToolStatus.ERROR,
-                error=str(e)
+                error=_compact_error(e)
             )
             latency = time.time() - started_time
             _log_observability(self.name, kwargs, started_time, latency, ToolStatus.ERROR, res.error)
@@ -399,17 +512,18 @@ class ToolRegistry:
         if not tool:
             return ToolResult(
                 status=ToolStatus.ERROR,
-                error=f"Tool-ul '{name}' nu exista"
+                error=f"Unknown tool: {name}"
             )
             
-        # UI v17: Rich Feedback (disabled in MCP mode)
-        if not os.environ.get('ANA_MCP_MODE'):
+        # UI v17: Rich Feedback. Disable in MCP mode and VS Code agent terminals.
+        if os.environ.get("ANA_TOOL_STDOUT", "").strip().lower() in {"1", "true", "yes", "on"}:
             clean_params = {k: (v if len(str(v)) < 100 else f"<{type(v).__name__} len={len(str(v))}>") for k, v in kwargs.items()}
             print(f"  Tool execution: {name}")
             print(f"  Params: {clean_params}")
             
         logger.info("TOOL START name=%s args=%s", name, _summarize_kwargs(kwargs))
         result = tool.safe_execute(**kwargs)
+        result = self._attach_auto_guidance(name, kwargs, result)
         if result.is_success:
             logger.info(
                 "TOOL END name=%s status=%s message=%s",
@@ -425,6 +539,145 @@ class ToolRegistry:
                 _summarize_value(result.error or result.message),
             )
         return result
+
+    def _attach_auto_guidance(self, name: str, kwargs: Dict[str, Any], result: ToolResult) -> ToolResult:
+        """Attach memory/coach guidance to failed tool results without changing execution."""
+        if result.is_success or not _auto_guidance_enabled():
+            return result
+        if name in AUTO_GUIDANCE_EXCLUDED_TOOLS:
+            return result
+
+        error_text = _compact_error(result.error or result.message)
+        guidance: Dict[str, Any] = {}
+
+        memory_tool = self.get("ana_memory")
+        if memory_tool and error_text:
+            try:
+                memory_result = memory_tool.safe_execute(
+                    action="find_error_solution",
+                    error_text=error_text,
+                    timeout=10,
+                )
+                memory_data = memory_result.data if isinstance(memory_result.data, dict) else {}
+                if memory_result.is_success and memory_data.get("found"):
+                    guidance["known_fix"] = memory_data.get("result")
+            except Exception as exc:
+                logger.debug("Auto guidance memory lookup failed: %s", exc)
+
+        coach_tool = self.get("agent_coach")
+        if coach_tool:
+            try:
+                recommend_result = coach_tool.safe_execute(
+                    action="recommend",
+                    task=f"Tool {name} failed",
+                    error=error_text,
+                    limit=80,
+                    repeat_threshold=2,
+                    max_tools=5,
+                    include_prompt=False,
+                    timeout=10,
+                )
+                recommend_data = recommend_result.data if isinstance(recommend_result.data, dict) else {}
+                if recommend_result.is_success and recommend_data.get("primary_tool"):
+                    guidance["agent_coach_recommend"] = {
+                        "severity": recommend_data.get("severity"),
+                        "headline": recommend_data.get("headline"),
+                        "primary_tool": recommend_data.get("primary_tool"),
+                        "tool_stack": recommend_data.get("tool_stack", []),
+                        "next_action": recommend_data.get("next_action", ""),
+                        "router": recommend_data.get("router", {}),
+                    }
+                coach_data = recommend_data.get("coach", {}) if isinstance(recommend_data.get("coach"), dict) else {}
+                if recommend_result.is_success and coach_data.get("severity") in {"warn", "critical"}:
+                    guidance["coach"] = {
+                        "severity": coach_data.get("severity"),
+                        "headline": coach_data.get("headline"),
+                        "signals": coach_data.get("signals", []),
+                        "advice": coach_data.get("advice", []),
+                        "next_best_tools": coach_data.get("next_best_tools", []),
+                    }
+            except Exception as exc:
+                logger.debug("Auto guidance coach lookup failed: %s", exc)
+
+        router_tool = self.get("tool_router")
+        if router_tool:
+            try:
+                router_result = router_tool.safe_execute(
+                    task=f"Tool {name} failed",
+                    error=error_text,
+                    mode="auto",
+                    max_tools=5,
+                    timeout=10,
+                )
+                router_data = router_result.data if isinstance(router_result.data, dict) else {}
+                if router_result.is_success and router_data.get("recommended_tools"):
+                    guidance["tool_router"] = {
+                        "mode": router_data.get("mode"),
+                        "headline": router_data.get("headline"),
+                        "recommended_tools": router_data.get("recommended_tools", []),
+                        "steps": router_data.get("steps", []),
+                        "guardrail": router_data.get("guardrail", ""),
+                    }
+            except Exception as exc:
+                logger.debug("Auto guidance tool router lookup failed: %s", exc)
+
+        if not guidance:
+            return result
+
+        if isinstance(result.data, dict):
+            data = dict(result.data)
+        elif result.data is None:
+            data = {}
+        else:
+            data = {"original_data": result.data}
+        data["auto_guidance"] = guidance
+        summary = self._build_guidance_summary(guidance)
+        if summary:
+            data["guidance_summary"] = summary
+        result.data = data
+
+        if not result.message:
+            result.message = "Auto guidance attached from ANA memory/coach."
+        elif "Auto guidance attached" not in result.message:
+            result.message = f"{result.message} Auto guidance attached from ANA memory/coach."
+
+        return result
+
+    def _build_guidance_summary(self, guidance: Dict[str, Any]) -> Dict[str, Any]:
+        """Build a compact agent-readable summary from richer auto guidance."""
+        recommend = guidance.get("agent_coach_recommend")
+        if isinstance(recommend, dict) and recommend.get("primary_tool"):
+            return {
+                "primary_tool": recommend.get("primary_tool"),
+                "tool_stack": recommend.get("tool_stack", []),
+                "next_action": recommend.get("next_action", ""),
+                "headline": recommend.get("headline", ""),
+                "source": "agent_coach_recommend",
+            }
+
+        router = guidance.get("tool_router")
+        if isinstance(router, dict) and router.get("recommended_tools"):
+            tools = router.get("recommended_tools", [])
+            return {
+                "primary_tool": tools[0] if tools else "",
+                "tool_stack": tools,
+                "next_action": "Use the primary tool, inspect its result, then verify before retrying.",
+                "headline": router.get("headline", ""),
+                "source": "tool_router",
+            }
+
+        coach = guidance.get("coach")
+        if isinstance(coach, dict):
+            tools = coach.get("next_best_tools", [])
+            return {
+                "primary_tool": tools[0] if tools else "",
+                "tool_stack": tools,
+                "next_action": (coach.get("advice") or ["Read the failure and change strategy before retrying."])[0],
+                "headline": coach.get("headline", ""),
+                "source": "coach",
+            }
+
+        return {}
     
     def list_tools(self, category: Optional[str] = None) -> List[str]:
         """Listeaza toate tool-urile (optional filtrate pe categorie)."""

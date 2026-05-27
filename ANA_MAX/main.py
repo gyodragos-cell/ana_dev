@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 ANA MAX - Arhitectura Neurala Avansata
 ======================================
@@ -51,6 +51,21 @@ from core.config import config  # noqa: E402
 config.load(str(CONFIG_PATH))
 
 
+def _is_vscode_agent_session() -> bool:
+    """Return True when VS Code marks this terminal command as agent-run."""
+    value = os.environ.get("VSCODE_AGENT", "")
+    return value.strip().lower() not in {"", "0", "false", "no"}
+
+
+def _compact_agent_output() -> bool:
+    return _is_vscode_agent_session()
+
+
+def _print_tool_load(message: str) -> None:
+    if not _compact_agent_output():
+        print(message)
+
+
 def _load_tool_class(module_path: str, class_name: str):
     mod = __import__(module_path, fromlist=[class_name])
     return getattr(mod, class_name)
@@ -78,7 +93,7 @@ def _build_runtime_agent():
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="ANA MAX - MCP Server cu 64 tools, AI Desktop Control, AI Core Intelligence pentru OpenCode"
+        description="ANA MAX - MCP Server cu release-ready tools, AI Desktop Control, AI Core Intelligence pentru OpenCode"
     )
     parser.add_argument("--port", "-p", type=int, default=8765, help="Port MCP server (default: 8765)")
     parser.add_argument("--host", default="127.0.0.1", help="Host MCP server (default: 127.0.0.1)")
@@ -93,7 +108,7 @@ def _print_banner() -> None:
         """
 ====================================================================
      A.N.A. MAX - Arhitectura Neurala Avansata
-     MCP Server | 64 Tools | AI Desktop Control | OpenCode Ready
+     MCP Server | Release Tools | AI Desktop Control | OpenCode Ready
      AI Core: Context Engine, Memory Cortex, Orchestrator
 ====================================================================
 """.strip()
@@ -144,6 +159,8 @@ def _register_all_tools():
         ("tools.tool_healthcheck", "ToolHealthcheckTool"),
         ("tools.conversation_learning_tool", "ConversationLearningTool"),
         ("tools.session_log_miner_tool", "SessionLogMinerTool"),
+        ("tools.session_checkpoint_tool", "SessionCheckpointTool"),
+        ("tools.session_rem_sleep_tool", "SessionRemSleepTool"),
         ("tools.memory_tool", "MemoryTool"),
         ("tools.privacy", "PrivacyTool"),
         ("tools.git_tool", "GitTool"),
@@ -155,6 +172,10 @@ def _register_all_tools():
         ("tools.codebase_understanding_tool", "CodebaseUnderstandingTool"),
         ("tools.browser_control", "BrowserControlTool"),
         ("tools.terminal_tool", "TerminalTool"),
+        ("tools.file_patch_tool", "FilePatchTool"),
+        ("tools.project_navigator_tool", "ProjectNavigatorTool"),
+        ("tools.error_radar_tool", "ErrorRadarTool"),
+        ("tools.tool_router_tool", "ToolRouterTool"),
         ("tools.todo_tool", "TodoWriteTool"),
         ("tools.edit_tool", "EditTool"),
         ("tools.system_optimization_tool", "SystemOptimizationTool"),
@@ -185,7 +206,7 @@ def _register_all_tools():
         ("tools.code_search", "CodeSearchTool"),
         ("tools.web_scraper", "WebScraperTool"),
     ]
-    
+
     # AI Desktop Control tools (2026-05-13) - KILLER FEATURE
     desktop_tools = [
         ("tools.desktop_capture", "DesktopCaptureTool"),
@@ -193,15 +214,22 @@ def _register_all_tools():
         ("tools.desktop_control_tool", "DesktopControlTool"),
         ("tools.windows_insight_tool", "WindowsInsightTool"),
         ("tools.windows_uia_bridge", "WindowsUiaBridgeTool"),
+        ("tools.window_manager", "WindowManagerTool"),
+        ("tools.ocr_tool", "OcrTool"),
+        ("tools.uia_click_tool", "UiaClickTool"),
+        ("tools.uia_type_tool", "UiaTypeTool"),
         ("tools.foreground_ui_snapshot", "ForegroundUISnapshotTool"),  # NEW: Structural Eyes
         ("tools.workspace_situational_awareness", "WorkspaceSituationalAwarenessTool"),  # NEW: Structural Awareness
+        ("tools.vision_region_capture_tool", "VisionRegionCaptureTool"),
+        ("tools.vision_find_element_tool", "VisionFindElementTool"),
     ]
-    
+
     # Live Tool Healer (2026-05-19) - intelligent supervision
     healing_tools = [
         ("tools.live_tool_healer", "LiveToolHealer"),
+        ("tools.agent_coach_tool", "AgentCoachTool"),
     ]
-    
+
     # Voice tools (2026-05-14) - JARVIS STYLE
     voice_tools = [
         ("tools.edge_tts_voice", "EdgeTTSVoice"),  # Natural voice commentary
@@ -215,9 +243,9 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name}")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name}")
         except Exception as e:
-            print(f"  [!] {class_name} skip: {e}")
+            _print_tool_load(f"  [!] {class_name} skip: {e}")
 
     for module_path, class_name in optional_modules:
         try:
@@ -228,7 +256,7 @@ def _register_all_tools():
                 tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (optional)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (optional)")
         except Exception as e:
             logging.getLogger(__name__).warning("Optional tool skipped %s.%s: %s", module_path, class_name, e)
 
@@ -239,17 +267,17 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (NEW)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (NEW)")
         except Exception as e:
-            print(f"  [!] {class_name} skip: {e}")
-    
+            _print_tool_load(f"  [!] {class_name} skip: {e}")
+
     # Windows Deep Sight tool (2026-05-13)
     try:
         tool_class = _load_tool_class("tools.windows_deep_sight", "WindowsDeepSightTool")
         tool_instance = tool_class()
         registry.register(tool_instance)
         loaded += 1
-        print(f"  [OK] {tool_instance.get_definition().name} (GOD VIEW)")
+        _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (GOD VIEW)")
     except Exception as e:
         logging.getLogger(__name__).warning("Deep Sight tool skipped: %s", e)
 
@@ -260,10 +288,10 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (DESKTOP CONTROL)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (DESKTOP CONTROL)")
         except Exception as e:
             logging.getLogger(__name__).warning("Desktop tool skipped %s.%s: %s", module_path, class_name, e)
-    
+
     # Load Live Tool Healer (2026-05-19)
     for module_path, class_name in healing_tools:
         try:
@@ -271,10 +299,10 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (INTELLIGENT SUPERVISION)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (INTELLIGENT SUPERVISION)")
         except Exception as e:
             logging.getLogger(__name__).warning("Healing tool skipped %s.%s: %s", module_path, class_name, e)
-    
+
     # Incarca Voice tools (2026-05-14) - JARVIS STYLE
     for module_path, class_name in voice_tools:
         try:
@@ -282,7 +310,7 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (JARVIS VOICE)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (JARVIS VOICE)")
         except Exception as e:
             logging.getLogger(__name__).warning("Voice tool skipped %s.%s: %s", module_path, class_name, e)
 
@@ -291,14 +319,14 @@ def _register_all_tools():
         ("tools.vector_memory_tool", "VectorMemoryTool"),  # Vector search 150x+ faster
         ("tools.swarm_tool", "SwarmTool"),  # Multi-agent swarm orchestration
     ]
-    
+
     # UI-TARS inspired: Vision, Remote Control, Event Stream (2026-05-19)
     uitars_tools = [
         ("tools.vision_fallback_tool", "VisionFallbackTool"),  # Vision-based GUI fallback
         ("tools.remote_control_tool", "RemoteControlTool"),  # Remote machine control
         ("tools.event_stream_tool", "EventStreamTool"),  # Event stream debugging
     ]
-    
+
     # Incarca Advanced tools (Vector Memory + Swarm) (2026-05-19)
     for module_path, class_name in advanced_tools:
         try:
@@ -306,10 +334,10 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (RUFLO-INTEGRATION)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (RUFLO-INTEGRATION)")
         except Exception as e:
             logging.getLogger(__name__).warning("Advanced tool skipped %s.%s: %s", module_path, class_name, e)
-    
+
     # Incarca UI-TARS tools (Vision, Remote, Event Stream) (2026-05-19)
     for module_path, class_name in uitars_tools:
         try:
@@ -317,10 +345,10 @@ def _register_all_tools():
             tool_instance = tool_class()
             registry.register(tool_instance)
             loaded += 1
-            print(f"  [OK] {tool_instance.get_definition().name} (UI-TARS-INTEGRATION)")
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (UI-TARS-INTEGRATION)")
         except Exception as e:
             logging.getLogger(__name__).warning("UI-TARS tool skipped %s.%s: %s", module_path, class_name, e)
-    
+
     # AI Core adapters (context_engine, proactive_interrupt, self_evolving,
     # memory_cortex, orchestrator, context_bridge, window_manager)
     try:
@@ -330,7 +358,7 @@ def _register_all_tools():
                 instance = AdapterClass()
                 registry.register(instance)
                 loaded += 1
-                print(f"  [OK] {instance.get_definition().name} (AI CORE)")
+                _print_tool_load(f"  [OK] {instance.get_definition().name} (AI CORE)")
             except Exception as e:
                 logging.getLogger(__name__).warning(
                     "AI Core adapter skipped %s: %s", AdapterClass.__name__, e
@@ -338,9 +366,155 @@ def _register_all_tools():
     except ImportError as e:
         logging.getLogger(__name__).warning("tool_adapters.py nu a putut fi incarcat: %s", e)
 
+
+    # PATCH_START v19_phase3
+    try:
+        from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
+
+        class _V19RunTool(Tool):
+            def __init__(self, module_path: str, name: str, description: str, parameters):
+                self._module_path = module_path
+                self._definition = ToolDefinition(
+                    name=name,
+                    description=description,
+                    parameters=parameters,
+                    category="diagnostics",
+                    requires_confirmation=False,
+                )
+
+            def get_definition(self):
+                return self._definition
+
+            def execute(self, **kwargs):
+                module = __import__(self._module_path, fromlist=["run"])
+                result = module.run(dict(kwargs))
+                if not isinstance(result, dict):
+                    return ToolResult(status=ToolStatus.ERROR, error="diagnostic returned non-dict response")
+                if result.get("success") is False:
+                    return ToolResult(status=ToolStatus.ERROR, error=str(result.get("error") or "success=false"))
+                return ToolResult(status=ToolStatus.SUCCESS, data=result, message=str(result.get("message", "ok")))
+
+        v19_tools = [
+            _V19RunTool(
+                "tools.ana_runtime_inspector",
+                "ana_runtime_inspector",
+                "Read-only runtime snapshot and environment comparison diagnostics.",
+                [
+                    ToolParameter("action", "snapshot or compare_envs", "string", False, "snapshot"),
+                    ToolParameter("dev_path", "Development workspace path for compare_envs", "string", False),
+                    ToolParameter("release_path", "Release workspace path for compare_envs", "string", False),
+                    ToolParameter("max_files", "Maximum files to compare", "integer", False, 5000),
+                ],
+            ),
+            _V19RunTool(
+                "tools.tool_contract_validator",
+                "tool_contract_validator",
+                "Read-only validation of safe tool response contracts.",
+                [
+                    ToolParameter("action", "validate_tool or validate_all", "string", False, "validate_all"),
+                    ToolParameter("tool_name", "Tool name for validate_tool", "string", False),
+                ],
+            ),
+            _V19RunTool(
+                "tools.schema_diff",
+                "schema_diff",
+                "Read-only schema and response diff diagnostic.",
+                [
+                    ToolParameter("expected_schema", "Expected response schema", "object", True),
+                    ToolParameter("actual_response", "Actual response object", "object", True),
+                ],
+            ),
+        ]
+        for tool_instance in v19_tools:
+            registry.register(tool_instance)
+            loaded += 1
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (V19 DIAGNOSTICS)")
+    except Exception as e:
+        logging.getLogger(__name__).warning("v19 diagnostics skipped: %s", e)
+    # PATCH_END v19_phase3
+
+    # PATCH_START v20_phase2
+    try:
+        from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
+
+        class _V20RunTool(Tool):
+            def __init__(self, module_path: str, name: str, description: str, parameters):
+                self._module_path = module_path
+                self._definition = ToolDefinition(
+                    name=name,
+                    description=description,
+                    parameters=parameters,
+                    category="diagnostics",
+                    requires_confirmation=False,
+                )
+
+            def get_definition(self):
+                return self._definition
+
+            def execute(self, **kwargs):
+                module = __import__(self._module_path, fromlist=["run"])
+                result = module.run(dict(kwargs))
+                if not isinstance(result, dict):
+                    return ToolResult(status=ToolStatus.ERROR, error="v20 tool returned non-dict response")
+                if result.get("success") is False:
+                    return ToolResult(status=ToolStatus.ERROR, error=str(result.get("error") or "success=false"))
+                return ToolResult(status=ToolStatus.SUCCESS, data=result, message=str(result.get("message", "ok")))
+
+        v20_tools = [
+            _V20RunTool(
+                "tools.v20.ana_health_check",
+                "ana_health_check",
+                "Manual read-only aggregate runtime health report.",
+                [ToolParameter("include_contracts", "Include tool contract validation", "boolean", False, False)],
+            ),
+            _V20RunTool(
+                "tools.v20.baseline_update_suggester",
+                "baseline_update_suggester",
+                "Suggest baseline updates without applying changes.",
+                [
+                    ToolParameter("baseline", "Expected baseline values", "object", False),
+                    ToolParameter("current", "Current runtime values", "object", False),
+                ],
+            ),
+            _V20RunTool(
+                "tools.v20.docs_generator",
+                "docs_generator",
+                "Generate documentation text previews without writing files.",
+                [
+                    ToolParameter("document", "Optional generated document name", "string", False),
+                    ToolParameter("generated_at", "Deterministic generated timestamp label", "string", False, "static-preview"),
+                ],
+            ),
+            _V20RunTool(
+                "tools.v20.ana_patch_suggester",
+                "ana_patch_suggester",
+                "Suggest patch diffs and risk without applying patches.",
+                [
+                    ToolParameter("issue", "Single issue descriptor", "object", False),
+                    ToolParameter("issues", "Issue descriptor list", "array", False),
+                ],
+            ),
+            _V20RunTool(
+                "tools.v20.runtime_guard",
+                "runtime_guard",
+                "Manual read-only runtime consistency guard checks.",
+                [ToolParameter("expected_root", "Expected repository root path", "string", False)],
+            ),
+            _V20RunTool(
+                "dashboard.autonomy_dashboard",
+                "autonomy_dashboard",
+                "Render a read-only HTML dashboard for v20 autonomy outputs.",
+                [ToolParameter("outputs", "Optional precomputed dashboard outputs", "object", False)],
+            ),
+        ]
+        for tool_instance in v20_tools:
+            registry.register(tool_instance)
+            loaded += 1
+            _print_tool_load(f"  [OK] {tool_instance.get_definition().name} (V20 FOUNDATION)")
+    except Exception as e:
+        logging.getLogger(__name__).warning("v20 foundation tools skipped: %s", e)
+    # PATCH_END v20_phase2
     return loaded
-
-
 def _list_tools():
     """Afiseaza toate tool-urile disponibile."""
     from tools.base import registry
@@ -444,7 +618,9 @@ def _start_mcp_server(host: str, port: int):
             "version": "18.0-MAX",
             "tools_count": len(tools),
             "tools": sorted(tools),
-            "mcp_ready": True
+            "mcp_ready": True,
+            "vscode_agent": _is_vscode_agent_session(),
+            "output_profile": "compact" if _compact_agent_output() else "normal",
         })
 
     @app.route('/tools', methods=['GET'])
@@ -510,7 +686,7 @@ def _start_mcp_server(host: str, port: int):
                 "version": "18.0-MAX",
                 "endpoints": ["/mcp (POST)"]
             })
-        
+
         data = request.json
         if not data:
             return jsonify({"error": "Invalid request"}), 400
@@ -521,6 +697,10 @@ def _start_mcp_server(host: str, port: int):
 
         try:
             logging.getLogger(__name__).info("HTTP /mcp method=%s id=%s", method, request_id)
+            if method and str(method).startswith("notifications/"):
+                logging.getLogger(__name__).info("HTTP /mcp notification accepted method=%s", method)
+                return jsonify({"jsonrpc": "2.0", "id": request_id, "result": None})
+
             if method == "initialize":
                 tools = registry.list_tools()
                 logging.getLogger(__name__).info("HTTP /mcp initialize tools=%s", len(tools))
@@ -555,6 +735,27 @@ def _start_mcp_server(host: str, port: int):
                     "result": {"tools": tool_list}
                 })
 
+            elif method == "resources/list":
+                return jsonify({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {"resources": []},
+                })
+
+            elif method == "resources/templates/list":
+                return jsonify({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {"resourceTemplates": []},
+                })
+
+            elif method == "prompts/list":
+                return jsonify({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {"prompts": []},
+                })
+
             elif method == "tools/call":
                 tool_name = params.get("name")
                 arguments = params.get("arguments", {})
@@ -570,6 +771,14 @@ def _start_mcp_server(host: str, port: int):
                     list(arguments.keys()),
                 )
                 result = registry.execute(tool_name, **arguments)
+                payload = {
+                    "success": result.is_success,
+                    "data": result.data,
+                    "message": result.message,
+                    "error": result.error,
+                }
+                if isinstance(result.data, dict) and isinstance(result.data.get("guidance_summary"), dict):
+                    payload["guidance_summary"] = result.data["guidance_summary"]
                 logging.getLogger(__name__).info(
                     "HTTP /mcp tools/call end name=%s id=%s success=%s",
                     tool_name,
@@ -582,12 +791,7 @@ def _start_mcp_server(host: str, port: int):
                     "result": {
                         "content": [{
                             "type": "text",
-                            "text": json.dumps({
-                                "success": result.is_success,
-                                "data": result.data,
-                                "message": result.message,
-                                "error": result.error
-                            }, indent=2, default=str)
+                            "text": json.dumps(payload, indent=2, default=str)
                         }]
                     }
                 })
@@ -732,7 +936,7 @@ def _start_mcp_server(host: str, port: int):
             original_wsgi_app = app.wsgi_app
             app.wsgi_app = lambda environ, start_response: environ.update({'SERVER_SOFTWARE': fake_banner}) or original_wsgi_app(environ, start_response)
             app._banner_patched = True
-    
+
     app.run(host=host, port=port, debug=False, use_reloader=False)
 
 
@@ -745,16 +949,26 @@ def main() -> int:
 
     args = _build_parser().parse_args()
     _configure_logging(args.debug)
-    _print_banner()
+    agent_session = _is_vscode_agent_session()
+    if agent_session:
+        logging.getLogger(__name__).info("VS Code agent session detected; compact output enabled")
+    else:
+        _print_banner()
 
     # Creeaza directoare necesare
     for d in ["logs", "memory", "backups", "generated_bots"]:
         (BASE_DIR / d).mkdir(parents=True, exist_ok=True)
 
     # Inregistreaza TOATE tool-urile
-    print("\n  Incarcare tool-uri...")
+    if agent_session:
+        print("ANA MAX: loading tools")
+    else:
+        print("\n  Incarcare tool-uri...")
     loaded = _register_all_tools()
-    print(f"  {loaded} tool-uri incarcate.\n")
+    if agent_session:
+        print(f"ANA MAX: {loaded} tools loaded")
+    else:
+        print(f"  {loaded} tool-uri incarcate.\n")
 
     if args.list_tools:
         _list_tools()
@@ -784,5 +998,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-

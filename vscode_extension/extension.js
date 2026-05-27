@@ -84,6 +84,43 @@ function safeModeMessage(action) {
   return `ANA & Antigravity ${action}: safe-mode ${config.safeMode ? "active" : "disabled"}.`;
 }
 
+function getDangerousActionPrompts(toolName, args) {
+  const text = `${toolName || ""} ${JSON.stringify(args || {})}`.toLowerCase();
+  const prompts = ["Allow tool execution?"];
+
+  if (/(write|patch|edit|delete|remove|move|rename|save|commit|push|install|uninstall)/.test(text)) {
+    prompts.push("Allow write?");
+  }
+  if (/(terminal|shell|powershell|cmd|subprocess|process|launch|start_runtime|exec)/.test(text)) {
+    prompts.push("Allow subprocess?");
+  }
+  if (/(http|https|fetch|download|upload|network|browser|web|api|curl)/.test(text)) {
+    prompts.push("Allow network call?");
+  }
+
+  return [...new Set(prompts)];
+}
+
+async function confirmDangerousAction(toolName, args) {
+  const config = getConfig();
+  if (!config.safeMode) {
+    return true;
+  }
+
+  const prompts = getDangerousActionPrompts(toolName, args);
+  for (const prompt of prompts) {
+    const answer = await vscode.window.showWarningMessage(
+      `${prompt} safe-mode blocks tool execution unless you approve this action.`,
+      { modal: true },
+      "Allow once"
+    );
+    if (answer !== "Allow once") {
+      return false;
+    }
+  }
+  return true;
+}
+
 function getHybridConfigText(config) {
   return [
     "ANA MAX Hybrid MCP",
@@ -147,6 +184,9 @@ function requestJson(url, payload) {
 }
 
 async function callTool(config, name, args) {
+  if (!(await confirmDangerousAction(name, args))) {
+    return { success: false, error: "safe-mode blocks tool execution" };
+  }
   const res = await requestJson(config.runtimeUrl, {
     jsonrpc: "2.0",
     id: Date.now(),
@@ -349,6 +389,10 @@ function activate(context) {
 
       if (message.command === "execute") {
         try {
+          if (!(await confirmDangerousAction(message.tool, message.args || {}))) {
+            post(panel, "error", "safe-mode blocks tool execution");
+            return;
+          }
           const res = await requestJson(config.runtimeUrl, {
             jsonrpc: "2.0",
             id: Date.now(),
@@ -407,11 +451,16 @@ function activate(context) {
     if (args === undefined) return;
 
     try {
+      const parsedArgs = JSON.parse(args || "{}");
+      if (!(await confirmDangerousAction(tool, parsedArgs))) {
+        vscode.window.showWarningMessage("safe-mode blocks tool execution");
+        return;
+      }
       const response = await requestJson(config.runtimeUrl, {
         jsonrpc: "2.0",
         id: "vscode-tool-call",
         method: "tools/call",
-        params: { name: tool, arguments: JSON.parse(args || "{}") }
+        params: { name: tool, arguments: parsedArgs }
       });
       const doc = await vscode.workspace.openTextDocument({ content: JSON.stringify(response, null, 2), language: "json" });
       await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);

@@ -32,63 +32,110 @@ _tools_loaded = False
 
 
 def load_tools():
-    """Load the focused MCP stdio tool set."""
-    from tools.ana_context_tool import AnaContextTool
-    from tools.browser_control import BrowserControlTool
-    from tools.code import CodeTool
-    from tools.code_search import CodeSearchTool
-    from tools.debugger_tool import DebuggerTool
-    from tools.desktop_capture import DesktopCaptureTool
-    from tools.desktop_control_tool import DesktopControlTool
-    from tools.edit_tool import EditTool
-    from tools.edge_tts_voice import EdgeTTSVoice
-    from tools.files import FilesTool
-    from tools.foreground_ui_snapshot import ForegroundUISnapshotTool
-    from tools.frida_automation import FridaTool
-    from tools.git_tool import GitTool
-    from tools.live_desktop_viewer import LiveDesktopViewerTool
-    from tools.memory_tool import MemoryTool
-    from tools.security_tool import SecurityTool
-    from tools.smart_search_tool import SmartSearchTool
-    from tools.system import SystemTool
-    from tools.task_tool import TaskTool
-    from tools.terminal_tool import TerminalTool
-    from tools.web import WebTool
-    from tools.windows_deep_sight import WindowsDeepSightTool
-    from tools.windows_insight_tool import WindowsInsightTool
-    from tools.windows_uia_bridge import WindowsUiaBridgeTool
+    """Load ALL available ANA MAX tools dynamically.
 
-    tools = [
-        FilesTool(),
-        SystemTool(),
-        CodeTool(),
-        WebTool(),
-        GitTool(),
-        MemoryTool(),
-        SmartSearchTool(),
-        AnaContextTool(),
-        DesktopCaptureTool(),
-        WindowsUiaBridgeTool(),
-        ForegroundUISnapshotTool(),
-        FridaTool(),
-        WindowsDeepSightTool(),
-        SecurityTool(),
-        TerminalTool(),
-        DebuggerTool(),
-        EditTool(),
-        TaskTool(),
-        CodeSearchTool(),
-        BrowserControlTool(),
-        LiveDesktopViewerTool(),
-        DesktopControlTool(),
-        WindowsInsightTool(),
-        EdgeTTSVoice(),
+    Each tool is loaded inside its own try/except block so a single
+    missing dependency never prevents the rest from loading.
+    Returns the total number of successfully registered tools.
+    """
+    import logging as _log
+
+    # ——— Core tool catalogue ———————————————————————————————————————————
+    _catalogue = [
+        # (module_path, ClassName)
+        ("tools.files",                     "FilesTool"),
+        ("tools.system",                    "SystemTool"),
+        ("tools.code",                      "CodeTool"),
+        ("tools.web",                       "WebTool"),
+        ("tools.git_tool",                  "GitTool"),
+        ("tools.memory_tool",               "MemoryTool"),
+        ("tools.memory_cortex",             "MemoryCortexTool"),
+        ("tools.smart_search_tool",         "SmartSearchTool"),
+        ("tools.ana_context_tool",          "AnaContextTool"),
+        ("tools.desktop_capture",           "DesktopCaptureTool"),
+        ("tools.windows_uia_bridge",        "WindowsUiaBridgeTool"),
+        ("tools.foreground_ui_snapshot",    "ForegroundUISnapshotTool"),
+        ("tools.frida_automation",          "FridaTool"),
+        ("tools.windows_deep_sight",        "WindowsDeepSightTool"),
+        ("tools.windows_insight_tool",      "WindowsInsightTool"),
+        ("tools.security_tool",             "SecurityTool"),
+        ("tools.terminal_tool",             "TerminalTool"),
+        ("tools.debugger_tool",             "DebuggerTool"),
+        ("tools.edit_tool",                 "EditTool"),
+        ("tools.task_tool",                 "TaskTool"),
+        ("tools.code_search",               "CodeSearchTool"),
+        ("tools.browser_control",           "BrowserControlTool"),
+        ("tools.live_desktop_viewer",       "LiveDesktopViewerTool"),
+        ("tools.desktop_control_tool",      "DesktopControlTool"),
+        ("tools.edge_tts_voice",            "EdgeTTSVoice"),
+        # Extended tool set
+        ("tools.network_tool",              "NetworkTool"),
+        ("tools.clipboard_manager",         "ClipboardManagerTool"),
+        ("tools.ocr_tool",                  "OcrTool"),
+        ("tools.qa_tool",                   "QATool"),
+        ("tools.todo_tool",                 "TodoTool"),
+        ("tools.session_log_miner_tool",    "SessionLogMinerTool"),
+        ("tools.conversation_learning_tool","ConversationLearningTool"),
+        ("tools.project_navigator_tool",    "ProjectNavigatorTool"),
+        ("tools.codebase_understanding_tool","CodebaseUnderstandingTool"),
+        ("tools.workspace_situational_awareness", "WorkspaceSituationalAwarenessTool"),
+        ("tools.file_patch_tool",           "FilePatchTool"),
+        ("tools.error_radar_tool",          "ErrorRadarTool"),
+        ("tools.tool_router_tool",          "ToolRouterTool"),
+        ("tools.window_manager",            "WindowManagerTool"),
+        ("tools.web_scraper",               "WebScraperTool"),
+        ("tools.hardware_scanner_tool",     "HardwareScannerTool"),
+        ("tools.system_optimization_tool",  "SystemOptimizationTool"),
+        ("tools.agent_coach_tool",          "AgentCoachTool"),
+        ("tools.science_tool",              "ScienceTool"),
+        ("tools.autonomous_tool",           "AutonomousTool"),
+        ("tools.ana_orchestrator",          "AnaOrchestratorTool"),
+        ("tools.adb_tool",                  "AdbTool"),
+        ("tools.uia_click_tool",            "UiaClickTool"),
+        ("tools.uia_type_tool",             "UiaTypeTool"),
+        ("tools.vision_fallback_tool",      "VisionFallbackTool"),
+        ("tools.vision_find_element_tool",  "VisionFindElementTool"),
+        ("tools.vision_region_capture_tool","VisionRegionCaptureTool"),
+        ("tools.session_checkpoint_tool",   "SessionCheckpointTool"),
+        ("tools.session_rem_sleep_tool",    "SessionRemSleepTool"),
+        ("tools.smoke_test_runner",         "SmokeTestRunnerTool"),
+        ("tools.tool_healthcheck",          "ToolHealthcheckTool"),
+        ("tools.live_debug_console",        "LiveDebugConsoleTool"),
+        ("tools.voice_commentary",          "VoiceCommentaryTool"),
+        ("tools.text_to_speech",            "TextToSpeechTool"),
+        ("tools.web_ai_bridge",             "WebAiBridgeTool"),
+        ("tools.swarm_tool",                "SwarmTool"),
+        ("tools.advanced_scanner",          "AdvancedScannerTool"),
+        ("tools.live_tool_healer",          "LiveToolHealerTool"),
+        ("tools.context_engine",            "ContextEngineTool"),
+        ("tools.ana_runtime_inspector",     "AnaRuntimeInspectorTool"),
+        ("tools.event_stream_tool",         "EventStreamTool"),
+        ("tools.vector_memory_tool",        "VectorMemoryTool"),
+        ("tools.adal_tool",                 "AdalTool"),
+        ("tools.apk_analyzer",              "ApkAnalyzerTool"),
+        ("tools.mitm_analyzer_tool",        "MitmAnalyzerTool"),
+        ("tools.network_pentest_tool",      "NetworkPentestTool"),
     ]
 
-    for tool in tools:
-        registry.register(tool)
+    loaded = 0
+    skipped = []
+    for module_path, class_name in _catalogue:
+        try:
+            import importlib
+            mod = importlib.import_module(module_path)
+            cls = getattr(mod, class_name)
+            instance = cls()
+            registry.register(instance)
+            loaded += 1
+        except Exception as exc:
+            skipped.append(f"{module_path}.{class_name}: {exc}")
 
-    return len(tools)
+    if skipped:
+        _log.getLogger(__name__).warning(
+            "mcp_stdio: %d tools skipped:\n  %s", len(skipped), "\n  ".join(skipped)
+        )
+
+    return loaded
 
 
 def _ensure_tools_loaded():
@@ -166,6 +213,8 @@ def handle_request(request):
                     "message": result.message,
                     "error": result.error,
                 }
+                if isinstance(result.data, dict) and isinstance(result.data.get("guidance_summary"), dict):
+                    payload["guidance_summary"] = result.data["guidance_summary"]
             except Exception as exc:
                 payload = {
                     "success": False,
@@ -189,6 +238,12 @@ def handle_request(request):
 
         if method == "resources/list":
             return {"jsonrpc": "2.0", "id": req_id, "result": {"resources": []}}
+
+        if method == "resources/templates/list":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {"resourceTemplates": []}}
+
+        if method == "prompts/list":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {"prompts": []}}
 
         return {
             "jsonrpc": "2.0",
