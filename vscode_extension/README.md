@@ -72,13 +72,13 @@ python main.py --host 127.0.0.1 --port 8766
 3. Install the VSIX:
 
 ```powershell
-code --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.12.vsix --force
+code --install-extension vscode_extension\ana-antigravity-chat-1.0.13.vsix --force
 ```
 
 For Qoder, if its CLI is available:
 
 ```powershell
-qoder --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.12.vsix --force
+qoder --install-extension vscode_extension\ana-antigravity-chat-1.0.13.vsix --force
 ```
 
 4. Reload the IDE window.

@@ -30,14 +30,23 @@ async function getHealth(config) {
 
 function resolveRuntimePaths(config) {
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath || "";
-  const runtimeRoot = path.resolve(config.runtimeRoot || workspaceRoot || "");
+  const baseRoot = path.resolve(config.runtimeRoot || workspaceRoot || "");
+  const searchedRoots = [
+    baseRoot,
+    path.join(baseRoot, "ANA_MAX"),
+    workspaceRoot ? path.resolve(workspaceRoot) : "",
+    workspaceRoot ? path.join(path.resolve(workspaceRoot), "ANA_MAX") : ""
+  ].filter((item, index, list) => item && list.indexOf(item) === index);
+  const runtimeRoot = searchedRoots.find(candidate => fs.existsSync(path.join(candidate, "main.py"))) || baseRoot;
+  const defaultPythonPath = path.join(runtimeRoot, "venv", "Scripts", "python.exe");
   const pythonPath = config.pythonPath
     ? path.resolve(config.pythonPath)
-    : path.join(runtimeRoot, "venv", "Scripts", "python.exe");
+    : (fs.existsSync(defaultPythonPath) ? defaultPythonPath : "python");
   return {
     runtimeRoot,
     pythonPath,
-    mainPy: path.join(runtimeRoot, "main.py")
+    mainPy: path.join(runtimeRoot, "main.py"),
+    searchedRoots
   };
 }
 
@@ -62,10 +71,14 @@ async function startRuntime() {
     return;
   }
   if (!fs.existsSync(paths.mainPy)) {
-    vscode.window.showErrorMessage(`ANA MAX main.py not found: ${paths.mainPy}`);
+    vscode.window.showErrorMessage(
+      `ANA MAX main.py not found: ${paths.mainPy}. ` +
+      `Checked: ${paths.searchedRoots.join(", ")}. ` +
+      `Set anaMax.runtimeRoot to the ANA_MAX folder (e.g. C:\\path\\to\\ANA_MAX) in VS Code settings.`
+    );
     return;
   }
-  if (!fs.existsSync(paths.pythonPath)) {
+  if (path.isAbsolute(paths.pythonPath) && !fs.existsSync(paths.pythonPath)) {
     vscode.window.showErrorMessage(`Python executable not found: ${paths.pythonPath}`);
     return;
   }
@@ -819,7 +832,8 @@ function getWebviewContent() {
         function addMsg(text, type) {
             const d = document.createElement('div');
             d.className = 'msg ' + type;
-            d.textContent = text;
+            // Sanitize carriage returns that can corrupt terminal output embedded in tool responses.
+            d.textContent = String(text || '').replace(/\r/g, '');
             chat.appendChild(d);
             chat.scrollTop = chat.scrollHeight;
         }

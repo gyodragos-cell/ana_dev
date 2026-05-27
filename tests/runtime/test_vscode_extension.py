@@ -91,3 +91,22 @@ def test_extension_uses_lifecycle_for_wake_and_rest():
     assert 'action: "wake"' in source
     assert 'consolidate: false' in source
     assert 'consolidate: true' in source
+
+
+def test_extension_start_runtime_handles_parent_workspace():
+    """Start Runtime should work when the opened folder is the parent lab root."""
+    source = extension_source_path().read_text(encoding="utf-8")
+
+    assert 'path.join(baseRoot, "ANA_MAX")' in source
+    assert "searchedRoots" in source
+    assert "Set anaMax.runtimeRoot to the ANA_MAX folder" in source
+    assert 'fs.existsSync(defaultPythonPath) ? defaultPythonPath : "python"' in source
+    assert "path.isAbsolute(paths.pythonPath)" in source
+
+
+def test_extension_sanitizes_cockpit_carriage_returns():
+    """Cockpit output should strip carriage returns from logs/tool responses."""
+    source = extension_source_path().read_text(encoding="utf-8")
+
+    assert "Sanitize carriage returns" in source
+    assert ".replace(/\\r/g, '')" in source

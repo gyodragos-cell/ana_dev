@@ -78,8 +78,8 @@ qa_testing
 - MCP real smoke is clean.
 - No-reload quality gate is clean and repeatable.
 - `session_rem_sleep` was added as ANA's between-session recalibration tool.
-- Marketplace extension 1.0.12 is the target stable beginner cockpit release as `ANA MAX - Hybrid AI Cockpit`: `https://marketplace.visualstudio.com/items?itemName=d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat`.
-- Cockpit VSIX 1.0.12 uses publisher `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad`, includes the marketplace icon, repo/author-with-Codex credit/license/homepage/keywords, workspace-relative runtime defaults, Smart Ready, Wake, Recommend, Checkpoint, Rest Preview, Save REM, and hybrid Codex/Qoder/Windsurf config helpers. Local artifact: `vscode_extension/ana-antigravity-chat-1.0.12.vsix`.
+- Marketplace extension 1.0.12 is the stable beginner cockpit baseline; patch 1.0.13 is the current button reliability release for `ANA MAX - Hybrid AI Cockpit`: `https://marketplace.visualstudio.com/items?itemName=d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat`.
+- Cockpit VSIX 1.0.13 uses publisher `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad`, includes the marketplace icon, repo/author-with-Codex credit/license/homepage/keywords, workspace-relative runtime defaults, Smart Ready, Wake, Recommend, Checkpoint, Rest Preview, Save REM, hybrid Codex/Qoder/Windsurf config helpers, `ANA_MAX/main.py` parent-workspace auto-detect, PATH Python fallback, and Cockpit carriage-return sanitization. Local artifact: `vscode_extension/ana-antigravity-chat-1.0.13.vsix`.
 - Public GitHub and GitHub Pages were updated after Marketplace publish:
   - `57d2330` explains the agent workflow and clarifies "Agent OS layer".
   - `829fe1b` adds one-click Marketplace install links to README and site.
@@ -95,7 +95,7 @@ qa_testing
 ```powershell
 python ANA_MAX_Launcher/mcp_readiness_check.py --mcp-url http://127.0.0.1:8766/mcp --expect-tool session_rem_sleep --expect-tool session_lifecycle
 ```
-3. Do not force IDE reload if preserving the active chat matters. Version `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat@1.0.12` is packaged; reload manually only after important chat context is safe.
+3. Do not force IDE reload if preserving the active chat matters. Version `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat@1.0.13` is packaged; reload manually only after important chat context is safe.
 4. Use `docs/MCP_AGENT_READINESS_CONTRACT.md` when changing MCP launcher, IDE, or smoke behavior.
 5. Keep lab-only/private memory out of public release sync.
 

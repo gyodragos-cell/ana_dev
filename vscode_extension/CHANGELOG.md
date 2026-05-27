@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.13 - Button Reliability Patch
+
+- Auto-detect `ANA_MAX/main.py` when the opened workspace is the parent
+  project folder.
+- Fall back to `python` from PATH when no local runtime venv is present.
+- Sanitize carriage returns in Cockpit output so Wake/REM/log text does not
+  render as visually corrupted terminal text.
+
 ## 1.0.12 - Beginner Lifecycle UI
 
 - Added a guided Beginner Flow in the cockpit.
