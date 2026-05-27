@@ -14,6 +14,7 @@ screenshots/
 memory/
 debug.log
 video/
+ANA_MAX/.launcher_state.json
 *.vsix
 extension.vsixmanifest
 vscode_extension/extension/
