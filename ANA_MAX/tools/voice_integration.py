@@ -1,24 +1,26 @@
 """
-ANA MAX - Voice Integration Helper
-
-Lazy helper for speaking status messages. Importing this module must stay quiet.
+ANA MAX – Voice Integration Helper
+Adds automatic speech to every console output.
 """
 
 from __future__ import annotations
 
+import builtins
 import logging
 import threading
-
 from tools.edge_tts_voice import EdgeTTSVoice
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
-_voice_instance = None
+# ----------------------------------------------------------------------
+# Shared voice instance (lazy, thread‑safe)
+# ----------------------------------------------------------------------
+_voice_instance: EdgeTTSVoice | None = None
 _voice_lock = threading.Lock()
 
 
-def get_voice():
-    """Get or create the shared voice instance."""
+def _get_voice() -> EdgeTTSVoice | None:
+    """Create/reuse a single EdgeTTSVoice instance."""
     global _voice_instance
     if _voice_instance is None:
         with _voice_lock:
@@ -26,39 +28,46 @@ def get_voice():
                 try:
                     _voice_instance = EdgeTTSVoice()
                 except Exception as exc:
-                    logger.warning("Voice init failed: %s", exc)
-                    return None
+                    _logger.warning("Voice init failed: %s", exc)
+                    _voice_instance = None
     return _voice_instance
 
 
-def speak(text: str, async_mode: bool = True):
-    """Speak text with optional background execution."""
-    if not text:
-        return
+# ----------------------------------------------------------------------
+# Public helper – print + optional speech
+# ----------------------------------------------------------------------
+def speak_and_print(*args, **kwargs):
+    """Replacement for built‑in `print`.  Prints to stdout and, if a voice
+    engine is available, speaks the same text asynchronously.
+    """
+    # Preserve original behaviour
+    builtins.__original_print__(*args, **kwargs)
 
-    voice = get_voice()
-    if not voice:
-        return
+    # Assemble the message exactly as `print` would output it
+    sep = kwargs.get("sep", " ")
+    end = kwargs.get("end", "\n")
+    message = sep.join(str(a) for a in args) + end
 
-    def _run():
-        try:
-            voice.execute("speak", text=text)
-        except Exception as exc:
-            logger.warning("Voice speak failed: %s", exc)
-
-    if async_mode:
-        threading.Thread(target=_run, daemon=True).start()
+    voice = _get_voice()
+    if voice and voice.enabled:
+        # Fire‑and‑forget – do not block the main thread
+        threading.Thread(
+            target=lambda: voice.execute("speak", text=message, **{"async": True}),
+            daemon=True,
+        ).start()
     else:
-        _run()
+        _logger.debug("Voice not available – skipping speech.")
 
 
-def test_voice():
-    """Run a small manual voice test."""
-    print("\nTesting voice integration...\n")
-    speak("Hello. This is a voice integration test.", async_mode=False)
-    speak("Voice integration is working.", async_mode=False)
-    print("Voice test complete.")
+# ----------------------------------------------------------------------
+# Install the wrapper at import time
+# ----------------------------------------------------------------------
+def _install_wrapper():
+    # Save the original `print` only once
+    if not hasattr(builtins, "__original_print__"):
+        builtins.__original_print__ = builtins.print
+    builtins.print = speak_and_print
+    _logger.info("Global print → speak_and_print installed.")
 
 
-if __name__ == "__main__":
-    test_voice()
+_install_wrapper()

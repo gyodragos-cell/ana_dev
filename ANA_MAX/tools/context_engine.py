@@ -1,11 +1,11 @@
-"""
+﻿"""
 ANA MAX - Context Intelligence Engine v2 (JARVIS Mode)
 tools/context_engine.py
 
 Trei piloni:
-  1. MEMORIE PE TERMEN LUNG  — SQLite via memory.py, invata din sesiuni trecute
-  2. COMUNICARE ACTIVA       — notificari Windows + TTS (pyttsx3) optional
-  3. BUCLA DE FEEDBACK       — DA/NU la sugestii → confidenta creste/scade
+  1. MEMORIE PE TERMEN LUNG  â€” SQLite via memory.py, invata din sesiuni trecute
+  2. COMUNICARE ACTIVA       â€” notificari Windows + TTS (pyttsx3) optional
+  3. BUCLA DE FEEDBACK       â€” DA/NU la sugestii â†’ confidenta creste/scade
 
 Filozofie ANA MAX:
   - Win32 / psutil nativ, zero subprocess
@@ -24,7 +24,7 @@ from typing import Optional, Callable
 
 logger = logging.getLogger(__name__)
 
-# ── Configurare ───────────────────────────────────────────────────────────────
+# â”€â”€ Configurare â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 OBSERVE_INTERVAL    = 2.0    # secunde intre snapshot-uri
 PATTERN_MIN_COUNT   = 3      # aparitii minime pentru a fi "pattern"
 SESSION_MEMORY      = 300    # snapshot-uri in RAM
@@ -36,14 +36,14 @@ MIN_CONFIDENCE      = 0.10
 NOTIFY_COOLDOWN     = 30     # secunde intre notificari pentru acelasi intent
 LONG_TERM_KEEP_DAYS = 30     # zile de retinut in SQLite
 
-# ── State intern (Singleton-like) ─────────────────────────────────────────────
+# â”€â”€ State intern (Singleton-like) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 _lock               = threading.Lock()
 _observer_active    = False
 _observer_thread: Optional[threading.Thread] = None
 
 _session_log: deque             = deque(maxlen=SESSION_MEMORY)
-_learned_patterns: dict         = {}   # key → {count, confidence, next_action, last_seen}
-_last_notify: dict              = {}   # intent_key → timestamp (cooldown)
+_learned_patterns: dict         = {}   # key â†’ {count, confidence, next_action, last_seen}
+_last_notify: dict              = {}   # intent_key â†’ timestamp (cooldown)
 _feedback_callbacks: list[Callable] = []
 
 # TTS engine (lazy)
@@ -51,9 +51,9 @@ _tts_engine = None
 _tts_lock   = threading.Lock()
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 1. HELPERS SISTEM (Win32 + psutil nativ)
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _get_foreground_window() -> str:
     try:
@@ -169,9 +169,9 @@ def _classify_activity(fg: str, windows: list[str], procs: list[str]) -> str:
     return "general"
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 2. MEMORIE PE TERMEN LUNG (SQLite via memory.py)
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _mem_store(key: str, value: dict, category: str = "context"):
     """Salveaza in SQLite prin memory.py (Singleton)."""
@@ -270,9 +270,9 @@ def _learn_from_log():
         logger.debug("_learn_from_log: %s", e)
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 3. COMUNICARE ACTIVA (Notificari Windows + TTS optional)
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _win_notify(title: str, message: str):
     """Trimite o notificare nativa Windows (balloon tip sau toast)."""
@@ -300,7 +300,7 @@ def _win_notify(title: str, message: str):
 
 
 def _speak(text: str):
-    """TTS optional — daca pyttsx3 e instalat."""
+    """TTS optional â€” daca pyttsx3 e instalat."""
     global _tts_engine
     try:
         with _tts_lock:
@@ -334,9 +334,9 @@ def _notify_user(intent_key: str, title: str, message: str,
                          daemon=True).start()
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 4. PREDICTIE INTENTII
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _detect_intents(obs: dict) -> list[dict]:
     """Genereaza lista de intentii posibile din observatia curenta."""
@@ -347,13 +347,13 @@ def _detect_intents(obs: dict) -> list[dict]:
     windows  = obs.get("windows", [])
     hour     = datetime.now().hour
 
-    # ── Reguli hard-coded ────────────────────────────────────────────────────
+    # â”€â”€ Reguli hard-coded â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     if clip.startswith("http"):
         intents.append({
             "intent":     "open_url",
             "confidence": 0.85,
-            "title":      "ANA MAX — URL detectat",
+            "title":      "ANA MAX â€” URL detectat",
             "suggestion": f"Deschid URL-ul din clipboard?\n{clip[:70]}",
             "action":     {"tool": "windows_uia_bridge",
                            "args": {"action": "open_url", "url": clip}},
@@ -363,7 +363,7 @@ def _detect_intents(obs: dict) -> list[dict]:
         intents.append({
             "intent":     "web_search",
             "confidence": 0.72,
-            "title":      "ANA MAX — Cautare web",
+            "title":      "ANA MAX â€” Cautare web",
             "suggestion": f"Caut pe web: '{clip[:50]}'?",
             "action":     {"tool": "windows_uia_bridge",
                            "args": {"action": "search", "query": clip}},
@@ -373,7 +373,7 @@ def _detect_intents(obs: dict) -> list[dict]:
         intents.append({
             "intent":     "organize_windows",
             "confidence": 0.68,
-            "title":      "ANA MAX — Ferestre aglomerate",
+            "title":      "ANA MAX â€” Ferestre aglomerate",
             "suggestion": f"{len(windows)} ferestre deschise. Aranjez automat in grid?",
             "action":     {"tool": "window_manager",
                            "args": {"action": "tile", "layout": "grid"}},
@@ -383,13 +383,13 @@ def _detect_intents(obs: dict) -> list[dict]:
         intents.append({
             "intent":     "end_session",
             "confidence": 0.60,
-            "title":      "ANA MAX — Sesiune tarzie",
+            "title":      "ANA MAX â€” Sesiune tarzie",
             "suggestion": "E tarziu. Salvez sesiunea si minimizez tot?",
             "action":     {"tool": "window_manager",
                            "args": {"action": "tile", "layout": "minimize_all"}},
         })
 
-    # ── Pattern-uri invatate ─────────────────────────────────────────────────
+    # â”€â”€ Pattern-uri invatate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     pattern_key = f"{activity}|{fg[:40]}"
     if pattern_key in _learned_patterns:
         p    = _learned_patterns[pattern_key]
@@ -399,7 +399,7 @@ def _detect_intents(obs: dict) -> list[dict]:
             intents.append({
                 "intent":     "learned_pattern",
                 "confidence": conf,
-                "title":      "ANA MAX — Pattern detectat",
+                "title":      "ANA MAX â€” Pattern detectat",
                 "suggestion": (f"De {p['count']} ori dupa '{activity}' "
                                f"ai trecut la '{next_act}'. Fac eu?"),
                 "action":     p.get("next_action"),
@@ -410,9 +410,9 @@ def _detect_intents(obs: dict) -> list[dict]:
     return [i for i in intents if i["confidence"] >= PREDICT_THRESHOLD]
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 5. BUCLA DE FEEDBACK
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def apply_feedback(pattern_key: str, accepted: bool) -> dict:
     """
@@ -431,16 +431,16 @@ def apply_feedback(pattern_key: str, accepted: bool) -> dict:
         if accepted:
             p["confidence"] = min(MAX_CONFIDENCE, old_c + FEEDBACK_BOOST)
             p["accepted"]   = p.get("accepted", 0) + 1
-            msg = f"Confidenta crescuta: {old_c:.2f} → {p['confidence']:.2f}"
+            msg = f"Confidenta crescuta: {old_c:.2f} â†’ {p['confidence']:.2f}"
         else:
             p["confidence"] = max(MIN_CONFIDENCE, old_c - FEEDBACK_PENALTY)
             p["rejected"]   = p.get("rejected", 0) + 1
-            msg = f"Confidenta scazuta: {old_c:.2f} → {p['confidence']:.2f}"
+            msg = f"Confidenta scazuta: {old_c:.2f} â†’ {p['confidence']:.2f}"
 
         _learned_patterns[pattern_key] = p
         _save_long_term_patterns()
 
-        logger.info("feedback '%s': accepted=%s — %s", pattern_key, accepted, msg)
+        logger.info("feedback '%s': accepted=%s â€” %s", pattern_key, accepted, msg)
         return {"success": True, "pattern_key": pattern_key,
                 "accepted": accepted, "message": msg,
                 "new_confidence": p["confidence"]}
@@ -456,9 +456,9 @@ def register_feedback_callback(cb: Callable):
         _feedback_callbacks.append(cb)
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 6. OBSERVER LOOP
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _observer_loop():
     global _observer_active
@@ -527,9 +527,9 @@ def _observer_loop():
     logger.info("ContextEngine v2: oprit, date salvate")
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 7. API PUBLIC
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def start_observing() -> dict:
     global _observer_thread, _observer_active
@@ -662,22 +662,22 @@ def record_action(action_name: str, context: Optional[dict] = None) -> dict:
         return {"success": False, "error": str(e)}
 
 
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 8. MCP ENTRY POINT
-# ════════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def run(args: dict) -> dict:
     """
     Entry point MCP.
 
     action:
-      'start'    — porneste observer
-      'stop'     — opreste observer
-      'context'  — context curent
-      'predict'  — predictie intentii
-      'summary'  — sumar sesiune
-      'feedback' — DA/NU la o sugestie (pattern_key + accepted: bool)
-      'record'   — inregistreaza o actiune (action_name)
+      'start'    â€” porneste observer
+      'stop'     â€” opreste observer
+      'context'  â€” context curent
+      'predict'  â€” predictie intentii
+      'summary'  â€” sumar sesiune
+      'feedback' â€” DA/NU la o sugestie (pattern_key + accepted: bool)
+      'record'   â€” inregistreaza o actiune (action_name)
     """
     action = args.get("action", "context")
 
@@ -687,6 +687,13 @@ def run(args: dict) -> dict:
         return stop_observing()
     elif action == "context":
         return get_current_context()
+    # PATCH_START context_engine get_context schema alias
+    elif action == "get_context":
+        current = get_current_context()
+        if current.get("success") is False:
+            return current
+        return {"success": True, "status": "success", "context": current.get("current", {}), "message": "ok"}
+    # PATCH_END context_engine get_context schema alias
     elif action == "predict":
         return predict_intent()
     elif action == "summary":

@@ -7,6 +7,7 @@ Suporta: JS eval, tabs multiple, network intercept, scroll, hover,
 from __future__ import annotations
 
 import base64
+import os
 import time
 import uuid
 import logging
@@ -681,12 +682,17 @@ class BrowserAutomationRuntime:
 
     @staticmethod
     def _candidate_browser_paths() -> List[Path]:
-        return [
-            Path(r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"),
+        candidates = []
+        env_path = os.environ.get("ANA_BROWSER_PATH", "").strip()
+        if env_path:
+            candidates.append(Path(env_path))
+        candidates.extend([
             Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
             Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
             Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
-        ]
+            Path(r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"),
+        ])
+        return candidates
 
 
 _RUNTIME: Optional[BrowserAutomationRuntime] = None

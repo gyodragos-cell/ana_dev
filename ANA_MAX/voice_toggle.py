@@ -44,6 +44,7 @@ def main() -> int:
         voice.execute(
             "speak",
             text="Voice is now on. I will speak Qoder messages while you test demos.",
+        **{"async": False},
         )
     except Exception as exc:
         logger.warning("Greeting failed: %s", exc)

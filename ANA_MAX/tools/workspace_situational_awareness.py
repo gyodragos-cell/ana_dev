@@ -12,6 +12,25 @@ from tools.base import Tool, ToolResult, ToolStatus, ToolDefinition, ToolParamet
 
 logger = logging.getLogger(__name__)
 
+GIT_STATUS_PREVIEW_LIMIT = 25
+
+
+def _to_bool(value: Any, default: bool = True) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "y", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "n", "off"}:
+            return False
+    return default
+
+
 class WorkspaceSituationalAwarenessTool(Tool):
     """Provides observation, git status, active UI app, recent log errors, and next-step recommendations."""
 
@@ -50,9 +69,9 @@ class WorkspaceSituationalAwarenessTool(Tool):
         )
 
     def execute(self, **kwargs) -> ToolResult:
-        include_git = kwargs.get("include_git", "true").lower() == "true"
-        include_uia = kwargs.get("include_uia", "true").lower() == "true"
-        include_errors = kwargs.get("include_errors", "true").lower() == "true"
+        include_git = _to_bool(kwargs.get("include_git"), True)
+        include_uia = _to_bool(kwargs.get("include_uia"), True)
+        include_errors = _to_bool(kwargs.get("include_errors"), True)
 
         # Determine workspace roots
         # Tools are in ANA_MAX/tools, so project root is two parents up from this file or parent of ANA_MAX
@@ -172,8 +191,12 @@ class WorkspaceSituationalAwarenessTool(Tool):
         """Runs short Git operations to parse repo status."""
         git_info = {
             "is_repo": False,
+            "repo_root": str(workspace_root),
             "branch": "Unknown",
             "status_summary": "",
+            "status_preview": [],
+            "changed_count": 0,
+            "truncated": False,
             "clean": True
         }
 
@@ -210,7 +233,17 @@ class WorkspaceSituationalAwarenessTool(Tool):
             if res_status.returncode == 0:
                 git_info["is_repo"] = True
                 status_out = res_status.stdout.strip()
-                git_info["status_summary"] = status_out
+                status_lines = status_out.splitlines() if status_out else []
+                changed_count = len(status_lines)
+                preview = status_lines[:GIT_STATUS_PREVIEW_LIMIT]
+                git_info["changed_count"] = changed_count
+                git_info["status_preview"] = preview
+                git_info["truncated"] = changed_count > len(preview)
+                git_info["status_summary"] = (
+                    "clean"
+                    if changed_count == 0
+                    else f"{changed_count} changed paths; preview shows {len(preview)}"
+                )
                 git_info["clean"] = len(status_out) == 0
 
         except Exception as e:
@@ -300,10 +333,17 @@ class WorkspaceSituationalAwarenessTool(Tool):
 
         # Heuristic 2: Uncommitted Git changes
         if not git_clean:
-            status_summary = state.get("git", {}).get("status_summary", "")
+            git_state = state.get("git", {})
+            changed_count = git_state.get("changed_count", 0)
+            preview = git_state.get("status_preview", [])
+            truncated = git_state.get("truncated", False)
+            preview_text = "\n".join(preview[:10])
+            if truncated:
+                preview_text += "\n... output truncated; run git status --short for full list."
             return (
-                f"Workspace is dirty. Review uncommitted changes: \n{status_summary}\n"
-                "Verify correctness with RUN_ANA_QUALITY_GATE.bat before commiting."
+                f"Workspace is dirty with {changed_count} changed paths. "
+                f"Preview:\n{preview_text}\n"
+                "Verify correctness with RUN_ANA_QUALITY_GATE.bat before committing."
             )
 
         # Heuristic 3: Known editor in foreground but no open file detected

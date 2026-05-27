@@ -6,7 +6,10 @@
   "tools": {
     "ana_identity": { "tier": "internal", "readonly": true, "requires_confirmation": false, "allowed": true },
     "tool_healthcheck": { "tier": "internal", "readonly": true, "requires_confirmation": false, "allowed": true },
+    "tool_router": { "tier": "internal", "readonly": true, "requires_confirmation": false, "allowed": true },
     "session_log_miner": { "tier": "internal", "readonly": true, "requires_confirmation": false, "allowed": true },
+    "session_checkpoint": { "tier": "internal", "readonly": false, "requires_confirmation": false, "allowed": true },
+    "session_rem_sleep": { "tier": "internal", "readonly": false, "requires_confirmation": false, "allowed": true },
     "conversation_learning": { "tier": "internal", "readonly": false, "requires_confirmation": false, "allowed": true },
     "vector_memory": { "tier": "internal", "readonly": false, "requires_confirmation": false, "allowed": true },
     "swarm_orchestrator": { "tier": "internal", "readonly": false, "requires_confirmation": false, "allowed": true },

@@ -6,6 +6,7 @@ Permite ANA sa interactioneze cu CLI-ul AdaL (Sylph AI) pentru executie tactica.
 
 import subprocess
 import logging
+import shutil
 from typing import Dict, Any, List
 from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
 
@@ -35,7 +36,8 @@ class AdaLTool(Tool):
                     required=False
                 )
             ],
-            category="tactic"
+            category="tactic",
+            dangerous=True,
         )
     
     def execute(self, **kwargs) -> ToolResult:
@@ -43,6 +45,13 @@ class AdaLTool(Tool):
         task = kwargs.get("task")
         
         if operation == "version":
+            adal_path = shutil.which("adal")
+            if not adal_path:
+                return ToolResult(
+                    status=ToolStatus.SUCCESS,
+                    data={"available": False, "executable": None},
+                    message="AdaL CLI is not installed or not available in PATH.",
+                )
             return self._run_command(["adal", "--version"])
             
         elif operation == "web":
@@ -56,6 +65,11 @@ class AdaLTool(Tool):
         elif operation == "exec":
             if not task:
                 return ToolResult(status=ToolStatus.ERROR, error="Parametrul 'task' este obligatoriu pentru 'exec'")
+            if not shutil.which("adal"):
+                return ToolResult(
+                    status=ToolStatus.ERROR,
+                    error="AdaL CLI is not installed or not available in PATH.",
+                )
             
             # Rulam adal cu task-ul specificat ca lista pentru siguranta
             cmd_list = ["adal", "-q", task, "--allowed-tools", "*"]
@@ -65,12 +79,14 @@ class AdaLTool(Tool):
 
     def _run_command(self, cmd: Any) -> ToolResult:
         try:
+            if isinstance(cmd, list) and cmd:
+                cmd = [shutil.which(cmd[0]) or cmd[0], *cmd[1:]]
             # Rulam comanda si capturam output-ul
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                shell=True, # Necesar pe Windows pentru CLI-uri instalate prin npm
+                shell=False,
                 timeout=120
             )
             

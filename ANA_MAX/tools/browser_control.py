@@ -35,6 +35,13 @@ logger = logging.getLogger(__name__)
 class BrowserControlTool(Tool):
     """Open the local browser or inspect a page with a lightweight snapshot."""
 
+    @property
+    def run_in_worker_thread(self) -> bool:
+        # Playwright sync objects are thread-affine; keep persistent sessions on
+        # the registry caller thread so follow-up browser operations can reuse
+        # the same page without greenlet/thread errors.
+        return False
+
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="browser_control",

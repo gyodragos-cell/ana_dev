@@ -1,4 +1,4 @@
-"""
+﻿"""
 ANA MAX - Foreground UI Snapshot Tool
 ======================================
 "Ochii Structurali" - Fast, clean UI state for agents
@@ -27,7 +27,7 @@ class ForegroundUISnapshotTool(Tool):
     Tool pentru capturarea starii UI a ferestrei active.
     Returneaza JSON mic, curat, optimizat pentru agenti AI.
     """
-    
+
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="foreground_ui_snapshot",
@@ -54,14 +54,17 @@ class ForegroundUISnapshotTool(Tool):
     def execute(self, **kwargs) -> ToolResult:
         """Executa snapshot UI foreground."""
         try:
-            include_text = kwargs.get("include_text", "true").lower() == "true"
-            max_elements = int(kwargs.get("max_elements", "20"))
-            
+            include_text = kwargs.get("include_text", True)
+            if isinstance(include_text, str):
+                include_text = include_text.lower() == "true"
+
+            max_elements = int(kwargs.get("max_elements", 20))
+
             snapshot = self._capture_foreground_ui(
                 include_text=include_text,
                 max_elements=max_elements
             )
-            
+
             return ToolResult(
                 status=ToolStatus.SUCCESS,
                 data=snapshot,
@@ -80,60 +83,60 @@ class ForegroundUISnapshotTool(Tool):
         try:
             from pywinauto import Desktop
             from pywinauto import application
-            
+
             # Get foreground window
             desktop = Desktop(backend="uia")
             foreground = desktop.window(handle=self._get_foreground_window_handle())
-            
+
             if not foreground.exists():
                 fallback["reason"] = "No foreground window found through UIA"
                 return fallback
-            
+
             # Extract app info
             app_name = self._get_app_name(foreground)
             window_title = foreground.window_text()
-            
+
             # Get all visible controls
             controls = foreground.descendants()
-            
+
             # Categorize elements
             buttons = []
             inputs = []
             texts = []
             errors = []
             clickable = []
-            
+
             for ctrl in controls:
                 try:
                     ctrl_type = ctrl.element_info.control_type
                     ctrl_text = ctrl.window_text()
                     is_visible = ctrl.is_visible()
-                    
+
                     if not is_visible or not ctrl_text:
                         continue
-                    
+
                     # Categorize by type
                     if ctrl_type == "Button":
                         buttons.append(ctrl_text)
                         clickable.append({"type": "button", "name": ctrl_text, "action": "click"})
-                    
+
                     elif ctrl_type in ["Edit", "Document"]:
                         inputs.append({
                             "name": ctrl_text,
                             "type": "input",
                             "action": "type"
                         })
-                    
+
                     elif ctrl_type == "Text" and include_text:
                         texts.append(ctrl_text)
-                    
+
                     # Detect errors
                     if self._is_error_text(ctrl_text):
                         errors.append(ctrl_text)
-                        
+
                 except Exception:
                     continue
-            
+
             # Build clean snapshot
             snapshot = {
                 "active_app": app_name,
@@ -144,9 +147,9 @@ class ForegroundUISnapshotTool(Tool):
                 "detected_errors": errors,
                 "suggested_actions": self._suggest_actions(buttons, errors, inputs)
             }
-            
+
             return snapshot
-            
+
         except Exception as e:
             logger.error(f"UI capture error: {e}")
             fallback["reason"] = f"UIA error: {str(e)}"
@@ -215,14 +218,14 @@ class ForegroundUISnapshotTool(Tool):
             "not found", "permission denied", "access denied",
             "exception", "crash", "warning"
         ]
-        
+
         text_lower = text.lower()
         return any(keyword in text_lower for keyword in error_keywords)
 
     def _suggest_actions(self, buttons: List[str], errors: List[str], inputs: List[dict]) -> List[Dict[str, str]]:
         """Sugereaza actiuni bazate pe UI state."""
         actions = []
-        
+
         # If errors detected, suggest dismissal
         if errors:
             # Look for OK/Close/Dismiss buttons
@@ -234,7 +237,7 @@ class ForegroundUISnapshotTool(Tool):
                         "reason": f"Error detected: {errors[0][:50]}"
                     })
                     break
-        
+
         # If no errors, suggest common actions
         if not actions and buttons:
             # Suggest primary action buttons
@@ -247,7 +250,7 @@ class ForegroundUISnapshotTool(Tool):
                         "reason": "Primary action button"
                     })
                     break
-        
+
         return actions
 
     def _empty_snapshot(self, reason: str = "") -> Dict[str, Any]:

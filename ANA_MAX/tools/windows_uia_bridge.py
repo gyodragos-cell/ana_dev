@@ -1,5 +1,6 @@
-import logging
+﻿import logging
 import json
+import re
 import time
 import sys
 from typing import Dict, Any, List
@@ -58,7 +59,8 @@ class WindowsUiaBridgeTool(Tool):
                     required=False
                 )
             ],
-            category="desktop"
+            category="desktop",
+            dangerous=True,
         )
 
     def __init__(self):
@@ -82,10 +84,10 @@ class WindowsUiaBridgeTool(Tool):
                 error_msg += "Run 'pip install pywinauto' first."
             logger.error(error_msg)
             return ToolResult(
-                status=ToolStatus.ERROR, 
+                status=ToolStatus.ERROR,
                 error=error_msg
             )
-            
+
         action = kwargs.get("action")
         if action == "list_windows":
             return self._list_windows()
@@ -93,17 +95,17 @@ class WindowsUiaBridgeTool(Tool):
             return self._inspect_window(kwargs.get("window_title"))
         elif action == "click_element":
             return self._interact_element(
-                kwargs.get("window_title"), 
-                kwargs.get("element_title"), 
-                kwargs.get("auto_id"), 
+                kwargs.get("window_title"),
+                kwargs.get("element_title"),
+                kwargs.get("auto_id"),
                 kwargs.get("control_type"),
                 action="click"
             )
         elif action == "type_text":
             return self._interact_element(
-                kwargs.get("window_title"), 
-                kwargs.get("element_title"), 
-                kwargs.get("auto_id"), 
+                kwargs.get("window_title"),
+                kwargs.get("element_title"),
+                kwargs.get("auto_id"),
                 kwargs.get("control_type"),
                 action="type",
                 text=kwargs.get("text")
@@ -112,18 +114,37 @@ class WindowsUiaBridgeTool(Tool):
             return ToolResult(status=ToolStatus.ERROR, error=f"Actiune necunoscuta: {action}")
 
     def _list_windows(self) -> ToolResult:
-        import pywinauto
         try:
-            windows = pywinauto.Desktop(backend="uia").windows(visible_only=True)
             win_list = []
-            for w in windows:
-                title = w.window_text()
-                if title:
+            try:
+                import win32gui
+
+                def _collect(hwnd, _extra):
+                    if not win32gui.IsWindowVisible(hwnd):
+                        return
+                    title = win32gui.GetWindowText(hwnd)
+                    if not title:
+                        return
                     win_list.append({
                         "title": title,
-                        "class": w.class_name(),
-                        "handle": w.handle
+                        "class": win32gui.GetClassName(hwnd),
+                        "handle": hwnd
                     })
+
+                win32gui.EnumWindows(_collect, None)
+            except Exception:
+                import pywinauto
+
+                windows = pywinauto.Desktop(backend="win32").windows(visible_only=True)
+                for w in windows:
+                    title = w.window_text()
+                    if title:
+                        win_list.append({
+                            "title": title,
+                            "class": w.class_name(),
+                            "handle": w.handle
+                        })
+
             return ToolResult(
                 status=ToolStatus.SUCCESS,
                 data={"windows": win_list, "count": len(win_list)},
@@ -135,15 +156,15 @@ class WindowsUiaBridgeTool(Tool):
     def _inspect_window(self, title: str) -> ToolResult:
         if not title:
             return ToolResult(status=ToolStatus.ERROR, error="window_title este obligatoriu pentru inspect_window.")
-        
+
         import pywinauto
         try:
             app = pywinauto.Desktop(backend="uia")
-            wins = app.windows(title_re=f".*{title}.*", visible_only=True)
+            wins = app.windows(title_re=f".*{re.escape(title)}.*", visible_only=True)
             if not wins:
                 return ToolResult(status=ToolStatus.ERROR, error=f"Fereastra '{title}' nu a fost gasita.")
             win = wins[0]
-                
+
             elements = []
             for ctrl in win.descendants():
                 try:
@@ -158,7 +179,7 @@ class WindowsUiaBridgeTool(Tool):
                         })
                 except Exception:
                     pass
-                    
+
             return ToolResult(
                 status=ToolStatus.SUCCESS,
                 data={"window_title": win.window_text(), "elements": elements, "count": len(elements)},
@@ -170,7 +191,7 @@ class WindowsUiaBridgeTool(Tool):
     def _interact_element(self, win_title, elem_title, auto_id, ctrl_type, action="click", text="") -> ToolResult:
         if not win_title:
             return ToolResult(status=ToolStatus.ERROR, error="window_title este obligatoriu.")
-            
+
         if not elem_title and not auto_id:
             return ToolResult(status=ToolStatus.ERROR, error="Specifica element_title sau auto_id.")
 
@@ -179,17 +200,17 @@ class WindowsUiaBridgeTool(Tool):
             # Connect to the window using Application or Desktop
             app = pywinauto.Application(backend="uia")
             try:
-                app.connect(title_re=f".*{win_title}.*", visible_only=True, timeout=2)
+                app.connect(title_re=f".*{re.escape(win_title)}.*", visible_only=True, timeout=2)
             except Exception as e:
                 # Window not found - try to provide helpful error
                 logger.error(f"Fereastra '{win_title}' nu a fost gasita")
                 return ToolResult(status=ToolStatus.ERROR, error=f"Fereastra '{win_title}' nu a fost gasita. Verifica daca aplicatia ruleaza.")
-            
+
             # Get the main window
-            win = app.window(title_re=f".*{win_title}.*")
+            win = app.window(title_re=f".*{re.escape(win_title)}.*")
             if not win.exists(timeout=2):
                 return ToolResult(status=ToolStatus.ERROR, error=f"Fereastra '{win_title}' nu a fost gasita.")
-            
+
             search_args = {}
             if auto_id:
                 search_args["auto_id"] = auto_id
@@ -200,15 +221,18 @@ class WindowsUiaBridgeTool(Tool):
 
             # Find the control
             ctrl = win.child_window(**search_args)
-            if not ctrl.exists(timeout=2):
-                return ToolResult(status=ToolStatus.ERROR, error=f"Elementul {search_args} nu a fost gasit in fereastra.")
-                
+            # Ensure the control exists
+            try:
+                ctrl.wait('exists', timeout=2)
+            except Exception:
+                return ToolResult(status=ToolStatus.ERROR, error=f"Element {search_args} nu a fost gasit in fereastra.")
+
             if action == "click":
                 try:
                     # Try invoke() first (works better for UWP apps like Calculator)
                     ctrl.invoke()
                     logger.info(f"Invoke pe elementul '{elem_title or auto_id}'")
-                except Exception as e:
+                except Exception:
                     # Fallback to click_input() for Win32 apps
                     try:
                         ctrl.click_input()
@@ -216,7 +240,7 @@ class WindowsUiaBridgeTool(Tool):
                     except Exception as e2:
                         return ToolResult(status=ToolStatus.ERROR, error=f"Nu am putut da click: {e2}")
                 return ToolResult(
-                    status=ToolStatus.SUCCESS, 
+                    status=ToolStatus.SUCCESS,
                     message=f"Am dat click pe elementul '{elem_title or auto_id}'."
                 )
             elif action == "type":
@@ -224,7 +248,7 @@ class WindowsUiaBridgeTool(Tool):
                 import pywinauto.keyboard
                 pywinauto.keyboard.send_keys(text, with_spaces=True)
                 return ToolResult(
-                    status=ToolStatus.SUCCESS, 
+                    status=ToolStatus.SUCCESS,
                     message=f"Am scris textul in elementul '{elem_title or auto_id}'."
                 )
         except Exception as e:

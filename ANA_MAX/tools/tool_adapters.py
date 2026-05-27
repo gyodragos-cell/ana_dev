@@ -276,7 +276,5 @@ ANA_ADAPTER_CLASSES = [
     MemoryCortexAdapter,
     AnaOrchestratorAdapter,
     ContextBridgeAdapter,
-    WindowManagerAdapter,
     ClipboardManagerAdapter,
-    OcrToolAdapter,
 ]

@@ -12,6 +12,8 @@ import win32con
 import win32api
 from typing import Dict, Any
 
+from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,17 +69,23 @@ def _focus_window(args: Dict[str, Any]) -> Dict[str, Any]:
     """Focus a window by title."""
     try:
         title = args.get("title", "")
+        if not title:
+            return {"status": "error", "error": "title is required"}
+        found = {"value": False}
         
         def callback(hwnd, extra):
             if win32gui.IsWindowVisible(hwnd):
                 window_title = win32gui.GetWindowText(hwnd)
                 if title.lower() in window_title.lower():
-                    win32gui.SetForegroundWindow(hwnd)
                     win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                    win32gui.SetForegroundWindow(hwnd)
+                    found["value"] = True
                     return False
             return True
         
         win32gui.EnumWindows(callback, None)
+        if not found["value"]:
+            return {"status": "error", "error": f"Window not found: {title}"}
         
         return {
             "status": "success",
@@ -92,6 +100,8 @@ def _snap_window(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         title = args.get("title", "")
         position = args.get("position", "left")
+        if not title:
+            return {"status": "error", "error": "title is required"}
         
         # Get screen dimensions
         screen_width = win32api.GetSystemMetrics(0)
@@ -110,15 +120,20 @@ def _snap_window(args: Dict[str, Any]) -> Dict[str, Any]:
             return {"status": "error", "error": f"Invalid position: {position}"}
         
         # Find and snap window
+        found = {"value": False}
+
         def callback(hwnd, extra):
             if win32gui.IsWindowVisible(hwnd):
                 window_title = win32gui.GetWindowText(hwnd)
                 if title.lower() in window_title.lower():
                     win32gui.MoveWindow(hwnd, x, y, width, height, True)
+                    found["value"] = True
                     return False
             return True
         
         win32gui.EnumWindows(callback, None)
+        if not found["value"]:
+            return {"status": "error", "error": f"Window not found: {title}"}
         
         return {
             "status": "success",
@@ -175,16 +190,22 @@ def _minimize_window(args: Dict[str, Any]) -> Dict[str, Any]:
     """Minimize a window."""
     try:
         title = args.get("title", "")
+        if not title:
+            return {"status": "error", "error": "title is required"}
+        found = {"value": False}
         
         def callback(hwnd, extra):
             if win32gui.IsWindowVisible(hwnd):
                 window_title = win32gui.GetWindowText(hwnd)
                 if title.lower() in window_title.lower():
                     win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+                    found["value"] = True
                     return False
             return True
         
         win32gui.EnumWindows(callback, None)
+        if not found["value"]:
+            return {"status": "error", "error": f"Window not found: {title}"}
         
         return {"status": "success", "message": f"Window '{title}' minimized"}
     except Exception as e:
@@ -195,16 +216,22 @@ def _maximize_window(args: Dict[str, Any]) -> Dict[str, Any]:
     """Maximize a window."""
     try:
         title = args.get("title", "")
+        if not title:
+            return {"status": "error", "error": "title is required"}
+        found = {"value": False}
         
         def callback(hwnd, extra):
             if win32gui.IsWindowVisible(hwnd):
                 window_title = win32gui.GetWindowText(hwnd)
                 if title.lower() in window_title.lower():
                     win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+                    found["value"] = True
                     return False
             return True
         
         win32gui.EnumWindows(callback, None)
+        if not found["value"]:
+            return {"status": "error", "error": f"Window not found: {title}"}
         
         return {"status": "success", "message": f"Window '{title}' maximized"}
     except Exception as e:
@@ -215,17 +242,46 @@ def _close_window(args: Dict[str, Any]) -> Dict[str, Any]:
     """Close a window."""
     try:
         title = args.get("title", "")
+        if not title:
+            return {"status": "error", "error": "title is required"}
+        found = {"value": False}
         
         def callback(hwnd, extra):
             if win32gui.IsWindowVisible(hwnd):
                 window_title = win32gui.GetWindowText(hwnd)
                 if title.lower() in window_title.lower():
                     win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+                    found["value"] = True
                     return False
             return True
         
         win32gui.EnumWindows(callback, None)
+        if not found["value"]:
+            return {"status": "error", "error": f"Window not found: {title}"}
         
         return {"status": "success", "message": f"Window '{title}' closed"}
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+class WindowManagerTool(Tool):
+    """Standard Tool wrapper for native Win32 window management."""
+
+    def get_definition(self) -> ToolDefinition:
+        return ToolDefinition(
+            name="window_manager",
+            description="Window management: list, snap, tile, focus, minimize, maximize, close windows.",
+            parameters=[
+                ToolParameter("action", "Action to perform", "string", True, choices=["list", "snap", "tile", "focus", "minimize", "maximize", "close"]),
+                ToolParameter("title", "Partial window title", "string", False),
+                ToolParameter("position", "Snap position", "string", False, choices=["left", "right", "top", "bottom"]),
+                ToolParameter("layout", "Tile layout", "string", False, choices=["grid", "horizontal", "vertical"]),
+            ],
+            category="desktop",
+        )
+
+    def execute(self, **kwargs: Any) -> ToolResult:
+        result = run(kwargs)
+        if result.get("status") == "success":
+            return ToolResult(status=ToolStatus.SUCCESS, data=result, message=result.get("message", "Window action complete"))
+        return ToolResult(status=ToolStatus.ERROR, error=result.get("error", "Window action failed"), data=result)

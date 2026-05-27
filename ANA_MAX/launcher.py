@@ -1,6 +1,6 @@
 """
 ANA MAX Launcher — Pornire sigura cu verificare integritate si auto-recovery.
-Ruleaza: python launcher.py [--port 8765] [--host 127.0.0.1] [--admin]
+Ruleaza: python launcher.py [--port 8766] [--host 127.0.0.1] [--admin]
 """
 
 import sys, os, json, time, subprocess, signal, socket, tempfile, shutil
@@ -9,7 +9,7 @@ from typing import Optional
 
 BASE_DIR = Path(__file__).parent.resolve()
 LOG_DIR = BASE_DIR / "logs"
-PORT = 8765
+PORT = 8766
 HOST = "127.0.0.1"
 SERVER_SCRIPT = BASE_DIR / "main.py"
 VENV_PYTHON = BASE_DIR / "venv" / "Scripts" / "python.exe"
@@ -96,7 +96,7 @@ def _kill_port(port: int):
             pass
 
 
-def _health_check(timeout: int = HEALTH_TIMEOUT) -> bool:
+def _mcp_tools_list(timeout: int = HEALTH_TIMEOUT) -> Optional[list[dict]]:
     import urllib.request
     payload = json.dumps({
         "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}
@@ -112,11 +112,105 @@ def _health_check(timeout: int = HEALTH_TIMEOUT) -> bool:
             )
             with urllib.request.urlopen(req, timeout=3) as resp:
                 data = json.loads(resp.read())
-                if "result" in data:
-                    return True
+                tools = data.get("result", {}).get("tools")
+                if isinstance(tools, list):
+                    return tools
         except Exception:
             time.sleep(1)
-    return False
+    return None
+
+
+def _mcp_call(tool: str, arguments: dict, timeout: int = HEALTH_TIMEOUT) -> Optional[dict]:
+    import urllib.request
+    payload = json.dumps({
+        "jsonrpc": "2.0",
+        "id": int(time.time() * 1000) % 100000,
+        "method": "tools/call",
+        "params": {"name": tool, "arguments": arguments},
+    }).encode()
+    try:
+        req = urllib.request.Request(
+            f"http://{HOST}:{PORT}/mcp",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+            text = data.get("result", {}).get("content", [{}])[0].get("text", "")
+            parsed = json.loads(text)
+            return parsed if isinstance(parsed, dict) else None
+    except Exception:
+        return None
+
+
+def _smart_readiness(timeout: int = HEALTH_TIMEOUT) -> tuple[bool, str]:
+    tools = _mcp_tools_list(timeout=timeout)
+    if tools is None:
+        return False, "tools/list unavailable"
+
+    names = {str(tool.get("name")) for tool in tools if isinstance(tool, dict)}
+    if "tool_router" not in names:
+        return False, "tool_router missing from tools/list"
+    if "agent_coach" not in names:
+        return False, "agent_coach missing from tools/list"
+
+    agent_schema = next((tool for tool in tools if tool.get("name") == "agent_coach"), {})
+    actions = (
+        agent_schema.get("inputSchema", {})
+        .get("properties", {})
+        .get("action", {})
+        .get("enum", [])
+    )
+    if "recommend" not in actions:
+        return False, "agent_coach action=recommend missing from schema"
+
+    router = _mcp_call(
+        "tool_router",
+        {
+            "task": "MCP tool failed with schema mismatch action versus operation",
+            "error": "Invalid value for operation",
+            "max_tools": 4,
+        },
+        timeout=timeout,
+    )
+    router_data = router.get("data", {}) if isinstance(router, dict) else {}
+    if not (router and router.get("success") and router_data.get("recommended_tools")):
+        return False, "tool_router call did not return recommendations"
+
+    coach = _mcp_call(
+        "agent_coach",
+        {
+            "action": "recommend",
+            "task": "MCP tool failed with schema mismatch action versus operation",
+            "error": "Invalid value for operation",
+            "max_tools": 5,
+            "include_prompt": False,
+        },
+        timeout=timeout,
+    )
+    coach_data = coach.get("data", {}) if isinstance(coach, dict) else {}
+    if not (
+        coach
+        and coach.get("success")
+        and coach_data.get("schema") == "ana.agent_coach.recommend.v1"
+        and coach_data.get("primary_tool")
+    ):
+        return False, "agent_coach action=recommend did not return primary_tool"
+
+    return True, f"smart ready: {len(tools)} tools, primary={coach_data.get('primary_tool')}"
+
+
+def _health_check(timeout: int = HEALTH_TIMEOUT) -> bool:
+    ok, _message = _smart_readiness(timeout=timeout)
+    return ok
+
+
+def _tool_count(timeout: int = 3) -> Optional[int]:
+    tools = _mcp_tools_list(timeout=timeout)
+    if tools is None:
+        return None
+    return len(tools)
 
 
 def _load_state() -> dict:
@@ -171,6 +265,7 @@ def start_server(python_exe: Path, port: int = PORT, host: str = HOST,
 
 
 def main():
+    global HOST, PORT
     port = PORT
     host = HOST
     admin = False
@@ -184,6 +279,9 @@ def main():
             port = int(arg.split("=")[1])
         elif arg.startswith("--host="):
             host = arg.split("=")[1]
+
+    PORT = port
+    HOST = host
 
     _log("=== ANA MAX Launcher ===")
     state = _load_state()
@@ -217,12 +315,17 @@ def main():
         if not _port_free(port):
             # Maybe it's our own server (elevated from UAC)?
             _log("Port ocupat. Verific daca e un server ANA MAX functional...")
-            if _health_check(timeout=5):
+            ready, ready_message = _smart_readiness(timeout=5)
+            if ready:
                 _log(f"Server ANA MAX deja activ la http://{host}:{port}")
+                _log(f"  {ready_message}")
+                count = _tool_count()
+                if count is not None:
+                    _log(f"  Tool-uri disponibile: {count}")
                 sys.exit(0)
             # Not our server, give up
             _log(f"Port {port} e ocupat de alt proces si nu poate fi oprit (posibil system/elevated).")
-            _log("Ruleaza ca ADMINISTRATOR: taskkill /F /PID (gaseste PID cu: netstat -ano | findstr :8765)")
+            _log(f"Ruleaza ca ADMINISTRATOR: taskkill /F /PID (gaseste PID cu: netstat -ano | findstr :{port})")
             sys.exit(1)
     _log(f"  Port {port} liber")
 
@@ -242,8 +345,10 @@ def main():
         if admin and not ctypes.windll.shell32.IsUserAnAdmin():
             # Admin mode via UAC: user must accept the dialog manually
             _log("  Astept acceptarea dialogului UAC (max 60s)...")
-            if _health_check(timeout=60):
+            ready, ready_message = _smart_readiness(timeout=60)
+            if ready:
                 _log("Server pornit cu succes (UAC elevation)! Health-check: OK")
+                _log(f"  {ready_message}")
             else:
                 _log("  Serverul nu a pornit. Ruleaza manual ca Administrator:")
                 _log(f"    {python_exe} {SERVER_SCRIPT} --port {port}")
@@ -254,14 +359,20 @@ def main():
             _log(f"\n  ANA MAX ruleaza la http://{host}:{port} (ADMIN)")
             return
 
-        if _health_check(timeout=HEALTH_TIMEOUT):
-            _log("Server pornit cu succes! Health-check: OK")
+        ready, ready_message = _smart_readiness(timeout=HEALTH_TIMEOUT)
+        if ready:
+            _log("Server pornit cu succes! Smart readiness: OK")
+            _log(f"  {ready_message}")
             state["last_ok"] = time.time()
             state["retries"] = 0
             _save_state(state)
 
             _log(f"\n  ANA MAX ruleaza la http://{host}:{port}")
-            _log(f"  Tool-uri disponibile: 46+")
+            count = _tool_count()
+            if count is not None:
+                _log(f"  Tool-uri disponibile: {count}")
+            else:
+                _log("  Tool-uri disponibile: health-check OK, count indisponibil")
             return
 
         _log(f"  Serverul nu raspunde. Incerc din nou...")

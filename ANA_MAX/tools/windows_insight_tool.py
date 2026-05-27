@@ -1,4 +1,4 @@
-"""
+﻿"""
 ANA MAX - Windows Insight Tool (God View Prototype)
 ===================================================
 Monitorizare in timp real a evenimentelor de sistem Windows (File I/O, Processes).
@@ -6,6 +6,8 @@ Foloseste PowerShell pentru a obtine acces la nivel de kernel/OS.
 """
 
 import os
+import json
+import re
 import subprocess
 import threading
 import queue
@@ -40,7 +42,8 @@ class WindowsInsightTool(Tool):
                     required=False
                 )
             ],
-            category="system_intelligence"
+            category="system_intelligence",
+            dangerous=True,
         )
 
     def execute(self, operation: str, path: Optional[str] = None, **kwargs) -> ToolResult:
@@ -55,7 +58,7 @@ class WindowsInsightTool(Tool):
                 return self._system_snapshot()
             if operation == "trace_process":
                 return self._trace_process(target=kwargs.get("target"))
-            
+
             return ToolResult(status=ToolStatus.ERROR, error=f"Operatie necunoscuta: {operation}")
         except Exception as e:
             return ToolResult(status=ToolStatus.ERROR, error=str(e))
@@ -67,7 +70,7 @@ class WindowsInsightTool(Tool):
         self._stop_event.clear()
         self._monitor_thread = threading.Thread(target=self._ps_monitor_loop, args=(path,), daemon=True)
         self._monitor_thread.start()
-        
+
         return ToolResult(status=ToolStatus.SUCCESS, message=f"God View activat pe calea: {path}")
 
     def _stop_monitor(self) -> ToolResult:
@@ -78,7 +81,7 @@ class WindowsInsightTool(Tool):
         events = []
         while not self._event_queue.empty():
             events.append(self._event_queue.get())
-        
+
         return ToolResult(
             status=ToolStatus.SUCCESS,
             data={"events": events, "count": len(events)},
@@ -87,9 +90,10 @@ class WindowsInsightTool(Tool):
 
     def _ps_monitor_loop(self, path: str):
         """Bucla PowerShell care urmareste: Fisiere si Procese."""
-        ps_script = fr"""
-        $path = "{path}"
-        
+        ps_path = json.dumps(str(path))
+        ps_script = rf"""
+        $path = {ps_path}
+
         # 1. File Watcher
         $watcher = New-Object System.IO.FileSystemWatcher
         $watcher.Path = $path
@@ -120,13 +124,13 @@ class WindowsInsightTool(Tool):
         $regWatcher = New-Object System.IO.FileSystemWatcher # Folosim o metoda alternativa pentru Reg daca e nevoie, dar aici testam detectia WMI
         # Nota: WMI pentru Reg este mai complex, vom folosi un poll rapid pentru acest test
         $lastVal = (Get-ItemProperty $regPath).AppsUseLightTheme
-        
+
         # 4. Clipboard Monitor
         $lastClip = ""
         try {{
             $lastClip = Get-Clipboard -ErrorAction SilentlyContinue
         }} catch {{}}
-        
+
         while ($true) {{
             try {{
                 $currentClip = Get-Clipboard -ErrorAction SilentlyContinue
@@ -138,7 +142,7 @@ class WindowsInsightTool(Tool):
                     $lastClip = $currentClip
                 }}
             }} catch {{}}
-            
+
             # 3. Registry Monitor (Example: Personalization settings)
             $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
             $currentVal = (Get-ItemProperty $regPath).AppsUseLightTheme
@@ -148,11 +152,11 @@ class WindowsInsightTool(Tool):
                 Write-Host "EVENT|REG|$time|CHANGE|Windows Theme changed to $mode"
                 $lastVal = $currentVal
             }}
-            
+
             Start-Sleep -Seconds 1
         }}
         """
-        
+
         process = subprocess.Popen(
             ["powershell", "-Command", ps_script],
             stdout=subprocess.PIPE,
@@ -166,17 +170,17 @@ class WindowsInsightTool(Tool):
                 if self._stop_event.is_set():
                     process.terminate()
                     break
-                
+
                 if line.startswith("EVENT|"):
                     logger.info(line.strip())
                     parts = line.strip().split("|")
                     if len(parts) >= 5:
                         cat, etype, details = parts[1], parts[3], parts[4]
-                        
+
                         # Logica de Gamification / Quests
                         if "error" in details.lower() or "failed" in details.lower():
-                            logger.info(f"EVENT|QUEST|{parts[2]}|MISSION|🛡️ NEW QUEST: Analizeaza si repara {details[:30]}...")
-                        
+                            logger.info(f"EVENT|QUEST|{parts[2]}|MISSION|ðŸ›¡ï¸ NEW QUEST: Analizeaza si repara {details[:30]}...")
+
                         event_data = {
                             "category": cat,
                             "time": parts[2],
@@ -195,7 +199,10 @@ class WindowsInsightTool(Tool):
 
     def _trace_process(self, target: str) -> ToolResult:
         """Trace detaliat pe un singur proces."""
-        if not target: return ToolResult(status=ToolStatus.ERROR, error="Target process missing")
+        if not target:
+            return ToolResult(status=ToolStatus.ERROR, error="Target process missing")
+        if not re.fullmatch(r"[\w.-]+", target):
+            return ToolResult(status=ToolStatus.ERROR, error="Invalid process name")
         ps_cmd = f"Get-Process -Name {target} | Select-Object * | ConvertTo-Json"
         result = subprocess.run(["powershell", "-Command", ps_cmd], capture_output=True, text=True)
         return ToolResult(status=ToolStatus.SUCCESS, data=result.stdout, message=f"Trace complet pe {target}")

@@ -8,8 +8,12 @@ This module is intentionally lazy: importing it must not start speech.
 from __future__ import annotations
 
 import logging
+import subprocess
 import threading
 import time
+import atexit
+import tempfile
+from pathlib import Path
 
 import pyttsx3
 
@@ -21,6 +25,7 @@ logging.getLogger("comtypes").setLevel(logging.WARNING)
 _engine = None
 _engine_lock = threading.Lock()
 _enabled = True
+_pyttsx3_broken = False
 
 
 def _create_engine(rate: int = 150, volume: float = 0.7):
@@ -37,14 +42,52 @@ def _create_engine(rate: int = 150, volume: float = 0.7):
     return engine
 
 
+def _speak_with_system_speech(text: str, rate: int = 0, volume: int = 80):
+    """Speak through .NET System.Speech when pyttsx3/SAPI COM is unavailable."""
+    if not text:
+        return
+
+    voice_dir = Path.cwd() / "voice_temp"
+    voice_dir.mkdir(exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".txt", encoding="utf-8", dir=voice_dir) as handle:
+        handle.write(text)
+        temp_path = Path(handle.name)
+
+    literal_path = str(temp_path).replace("'", "''")
+    command = (
+        "Add-Type -AssemblyName System.Speech; "
+        f"$path = '{literal_path}'; "
+        "$text = Get-Content -Raw -LiteralPath $path; "
+        "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+        f"$s.Rate = {int(rate)}; "
+        f"$s.Volume = {int(volume)}; "
+        "$s.Speak($text); "
+        "$s.Dispose(); "
+        "Remove-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue"
+    )
+    subprocess.Popen(
+        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW,
+    )
+
+
 def get_engine():
     """Return the shared pyttsx3 engine, creating it on first use."""
-    global _engine
+    global _engine, _pyttsx3_broken
+    if _pyttsx3_broken:
+        raise RuntimeError("pyttsx3 is unavailable in this session")
     if _engine is None:
         with _engine_lock:
             if _engine is None:
-                _engine = _create_engine()
-                logger.info("Live voice bridge initialized")
+                try:
+                    _engine = _create_engine()
+                except Exception:
+                    _pyttsx3_broken = True
+                    raise
+        logger.info("Live voice bridge initialized")
+        atexit.register(_engine.stop)
     return _engine
 
 
@@ -53,14 +96,23 @@ class LiveVoiceBridge:
 
     def __init__(self, rate: int = 150, volume: float = 0.7):
         self.enabled = True
-        self.engine = _create_engine(rate=rate, volume=volume)
+        self.rate = rate
+        self.volume = volume
+        try:
+            self.engine = _create_engine(rate=rate, volume=volume)
+        except Exception as exc:
+            logger.warning("pyttsx3 engine unavailable, using System.Speech fallback: %s", exc)
+            self.engine = None
 
     def speak(self, text: str):
         if not self.enabled or not text:
             return
         with _engine_lock:
-            self.engine.say(text)
-            self.engine.runAndWait()
+            if self.engine is not None:
+                self.engine.say(text)
+                self.engine.runAndWait()
+            else:
+                _speak_with_system_speech(text, rate=0, volume=int(self.volume * 100))
 
     def enable(self):
         self.enabled = True
@@ -79,14 +131,24 @@ def speak(text: str):
     if not _enabled or not text:
         return
 
+    global _pyttsx3_broken
+    if _pyttsx3_broken:
+        _speak_with_system_speech(text)
+        return
+
     try:
         engine = get_engine()
         with _engine_lock:
             engine.say(text)
             engine.runAndWait()
     except Exception as exc:
-        logger.warning("Voice speak failed: %s", exc)
-        print(f"Voice error: {exc}")
+        _pyttsx3_broken = True
+        logger.warning("pyttsx3 voice failed, using System.Speech fallback: %s", exc)
+        try:
+            _speak_with_system_speech(text)
+        except Exception as fallback_exc:
+            logger.warning("Voice fallback failed: %s", fallback_exc)
+            print(f"Voice error: {fallback_exc}")
 
 
 def speak_async(text: str):

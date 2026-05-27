@@ -1,4 +1,4 @@
-"""
+﻿"""
 ANA MAX - Edge TTS Voice Tool (experimental)
 
 Natural local voice feedback for ANA MAX tests.
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import subprocess
 import threading
 import time
@@ -17,6 +18,9 @@ from typing import Optional
 from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
 
 logger = logging.getLogger(__name__)
+logging.getLogger("comtypes").setLevel(logging.WARNING)
+logging.getLogger("comtypes.client").setLevel(logging.WARNING)
+logging.getLogger("comtypes.client._code_cache").setLevel(logging.WARNING)
 
 try:
     import edge_tts
@@ -60,9 +64,11 @@ class EdgeTTSVoice(Tool):
         self.rate = rate
         self.volume = volume
         self.use_edge_tts = use_edge_tts
-        self._tts_engine = None
+
         self._temp_dir = Path.cwd() / "voice_temp"
         self._temp_dir.mkdir(exist_ok=True)
+        self._tts_engine = None
+        self._pyttsx3_available = False
 
         if not use_edge_tts:
             self._init_pyttsx3(rate=rate, volume=volume)
@@ -80,9 +86,11 @@ class EdgeTTSVoice(Tool):
                     break
             self._tts_engine.setProperty("rate", rate)
             self._tts_engine.setProperty("volume", volume)
+            self._pyttsx3_available = True
         except Exception as exc:
-            logger.warning("pyttsx3 not available: %s", exc)
-            self.enabled = False
+            self._tts_engine = None
+            self._pyttsx3_available = False
+            logger.debug("pyttsx3 unavailable; live voice fallback will be used: %s", exc)
 
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
@@ -184,12 +192,25 @@ class EdgeTTSVoice(Tool):
             self._speak_realtime(text)
 
     def _speak_realtime(self, text: str):
+        # Threadâ€‘local engine: create, use, and stop per call
         try:
-            if self._tts_engine:
-                self._tts_engine.say(text)
-                self._tts_engine.runAndWait()
+            import pyttsx3
+            engine = pyttsx3.init()
+            engine.setProperty('rate', self.rate)
+            engine.setProperty('volume', self.volume)
+            # Select voice if available
+            voices = engine.getProperty('voices') or []
+            for v in voices:
+                if 'Zira' in v.name:
+                    engine.setProperty('voice', v.id)
+                    break
+            engine.say(text)
+            engine.runAndWait()
+            engine.stop()
         except Exception as exc:
-            logger.warning("Voice speak error: %s", exc)
+            logger.debug("pyttsx3 realtime fallback failed: %s", exc)
+        except Exception as exc:
+            logger.debug("Voice fallback failed: %s", exc)
 
     def _speak_text(self, text: str, voice: str):
         try:
@@ -207,11 +228,7 @@ class EdgeTTSVoice(Tool):
 
     def _play_audio(self, file_path: str):
         try:
-            subprocess.Popen(
-                ["start", "", file_path],
-                shell=True,
-                creationflags=subprocess.CREATE_NO_WINDOW,
-            )
+            os.startfile(file_path)  # type: ignore[attr-defined]
             time.sleep(5)
         except Exception as exc:
             logger.warning("Failed to play audio: %s", exc)

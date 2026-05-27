@@ -1,4 +1,4 @@
-"""
+﻿"""
 Frida Automation Tool - Dynamic Instrumentation
 Author: ANA_MAX
 Date: 2026-05-12
@@ -19,11 +19,8 @@ Requires: pip install frida
 
 from __future__ import annotations
 
-import subprocess
-import json
-import re
-import os
 import logging
+import time
 from typing import Optional, List, Dict, Any
 
 from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus
@@ -32,51 +29,26 @@ logger = logging.getLogger(__name__)
 
 
 class FridaTool(Tool):
-    """Tool pentru instrumentare dinamica cu Frida."""
+    """Tool pentru instrumentare dinamica cu Frida folosind API-ul nativ Python."""
 
     def __init__(self) -> None:
-        self._current_session: Optional[str] = None
-        self._frida_path = self._find_frida()
+        self._current_session: Optional[Any] = None
 
-    def _find_frida(self) -> str:
-        """Verifica daca Frida e instalat."""
-        paths = [
-            "frida",
-            os.path.expandvars("%APPDATA%\\Python\\Python312\\Scripts\\frida.exe"),
-            os.path.expandvars("%LOCALAPPDATA%\\Python\\Python312\\Scripts\\frida.exe"),
-            "C:\\Program Files\\Python312\\Scripts\\frida.exe"
-        ]
-        for p in paths:
+    def _get_device(self, device_id: str = "") -> Any:
+        """Obtine un device Frida dupa ID sau tip."""
+        import frida
+        device_manager = frida.get_device_manager()
+        if device_id:
             try:
-                result = subprocess.run([p, "--version"], capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    return p
-            except Exception as e:
-                continue
-        return "frida"  # Fallback
-
-    def _run_frida_tool(self, tool_name: str, args: List[str], timeout: int = 30) -> tuple[int, str, str]:
-        """Ruleaza un tool din frida-tools via python -m."""
-        try:
-            # Use the current Python executable (from venv if active)
-            import sys
-            python_exe = sys.executable
-            
-            result = subprocess.run(
-                [python_exe, "-m", f"frida_tools.{tool_name}"] + args,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                encoding="utf-8",
-                errors="replace"
-            )
-            return result.returncode, result.stdout, result.stderr
-        except subprocess.TimeoutExpired:
-            return -1, "", "Command timeout"
-        except FileNotFoundError:
-            return -1, "", "Frida not installed. Run: pip install frida-tools"
-        except Exception as e:
-            return -1, "", str(e)
+                return device_manager.get_device(device_id)
+            except Exception:
+                if device_id.lower() == "usb":
+                    return frida.get_usb_device()
+                elif device_id.lower() == "local":
+                    return frida.get_local_device()
+                raise
+        else:
+            return frida.get_local_device()
 
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
@@ -185,15 +157,15 @@ class FridaTool(Tool):
 
     def _version(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Verifica versiunea Frida."""
-        returncode, stdout, stderr = self._run_frida_tool("frida", ["--version"], timeout)
-        
-        if returncode == 0:
+        try:
+            import frida
+            v = frida.__version__
             return ToolResult(
                 status=ToolStatus.SUCCESS,
-                data={"version": stdout.strip()},
-                message=f"Frida {stdout.strip()}"
+                data={"version": v},
+                message=f"Frida {v}"
             )
-        else:
+        except ImportError:
             return ToolResult(
                 status=ToolStatus.ERROR,
                 error="Frida not installed. Run: pip install frida-tools"
@@ -201,63 +173,51 @@ class FridaTool(Tool):
 
     def _devices(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Listeaza dispozitivele Frida."""
-        returncode, stdout, stderr = self._run_frida_tool("ls_devices", [], timeout)
-        
-        if returncode == 0:
-            devices = []
-            for line in stdout.split("\n"):
-                if line.strip() and not line.startswith("Proxies"):
-                    match = re.match(r'(USB|Local).*?(\w+)', line)
-                    if match:
-                        devices.append(match.group(2))
-            
+        try:
+            import frida
+            device_manager = frida.get_device_manager()
+            devices = device_manager.enumerate_devices()
+            device_ids = [d.id for d in devices]
+            device_info = [{"id": d.id, "name": d.name, "type": d.type} for d in devices]
+
+            raw_lines = ["%-16s %-16s %-16s" % ("Id", "Name", "Type")]
+            for d in devices:
+                raw_lines.append("%-16s %-16s %-16s" % (d.id, d.name, d.type))
+            raw_output = "\n".join(raw_lines)
+
             return ToolResult(
                 status=ToolStatus.SUCCESS,
-                data={"count": len(devices), "devices": devices, "raw": stdout},
+                data={"count": len(devices), "devices": device_ids, "details": device_info, "raw": raw_output},
                 message=f"Gasite {len(devices)} dispozitive"
             )
-        else:
-            return ToolResult(status=ToolStatus.ERROR, error=stderr)
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=str(e))
 
     def _list_processes(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Listeaza procesele in curs de executie."""
-        device_arg = ["-D", device] if device else []
-        returncode, stdout, stderr = self._run_frida_tool("ps", device_arg, timeout)
-        
-        if returncode != 0:
-            return ToolResult(status=ToolStatus.ERROR, error=stderr or "List processes failed")
+        try:
+            dev = self._get_device(device)
+            processes = dev.enumerate_processes()
+            process_list = [{"pid": p.pid, "name": p.name} for p in processes]
 
-        processes = []
-        for line in stdout.split("\n"):
-            line = line.strip()
-            if line and not line.startswith("Process"):
-                parts = line.split()
-                if len(parts) >= 2 and parts[0].isdigit():
-                    processes.append({
-                        "pid": parts[0],
-                        "name": parts[1] if len(parts) > 1 else "unknown"
-                    })
-
-        return ToolResult(
-            status=ToolStatus.SUCCESS,
-            data={"count": len(processes), "processes": processes[:50]},
-            message=f"Gasite {len(processes)} procese"
-        )
+            return ToolResult(
+                status=ToolStatus.SUCCESS,
+                data={"count": len(process_list), "processes": process_list[:50]},
+                message=f"Gasite {len(process_list)} procese"
+            )
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=str(e))
 
     def _attach(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Ataseaza la un proces."""
         if not target:
             return ToolResult(status=ToolStatus.ERROR, error="Target (PID sau nume) este obligatoriu")
 
-        # Use frida repl for attaching
-        import sys
-        python_exe = sys.executable
-        
         try:
-            import frida
-            # Use Python API directly - frida.attach() returns a Session
-            session = frida.attach(int(target) if target.isdigit() else target)
-            
+            dev = self._get_device(device)
+            session = dev.attach(int(target) if target.isdigit() else target)
+            self._current_session = session
+
             return ToolResult(
                 status=ToolStatus.SUCCESS,
                 data={"session_id": str(id(session)), "target": target},
@@ -271,21 +231,18 @@ class FridaTool(Tool):
         if not pkg:
             return ToolResult(status=ToolStatus.ERROR, error="Package name este obligatoriu")
 
-        device_arg = ["-D", device] if device else ["-f"]
-        returncode, stdout, stderr = self._run_frida_tool("frida", device_arg + [pkg], timeout)
-        
-        if returncode == 0:
-            # Extract PID from output
-            match = re.search(r'pid=(\d+)', stdout)
-            pid = match.group(1) if match else "unknown"
-            
+        try:
+            dev = self._get_device(device)
+            pid = dev.spawn([pkg])
+            dev.resume(pid)
+
             return ToolResult(
                 status=ToolStatus.SUCCESS,
-                data={"package": pkg, "pid": pid, "output": stdout[:500]},
+                data={"package": pkg, "pid": pid},
                 message=f"Spawned {pkg} (PID: {pid})"
             )
-        else:
-            return ToolResult(status=ToolStatus.ERROR, error=f"Spawn failed: {stderr}")
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=f"Spawn failed: {str(e)}")
 
     def _inject(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Injecteaza script JavaScript."""
@@ -293,62 +250,85 @@ class FridaTool(Tool):
             return ToolResult(status=ToolStatus.ERROR, error="Script JS este obligatoriu")
 
         if not target:
-            return ToolResult(status=ToolStatus.ERROR, error="Target (PID) este obligatoriu")
+            return ToolResult(status=ToolStatus.ERROR, error="Target (PID sau nume) este obligatoriu")
 
-        # Create temporary script file
-        script_path = "frida_temp_script.js"
         try:
-            with open(script_path, "w", encoding="utf-8") as f:
-                f.write(script)
+            dev = self._get_device(device)
+            session = dev.attach(int(target) if target.isdigit() else target)
+            script_obj = session.create_script(script)
 
-            device_arg = ["-D", device] if device else []
-            returncode, stdout, stderr = self._run_frida_tool(
-                "frida",
-                device_arg + ["-p", target, "-l", script_path], 
-                timeout
-            )
+            messages = []
+            errors = []
+
+            def on_message(message, data):
+                if message['type'] == 'send':
+                    messages.append(message['payload'])
+                elif message['type'] == 'error':
+                    errors.append(message['stack'])
+
+            script_obj.on('message', on_message)
+            script_obj.load()
+
+            # Asteptam scurt pentru a colecta mesaje (default 1s sau 10% din timeout)
+            wait_sec = min(max(timeout / 10.0, 1.0), 5.0)
+            time.sleep(wait_sec)
+
+            script_obj.unload()
+            session.detach()
+
+            if errors:
+                return ToolResult(
+                    status=ToolStatus.ERROR,
+                    error="\n".join(errors),
+                    data={"messages": messages}
+                )
 
             return ToolResult(
-                status=ToolStatus.SUCCESS if returncode == 0 else ToolStatus.ERROR,
-                data={"target": target, "script_file": script_path, "output": stdout[:1000]},
-                message="Script injectat" if returncode == 0 else f"Inject failed: {stderr}"
+                status=ToolStatus.SUCCESS,
+                data={"target": target, "messages": messages},
+                message=f"Script injectat cu succes. Colectate {len(messages)} mesaje."
             )
-        finally:
-            # Cleanup
-            if os.path.exists(script_path):
-                try:
-                    os.remove(script_path)
-                except Exception as e:
-                    pass
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=f"Inject failed: {str(e)}")
 
     def _list_modules(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Listeaza modulele incarcate pentru un proces."""
         if not target:
             return ToolResult(status=ToolStatus.ERROR, error="Target (PID sau nume) este obligatoriu")
 
-        device_arg = ["-D", device] if device else []
-        
-        # Create listing script
-        list_script = """
-        Process.enumerateModules().forEach(function(m) {
-            console.log(m.name + "|" + m.base + "|" + m.size);
-        });
-        """
-        
-        script_path = "frida_modules_script.js"
         try:
-            with open(script_path, "w", encoding="utf-8") as f:
-                f.write(list_script)
+            dev = self._get_device(device)
+            session = dev.attach(int(target) if target.isdigit() else target)
 
-            if target.isdigit():
-                cmd = device_arg + ["-p", target, "-l", script_path]
-            else:
-                cmd = device_arg + ["-n", target, "-l", script_path]
+            list_script = """
+            Process.enumerateModules().forEach(function(m) {
+                send(m.name + "|" + m.base + "|" + m.size);
+            });
+            """
 
-            returncode, stdout, stderr = self._run_frida_tool("frida", cmd, timeout)
+            messages = []
+            errors = []
+
+            def on_message(message, data):
+                if message['type'] == 'send':
+                    messages.append(message['payload'])
+                elif message['type'] == 'error':
+                    errors.append(message['stack'])
+
+            script_obj = session.create_script(list_script)
+            script_obj.on('message', on_message)
+            script_obj.load()
+
+            time.sleep(0.5)
+
+            script_obj.unload()
+            session.detach()
+
+            if errors:
+                return ToolResult(status=ToolStatus.ERROR, error="\n".join(errors))
 
             modules = []
-            for line in stdout.split("\n"):
+            for line in messages:
                 if "|" in line:
                     parts = line.strip().split("|")
                     if len(parts) == 3:
@@ -363,51 +343,63 @@ class FridaTool(Tool):
                 data={"count": len(modules), "modules": modules},
                 message=f"Gasite {len(modules)} module"
             )
-        finally:
-            if os.path.exists(script_path):
-                try:
-                    os.remove(script_path)
-                except Exception as e:
-                    pass
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=str(e))
 
     def _find_functions(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
-        """Gaseste functii intr-un modul."""
+        """Gaseste functii exports intr-un modul."""
         if not module:
             return ToolResult(status=ToolStatus.ERROR, error="Module name este obligatoriu")
 
         if not target:
-            return ToolResult(status=ToolStatus.ERROR, error="Target (PID) este obligatoriu")
+            return ToolResult(status=ToolStatus.ERROR, error="Target (PID sau nume) este obligatoriu")
 
         search_pattern = pattern or ".*"
-        
-        # Create search script
-        search_script = f"""
-        var mod = Process.findModuleByName("{module}");
-        if (mod) {{
-            console.log("Module: " + mod.name);
-            mod.enumerateExports().forEach(function(e) {{
-                if (/{search_pattern}/.test(e.name)) {{
-                    console.log("EXPORT|" + e.name + "|" + e.type + "|" + e.address);
-                }}
-            }});
-        }} else {{
-            console.log("MODULE_NOT_FOUND");
-        }}
-        """
 
-        script_path = "frida_find_script.js"
         try:
-            with open(script_path, "w", encoding="utf-8") as f:
-                f.write(search_script)
+            dev = self._get_device(device)
+            session = dev.attach(int(target) if target.isdigit() else target)
 
-            device_arg = ["-D", device] if device else ["-p", target]
-            returncode, stdout, stderr = self._run_frida_tool("frida", device_arg + ["-l", script_path], timeout)
+            search_script = f"""
+            var mod = Process.findModuleByName("{module}");
+            if (mod) {{
+                send("MODULE_FOUND");
+                mod.enumerateExports().forEach(function(e) {{
+                    if (/{search_pattern}/.test(e.name)) {{
+                        send("EXPORT|" + e.name + "|" + e.type + "|" + e.address);
+                    }}
+                }});
+            }} else {{
+                send("MODULE_NOT_FOUND");
+            }}
+            """
 
-            if "MODULE_NOT_FOUND" in stdout:
+            messages = []
+            errors = []
+
+            def on_message(message, data):
+                if message['type'] == 'send':
+                    messages.append(message['payload'])
+                elif message['type'] == 'error':
+                    errors.append(message['stack'])
+
+            script_obj = session.create_script(search_script)
+            script_obj.on('message', on_message)
+            script_obj.load()
+
+            time.sleep(0.5)
+
+            script_obj.unload()
+            session.detach()
+
+            if errors:
+                return ToolResult(status=ToolStatus.ERROR, error="\n".join(errors))
+
+            if "MODULE_NOT_FOUND" in messages:
                 return ToolResult(status=ToolStatus.ERROR, error=f"Module {module} not found")
 
             functions = []
-            for line in stdout.split("\n"):
+            for line in messages:
                 if line.startswith("EXPORT|"):
                     parts = line.strip().split("|")
                     if len(parts) == 4:
@@ -422,12 +414,8 @@ class FridaTool(Tool):
                 data={"module": module, "count": len(functions), "functions": functions},
                 message=f"Gasite {len(functions)} functii"
             )
-        finally:
-            if os.path.exists(script_path):
-                try:
-                    os.remove(script_path)
-                except Exception as e:
-                    pass
+        except Exception as e:
+            return ToolResult(status=ToolStatus.ERROR, error=str(e))
 
     def _hook(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Genereaza script de hook pentru o functie."""
@@ -435,7 +423,7 @@ class FridaTool(Tool):
             return ToolResult(status=ToolStatus.ERROR, error="Function pattern este obligatoriu")
 
         module_name = module or "libname.so"
-        
+
         hook_script = f"""
 Java.perform(function() {{
     var module = Module.findBaseAddress("{module_name}");
@@ -444,7 +432,7 @@ Java.perform(function() {{
         return;
     }}
     console.log("Module base: " + module);
-    
+
     // Hook all exports matching pattern
     var exports = Module.enumerateExports("{module_name}");
     exports.forEach(function(e) {{
@@ -479,7 +467,12 @@ Java.perform(function() {{
 
     def _terminate(self, target: str, pkg: str, script: str, module: str, pattern: str, device: str, timeout: int) -> ToolResult:
         """Termina sesiunea curenta."""
-        self._current_session = None
+        if self._current_session:
+            try:
+                self._current_session.detach()
+            except Exception:
+                pass
+            self._current_session = None
         return ToolResult(
             status=ToolStatus.SUCCESS,
             message="Sesiune terminata"
@@ -488,26 +481,33 @@ Java.perform(function() {{
 
 def smoke_test():
     """Smoke test pentru Frida tool."""
-    print("[*] Testing Frida Tool...")
-    
+    print("[*] Testing Frida Tool Native...")
+
     tool = FridaTool()
-    
+
     # Test version
     result = tool.execute(operation="version")
     if result.is_success:
         print(f"[OK] Frida version: {result.data.get('version')}")
     else:
-        print(f"[!] Frida not installed: {result.error}")
-        print("    Install with: pip install frida-tools")
+        print(f"[!] Frida version test failed: {result.error}")
         return
-    
+
     # Test devices
     result = tool.execute(operation="devices")
     if result.is_success:
-        print(f"[OK] Frida devices: {result.data.get('count')}")
+        print(f"[OK] Frida devices: {result.data.get('count')} - {result.data.get('devices')}")
     else:
-        print(f"[?] Devices: {result.error}")
-    
+        print(f"[!] Devices test failed: {result.error}")
+
+    # Test list_processes
+    result = tool.execute(operation="list_processes")
+    if result.is_success:
+        processes = result.data.get("processes", [])
+        print(f"[OK] Frida list_processes: found {result.data.get('count')} processes. First 3: {processes[:3]}")
+    else:
+        print(f"[!] list_processes test failed: {result.error}")
+
     print("[*] Frida smoke test complete")
 
 
