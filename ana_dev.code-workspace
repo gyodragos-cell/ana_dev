@@ -5,18 +5,11 @@
 		},
 		{
 			"path": "../ANA_MAX_GitHub_Release"
-		},
-		{
-			"path": "../teste cu qoder my friend"
-		},
-		{
-			"path": "../../.kiro"
 		}
 	],
-	"settings": {
-		"kiroAgent.enableCodebaseIndexing": true,
-		"kiroAgent.enableDebugLogs": true,
-		"kiroAgent.enableTabAutocomplete": true,
-		"chat.mcp.assisted.nuget.enabled": true
+	"extensions": {
+		"recommendations": [
+			"d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat"
+		]
 	}
 }

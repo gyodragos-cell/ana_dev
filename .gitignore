@@ -12,8 +12,11 @@ __pycache__/
 logs/
 screenshots/
 memory/
+debug.log
+video/
 *.vsix
 extension.vsixmanifest
+vscode_extension/extension/
 ANA_MAX/dev_artifacts/*.zip
 ANA_MAX/dev_artifacts/media/
 ANA_MAX/dev_artifacts/reports/
