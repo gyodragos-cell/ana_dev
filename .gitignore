@@ -14,7 +14,16 @@ screenshots/
 memory/
 debug.log
 video/
+*.log
+test_results*.txt
+test_v11_behavior.py
+test_ana_tools.py
 ANA_MAX/.launcher_state.json
+ANA_MAX/logs/
+ANA_MAX/memory/session_manifest.json
+ANA_MAX/memory/*.jsonl
+ANA_MAX/sandbox/*
+!ANA_MAX/sandbox/README.md
 *.vsix
 extension.vsixmanifest
 vscode_extension/extension/

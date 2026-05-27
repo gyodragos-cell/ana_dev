@@ -11,6 +11,8 @@ This repository treats Codex as the primary project manager and implementation a
 - Before changing shared behavior, inspect the surrounding code and follow the established project patterns.
 - When multiple agents or tools are active, avoid reverting or overwriting unrelated changes; integrate carefully with the current workspace state.
 - Record durable project guidance here when it should affect future sessions.
+- Put ad-hoc experiments, one-off scripts, temporary prompts, and scratch outputs in `ANA_MAX/sandbox/`, not the repository root. Promote only cleaned logic and focused tests into `ANA_MAX/core/`, `ANA_MAX/tools/`, or `tests/`.
+- To watch live MCP activity from Antigravity/Qoder/Windsurf/Codex, run `ANA_MAX/dev_artifacts/scripts/tail_mcp_log.ps1`. Avoid adding desktop notification dependencies unless explicitly requested.
 
 ## Project Context
 
@@ -19,6 +21,7 @@ This repository treats Codex as the primary project manager and implementation a
 - For tool keep/fix/wrap/hide decisions, update `docs/TOOL_MATRIX.md`.
 - For high-leverage local/hybrid tools and when to use Frida/watchdog/UI vision, read `docs/AGENT_STEROID_TOOLS.md`.
 - When a mother-lab improvement is good but should be synced to the GitHub release later, add it to `docs/PUBLIC_RELEASE_SYNC_BACKLOG.md` instead of relying on chat memory.
+- Treat `ANA_MAX/sandbox/`, `ANA_MAX/logs/`, `ANA_MAX/memory/`, local VSIX files, and root `test_*.py`/`test_results*.txt` as lab-only noise unless a human explicitly promotes them.
 - ANA MAX is a safe local agent runtime: observe, plan, route, execute, verify, learn.
 - Current runtime/kernel work is dev/lab-oriented. Distributed behavior is primarily simulated, deterministic, local-first, and fake-transport based unless the user explicitly approves real integrations.
 - Preserve backward compatibility for existing subsystem APIs. Network/distributed features should be additive and continue to work in local-only mode when transport is absent.
