@@ -98,6 +98,7 @@ def load_tools():
         ("tools.vision_region_capture_tool","VisionRegionCaptureTool"),
         ("tools.session_checkpoint_tool",   "SessionCheckpointTool"),
         ("tools.session_rem_sleep_tool",    "SessionRemSleepTool"),
+        ("tools.session_lifecycle_tool",    "SessionLifecycleTool"),
         ("tools.smoke_test_runner",         "SmokeTestRunnerTool"),
         ("tools.tool_healthcheck",          "ToolHealthcheckTool"),
         ("tools.live_debug_console",        "LiveDebugConsoleTool"),

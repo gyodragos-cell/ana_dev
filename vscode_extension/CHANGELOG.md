@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.12 - Beginner Lifecycle UI
+
+- Added a guided Beginner Flow in the cockpit.
+- Grouped controls into Start here, Daily work, and Advanced sections.
+- Added visible Wake, Rest Preview, and Save REM lifecycle actions.
+- Wired lifecycle actions through the `session_lifecycle` tool so Rest Preview
+  analyzes without writing and Save REM writes only when explicitly selected.
+
 ## 1.0.11 - Quieter Safe Mode For Read-Only Agent Tools
 
 - Stopped asking for `Allow tool execution?` on known read-only guidance tools

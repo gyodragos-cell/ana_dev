@@ -2,7 +2,7 @@
   "name": "ana-antigravity-chat",
   "displayName": "ANA MAX - Hybrid AI Cockpit",
   "description": "Local-first MCP cockpit that helps AI coding agents observe, route, act, verify and remember with ANA MAX.",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "publisher": "d4d8176a-bb85-66ef-93dd-a58bc9ddfdad",
   "preview": true,
   "author": {
@@ -68,12 +68,14 @@
     "onCommand:ana.callTool",
     "onCommand:ana.showHybridConfig",
     "onCommand:anaMax.startRuntime",
+    "onCommand:anaMax.wakeSession",
     "onCommand:anaMax.showHealth",
     "onCommand:anaMax.runScenario",
     "onCommand:anaMax.executeTool",
     "onCommand:anaMax.inspectRuntime",
     "onCommand:anaMax.showRouterDecisions",
     "onCommand:anaMax.runRemSleep",
+    "onCommand:anaMax.previewRest",
     "onCommand:anaMax.showObservability",
     "onCommand:anaMax.openDashboard"
   ],
@@ -106,6 +108,11 @@
         "icon": "$(pulse)"
       },
       {
+        "command": "anaMax.wakeSession",
+        "title": "ANA MAX: Wake Session",
+        "icon": "$(debug-restart)"
+      },
+      {
         "command": "anaMax.runScenario",
         "title": "ANA MAX: Run Scenario"
       },
@@ -124,8 +131,13 @@
       },
       {
         "command": "anaMax.runRemSleep",
-        "title": "ANA MAX: Run REM Sleep",
+        "title": "ANA MAX: Save REM Sleep",
         "icon": "$(repo-push)"
+      },
+      {
+        "command": "anaMax.previewRest",
+        "title": "ANA MAX: Preview REM Sleep",
+        "icon": "$(preview)"
       },
       {
         "command": "anaMax.showObservability",
@@ -165,6 +177,18 @@
           "when": "true"
         },
         {
+          "command": "anaMax.wakeSession",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.previewRest",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.runRemSleep",
+          "when": "true"
+        },
+        {
           "command": "ana.openChat",
           "when": "true"
         },
@@ -183,6 +207,16 @@
           "command": "anaMax.showHealth",
           "when": "view == anaMax.actions",
           "group": "navigation@2"
+        },
+        {
+          "command": "anaMax.wakeSession",
+          "when": "view == anaMax.actions",
+          "group": "navigation@3"
+        },
+        {
+          "command": "anaMax.previewRest",
+          "when": "view == anaMax.actions",
+          "group": "navigation@4"
         }
       ],
       "editor/title": [

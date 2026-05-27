@@ -22,6 +22,8 @@ def test_extension_commands_declared():
     assert "anaMax.executeTool" in commands
     assert "anaMax.inspectRuntime" in commands
     assert "anaMax.showRouterDecisions" in commands
+    assert "anaMax.wakeSession" in commands
+    assert "anaMax.previewRest" in commands
     assert "anaMax.showObservability" in commands
 
 
@@ -41,7 +43,14 @@ def test_extension_exposes_antigravity_visible_start_ui():
     editor_title_commands = {item["command"] for item in contributes["menus"]["editor/title"]}
 
     assert "anaMax.startRuntime" in view_title_commands
+    assert "anaMax.wakeSession" in view_title_commands
+    assert "anaMax.previewRest" in view_title_commands
     assert "anaMax.startRuntime" in editor_title_commands
+
+    palette_commands = {item["command"] for item in contributes["menus"]["commandPalette"]}
+    assert "anaMax.wakeSession" in palette_commands
+    assert "anaMax.previewRest" in palette_commands
+    assert "anaMax.runRemSleep" in palette_commands
 
 
 def test_extension_safe_mode_ui_enforcement_present():
@@ -52,6 +61,10 @@ def test_extension_safe_mode_ui_enforcement_present():
     assert "blocks tool execution" in source
     assert "requestJson" in source
     assert "Start Runtime" in source
+    assert "Beginner Flow" in source
+    assert "Start here" in source
+    assert "Daily work" in source
+    assert "Rest Preview" in source
     assert "registerTreeDataProvider" in source
 
 
@@ -67,3 +80,14 @@ def test_extension_confirmation_dialogs_present():
     assert "readOnlyTools" in source
     assert '"tool_router"' in source
     assert '"agent_coach"' in source
+    assert '"session_lifecycle"' in source
+
+
+def test_extension_uses_lifecycle_for_wake_and_rest():
+    """Cockpit should use session_lifecycle for wake/rest flows."""
+    source = extension_source_path().read_text(encoding="utf-8")
+
+    assert "session_lifecycle" in source
+    assert 'action: "wake"' in source
+    assert 'consolidate: false' in source
+    assert 'consolidate: true' in source

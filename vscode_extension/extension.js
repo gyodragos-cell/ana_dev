@@ -100,6 +100,7 @@ function getDangerousActionPrompts(toolName, args) {
     "project_navigator",
     "runtime_guard",
     "schema_diff",
+    "session_lifecycle",
     "session_rem_sleep",
     "tool_contract_validator",
     "tool_healthcheck",
@@ -294,12 +295,14 @@ class AnaActionProvider {
 
   getChildren() {
     return [
-      actionItem("Start Runtime", "anaMax.startRuntime", "play", "Launch ANA MAX MCP on the configured port."),
-      actionItem("Smart Ready / Health", "anaMax.showHealth", "pulse", "Verify health, tool_router, and agent_coach."),
-      actionItem("Open Cockpit", "ana.openChat", "layout", "Open the ANA MAX hybrid cockpit."),
-      actionItem("Router Decisions", "anaMax.showRouterDecisions", "list-tree", "Ask ANA MAX which tool should be used next."),
-      actionItem("REM Sleep", "anaMax.runRemSleep", "repo-push", "Consolidate checkpoints and lessons."),
-      actionItem("Hybrid MCP Config", "ana.showHybridConfig", "json", "Show Codex and Antigravity/Qoder/Windsurf MCP config.")
+      actionItem("1. Start Runtime", "anaMax.startRuntime", "play", "Start the local ANA MAX server."),
+      actionItem("2. Smart Ready", "anaMax.showHealth", "pulse", "Check that ANA MAX is online and ready."),
+      actionItem("3. Wake Session", "anaMax.wakeSession", "debug-restart", "Load the last session memory or create first-run context."),
+      actionItem("Open Cockpit", "ana.openChat", "layout", "Open the ANA MAX guided panel."),
+      actionItem("Ask Next Tool", "anaMax.showRouterDecisions", "list-tree", "Ask ANA MAX which tool should be used next."),
+      actionItem("Preview REM Sleep", "anaMax.previewRest", "preview", "Review session lessons without saving."),
+      actionItem("Save REM Sleep", "anaMax.runRemSleep", "repo-push", "Save the session handoff after review."),
+      actionItem("Copy MCP Config", "ana.showHybridConfig", "json", "Show Codex and Antigravity/Qoder/Windsurf MCP config.")
     ];
   }
 }
@@ -383,6 +386,18 @@ function activate(context) {
         return;
       }
 
+      if (message.command === "wakeSession") {
+        try {
+          const payload = await callTool(config, "session_lifecycle", {
+            action: "wake"
+          });
+          post(panel, "lifecycle", payload.data || payload);
+        } catch (e) {
+          post(panel, "error", e.message);
+        }
+        return;
+      }
+
       if (message.command === "checkpoint") {
         try {
           const payload = await callTool(config, "session_checkpoint", {
@@ -405,14 +420,25 @@ function activate(context) {
 
       if (message.command === "remSleep") {
         try {
-          const payload = await callTool(config, "session_rem_sleep", {
-            action: "consolidate",
-            checkpoint_limit: 8,
-            telemetry_limit: 160,
-            lesson_limit: 25,
+          const payload = await callTool(config, "session_lifecycle", {
+            action: "rest",
+            consolidate: true,
             save_memory: true
           });
           post(panel, "remSleep", payload.data || payload);
+        } catch (e) {
+          post(panel, "error", e.message);
+        }
+        return;
+      }
+
+      if (message.command === "previewRest") {
+        try {
+          const payload = await callTool(config, "session_lifecycle", {
+            action: "rest",
+            consolidate: false
+          });
+          post(panel, "lifecycle", payload.data || payload);
         } catch (e) {
           post(panel, "error", e.message);
         }
@@ -567,14 +593,43 @@ function activate(context) {
     }
   }));
 
+  context.subscriptions.push(vscode.commands.registerCommand("anaMax.wakeSession", async () => {
+    const config = getConfig();
+    try {
+      const payload = await callTool(config, "session_lifecycle", { action: "wake" });
+      const doc = await vscode.workspace.openTextDocument({
+        content: JSON.stringify(payload, null, 2),
+        language: "json"
+      });
+      await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+    } catch (e) {
+      vscode.window.showErrorMessage(e.message);
+    }
+  }));
+
+  context.subscriptions.push(vscode.commands.registerCommand("anaMax.previewRest", async () => {
+    const config = getConfig();
+    try {
+      const payload = await callTool(config, "session_lifecycle", {
+        action: "rest",
+        consolidate: false
+      });
+      const doc = await vscode.workspace.openTextDocument({
+        content: JSON.stringify(payload, null, 2),
+        language: "json"
+      });
+      await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+    } catch (e) {
+      vscode.window.showErrorMessage(e.message);
+    }
+  }));
+
   context.subscriptions.push(vscode.commands.registerCommand("anaMax.runRemSleep", async () => {
     const config = getConfig();
     try {
-      const payload = await callTool(config, "session_rem_sleep", {
-        action: "consolidate",
-        checkpoint_limit: 8,
-        telemetry_limit: 160,
-        lesson_limit: 25,
+      const payload = await callTool(config, "session_lifecycle", {
+        action: "rest",
+        consolidate: true,
         save_memory: true
       });
       const doc = await vscode.workspace.openTextDocument({
@@ -651,10 +706,18 @@ function getWebviewContent() {
         .header { background: #252526; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; }
         h1 { font-size: 18px; margin: 0 0 5px 0; color: #007acc; }
         p { font-size: 12px; margin: 0; color: #888; }
-        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .quickstart { background: #202832; border: 1px solid #33475f; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+        .quickstart h2 { font-size: 13px; margin: 0 0 8px 0; color: #d7e8ff; }
+        .quickstart ol { margin: 0; padding-left: 18px; color: #c7d8ea; font-size: 12px; line-height: 1.5; }
+        .quickstart code { color: #8fd3ff; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .group-label { width: 100%; color: #aab6c3; font-size: 11px; text-transform: uppercase; margin-top: 4px; }
         .status { background: #1f2a24; border: 1px solid #315c3f; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 12px; color: #b7e4c7; white-space: pre-wrap; }
         .status.bad { background: #3a2323; border-color: #713333; color: #ffc9c9; }
-        button { background: #0e639c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        button { background: #0e639c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; min-height: 32px; }
+        button.secondary { background: #3d4c5c; }
+        button.safe { background: #1f7a54; }
+        button.save { background: #76591f; }
         button:hover { background: #1177bb; }
         #chat { flex: 1; background: #252526; border: 1px solid #333; border-radius: 8px; overflow-y: auto; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
         .msg { padding: 10px; border-radius: 6px; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
@@ -668,23 +731,37 @@ function getWebviewContent() {
 <body>
     <div class="header">
         <h1>ANA MAX Hybrid AI Cockpit</h1>
-        <p>Local-first MCP bridge for Codex, Antigravity/Qoder, Windsurf and VS Code-compatible agent IDEs.</p>
+        <p>Start ANA, check readiness, wake the last session, then let your AI agent ask ANA which tool to use next.</p>
+    </div>
+    <div class="quickstart">
+        <h2>Beginner Flow</h2>
+        <ol>
+            <li>Press <code>Start Runtime</code> once when ANA is offline.</li>
+            <li>Press <code>Smart Ready</code>. Green means the agent can use ANA tools.</li>
+            <li>Press <code>Wake</code> so the agent loads the last session memory.</li>
+            <li>Use <code>Recommend</code> before risky work, then <code>Rest Preview</code> before saving REM Sleep.</li>
+        </ol>
     </div>
     <div class="toolbar">
-        <button onclick="cmd('startRuntime')">Start Runtime</button>
-        <button onclick="cmd('health')">Health</button>
-        <button onclick="cmd('smartReady')">Smart Ready</button>
-        <button onclick="recommend()">Recommend</button>
-        <button onclick="checkpoint()">Checkpoint</button>
-        <button onclick="remSleep()">REM Sleep</button>
-        <button onclick="cmd('listTools')">List Tools</button>
-        <button onclick="cmd('hybridConfig')">Hybrid Config</button>
-        <button onclick="identity()">Identity</button>
+        <div class="group-label">Start here</div>
+        <button title="Start the local ANA MAX MCP server if it is offline." onclick="cmd('startRuntime')">1 Start Runtime</button>
+        <button class="safe" title="Verify ANA MAX health, router, coach, and tool list." onclick="cmd('smartReady')">2 Smart Ready</button>
+        <button class="safe" title="Load last REM Sleep context or create a first-run manifest." onclick="wakeSession()">3 Wake</button>
+        <div class="group-label">Daily work</div>
+        <button title="Ask ANA which tool should be used next." onclick="recommend()">Recommend</button>
+        <button class="secondary" title="Save a compact handoff checkpoint." onclick="checkpoint()">Checkpoint</button>
+        <button class="secondary" title="Analyze the session without writing memory." onclick="previewRest()">Rest Preview</button>
+        <button class="save" title="Save REM Sleep after reviewing the preview." onclick="remSleep()">Save REM</button>
+        <div class="group-label">Advanced</div>
+        <button class="secondary" title="Show raw health JSON." onclick="cmd('health')">Health JSON</button>
+        <button class="secondary" title="List MCP tools exposed by ANA MAX." onclick="cmd('listTools')">List Tools</button>
+        <button class="secondary" title="Show MCP config snippets for agent IDEs." onclick="cmd('hybridConfig')">MCP Config</button>
+        <button class="secondary" title="Call ANA identity." onclick="identity()">Identity</button>
     </div>
-    <div id="status" class="status">Smart readiness not checked yet.</div>
+    <div id="status" class="status">Press Smart Ready. If it is green, press Wake before work.</div>
     <div id="chat"></div>
     <div class="input-box">
-        <input type="text" id="in" placeholder="Scrie un mesaj sau /tool name {}" />
+        <input type="text" id="in" placeholder="Optional task for Recommend, or /tool name {}" />
         <button onclick="send()">Send</button>
     </div>
     <script>
@@ -710,6 +787,11 @@ function getWebviewContent() {
             vscode.postMessage({ command: "recommend", task });
         }
 
+        function wakeSession() {
+            addMsg('WAKE: load last REM context or first-run manifest', 'user');
+            vscode.postMessage({ command: "wakeSession" });
+        }
+
         function checkpoint() {
             const summary = input.value.trim() || 'Operator saved a quick checkpoint before risking chat loss.';
             addMsg('CHECKPOINT: ' + summary, 'user');
@@ -717,8 +799,13 @@ function getWebviewContent() {
         }
 
         function remSleep() {
-            addMsg('REM SLEEP: consolidate recent session lessons', 'user');
+            addMsg('REM SLEEP: save recent session lessons', 'user');
             vscode.postMessage({ command: "remSleep" });
+        }
+
+        function previewRest() {
+            addMsg('REST PREVIEW: analyze recent session lessons without writing', 'user');
+            vscode.postMessage({ command: "previewRest" });
         }
 
         function send() {
@@ -778,7 +865,10 @@ function getWebviewContent() {
                 addMsg('Checkpoint saved:\\n' + JSON.stringify(m.content, null, 2), 'ai');
             }
             if(m.type === 'remSleep') {
-                addMsg('REM sleep consolidated:\\nheadline=' + (m.content.headline || '') + '\\nreport=' + (m.content.saved_report || 'not saved') + '\\nmemory=' + JSON.stringify(m.content.saved_memory || {}, null, 2), 'ai');
+                addMsg('REM sleep saved:\\n' + JSON.stringify(m.content, null, 2), 'ai');
+            }
+            if(m.type === 'lifecycle') {
+                addMsg('Lifecycle:\\n' + JSON.stringify(m.content, null, 2), 'ai');
             }
             if(m.type === 'toolGuidance') {
                 addMsg(formatToolGuidance(m.content), 'ai');

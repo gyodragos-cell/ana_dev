@@ -161,6 +161,7 @@ def _register_all_tools():
         ("tools.session_log_miner_tool", "SessionLogMinerTool"),
         ("tools.session_checkpoint_tool", "SessionCheckpointTool"),
         ("tools.session_rem_sleep_tool", "SessionRemSleepTool"),
+        ("tools.session_lifecycle_tool", "SessionLifecycleTool"),
         ("tools.memory_tool", "MemoryTool"),
         ("tools.privacy", "PrivacyTool"),
         ("tools.git_tool", "GitTool"),

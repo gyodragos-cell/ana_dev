@@ -72,18 +72,38 @@ python main.py --host 127.0.0.1 --port 8766
 3. Install the VSIX:
 
 ```powershell
-code --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.11.vsix --force
+code --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.12.vsix --force
 ```
 
 For Qoder, if its CLI is available:
 
 ```powershell
-qoder --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.11.vsix --force
+qoder --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.12.vsix --force
 ```
 
 4. Reload the IDE window.
 5. Open the `ANA MAX` Activity Bar view or run `ANA & Antigravity: Open Cockpit`.
 6. Press `Start Runtime` if the MCP server is offline, then press `Smart Ready`.
+
+## Beginner Button Guide
+
+Use the buttons in this order:
+
+1. **Start Runtime** starts the local ANA MAX server. Press it once if ANA is
+   offline.
+2. **Smart Ready** checks that ANA is online and that the router/coach tools
+   work. Green means the agent can use ANA safely.
+3. **Wake Session** loads the last REM Sleep memory. On a first run, it creates
+   a fresh-start manifest so the agent does not start blind.
+4. **Ask Next Tool / Recommend** asks ANA which tool should be used next for the
+   current task.
+5. **Checkpoint** saves a compact handoff before reloads or risky changes.
+6. **Preview REM Sleep** analyzes the session without writing memory.
+7. **Save REM Sleep** writes the handoff only after you reviewed the preview.
+
+Normal read-only buttons should not show confirmation popups. Confirmation is
+reserved for writes, terminal/subprocess actions, network calls, and desktop
+control.
 
 Expected local lab health:
 
