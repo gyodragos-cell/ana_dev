@@ -33,6 +33,9 @@ Cursor.
 ## What You Get
 
 - **Open Cockpit**: a local panel for runtime status and MCP tool actions.
+- **Visible Runtime Controls**: an `ANA MAX` Activity Bar view with `Start
+  Runtime`, `Smart Ready`, cockpit, router, REM Sleep, and MCP config actions
+  for VS Code-compatible IDEs that do not surface every command the same way.
 - **Smart Ready**: verifies that the ANA MAX runtime is online and that router,
   coach, and memory tools are callable.
 - **Tool Calls**: call MCP tools directly from the cockpit when debugging.
@@ -69,18 +72,18 @@ python main.py --host 127.0.0.1 --port 8766
 3. Install the VSIX:
 
 ```powershell
-code --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.9.vsix --force
+code --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.10.vsix --force
 ```
 
 For Qoder, if its CLI is available:
 
 ```powershell
-qoder --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.9.vsix --force
+qoder --install-extension ANA_MAX\ana-antigravity-hybrid-1.0.10.vsix --force
 ```
 
 4. Reload the IDE window.
-5. Run `ANA & Antigravity: Open Cockpit`.
-6. Press `Smart Ready`.
+5. Open the `ANA MAX` Activity Bar view or run `ANA & Antigravity: Open Cockpit`.
+6. Press `Start Runtime` if the MCP server is offline, then press `Smart Ready`.
 
 Expected local lab health:
 

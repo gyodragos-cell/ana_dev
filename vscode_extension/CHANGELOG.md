@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.10 - Antigravity Visible Runtime Controls
+
+- Added an `ANA MAX` Activity Bar view with visible runtime actions for
+  VS Code-compatible IDEs that do not expose command palette entries the same
+  way.
+- Added explicit `Start Runtime` buttons in the view title, editor title, and
+  cockpit toolbar.
+- Kept the MCP backend unchanged: this release improves discoverability for
+  Antigravity/Qoder/Windsurf-style hosts.
+
 ## 1.0.9 - Marketplace Readiness Pass
 
 - Clarified the public product message around `observe -> route -> act -> verify -> remember`.

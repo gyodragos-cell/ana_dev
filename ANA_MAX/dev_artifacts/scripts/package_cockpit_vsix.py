@@ -226,7 +226,7 @@ def main() -> int:
     build_dir = ARTIFACTS_DIR / f"vsix_build_{version}"
     verify_dir = ARTIFACTS_DIR / f"vsix_verify_{version}"
     output_main = ANA_ROOT / f"ana-antigravity-hybrid-{version}.vsix"
-    output_copy = SOURCE_DIR / f"ana-antigravity-{version}.vsix"
+    output_copy = SOURCE_DIR / f"{package['name']}-{version}.vsix"
 
     if build_dir.exists():
         shutil.rmtree(build_dir)

@@ -7,6 +7,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def extension_source_path() -> Path:
+    src_path = ROOT / "vscode_extension" / "src" / "extension.js"
+    if src_path.exists():
+        return src_path
+    return ROOT / "vscode_extension" / "extension.js"
+
+
 def test_extension_commands_declared():
     """Package manifest should expose v23 commands."""
     package = json.loads((ROOT / "vscode_extension" / "package.json").read_text(encoding="utf-8"))
@@ -18,18 +25,39 @@ def test_extension_commands_declared():
     assert "anaMax.showObservability" in commands
 
 
+def test_extension_exposes_antigravity_visible_start_ui():
+    """VS Code-compatible IDEs should get a visible ANA MAX runtime surface."""
+    package = json.loads((ROOT / "vscode_extension" / "package.json").read_text(encoding="utf-8"))
+    contributes = package["contributes"]
+
+    assert "anaMax" in contributes["viewsContainers"]["activitybar"][0]["id"]
+    assert contributes["views"]["anaMax"][0]["id"] == "anaMax.actions"
+
+    view_title_commands = {
+        item["command"]
+        for item in contributes["menus"]["view/title"]
+        if item.get("when") == "view == anaMax.actions"
+    }
+    editor_title_commands = {item["command"] for item in contributes["menus"]["editor/title"]}
+
+    assert "anaMax.startRuntime" in view_title_commands
+    assert "anaMax.startRuntime" in editor_title_commands
+
+
 def test_extension_safe_mode_ui_enforcement_present():
     """Extension source should keep safe-mode checks around tool execution."""
-    source = (ROOT / "vscode_extension" / "extension.js").read_text(encoding="utf-8")
+    source = extension_source_path().read_text(encoding="utf-8")
 
     assert "safeMode" in source
     assert "blocks tool execution" in source
     assert "requestJson" in source
+    assert "Start Runtime" in source
+    assert "registerTreeDataProvider" in source
 
 
 def test_extension_confirmation_dialogs_present():
     """Extension should include explicit dangerous-action confirmations."""
-    source = (ROOT / "vscode_extension" / "extension.js").read_text(encoding="utf-8")
+    source = extension_source_path().read_text(encoding="utf-8")
 
     assert "Allow write?" in source
     assert "Allow subprocess?" in source

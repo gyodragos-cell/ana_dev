@@ -267,8 +267,37 @@ function formatSmartReadiness(report) {
   ].join("\n");
 }
 
+class AnaActionProvider {
+  getTreeItem(element) {
+    return element;
+  }
+
+  getChildren() {
+    return [
+      actionItem("Start Runtime", "anaMax.startRuntime", "play", "Launch ANA MAX MCP on the configured port."),
+      actionItem("Smart Ready / Health", "anaMax.showHealth", "pulse", "Verify health, tool_router, and agent_coach."),
+      actionItem("Open Cockpit", "ana.openChat", "layout", "Open the ANA MAX hybrid cockpit."),
+      actionItem("Router Decisions", "anaMax.showRouterDecisions", "list-tree", "Ask ANA MAX which tool should be used next."),
+      actionItem("REM Sleep", "anaMax.runRemSleep", "repo-push", "Consolidate checkpoints and lessons."),
+      actionItem("Hybrid MCP Config", "ana.showHybridConfig", "json", "Show Codex and Antigravity/Qoder/Windsurf MCP config.")
+    ];
+  }
+}
+
+function actionItem(label, command, icon, tooltip) {
+  const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+  item.command = { command, title: label };
+  item.iconPath = new vscode.ThemeIcon(icon);
+  item.tooltip = tooltip;
+  return item;
+}
+
 function activate(context) {
   let panel = undefined;
+
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider("anaMax.actions", new AnaActionProvider())
+  );
 
   const openCockpit = vscode.commands.registerCommand("ana.openChat", () => {
     if (panel) {
@@ -301,6 +330,11 @@ function activate(context) {
         } catch (e) {
           post(panel, "error", `Backend offline @ ${baseUrl}. Start ANA MAX via main.py.`);
         }
+        return;
+      }
+
+      if (message.command === "startRuntime") {
+        await vscode.commands.executeCommand("anaMax.startRuntime");
         return;
       }
 
@@ -617,6 +651,7 @@ function getWebviewContent() {
         <p>Local-first MCP bridge for Codex, Antigravity/Qoder, Windsurf and VS Code-compatible agent IDEs.</p>
     </div>
     <div class="toolbar">
+        <button onclick="cmd('startRuntime')">Start Runtime</button>
         <button onclick="cmd('health')">Health</button>
         <button onclick="cmd('smartReady')">Smart Ready</button>
         <button onclick="recommend()">Recommend</button>

@@ -2,7 +2,7 @@
   "name": "ana-antigravity-chat",
   "displayName": "ANA MAX - Hybrid AI Cockpit",
   "description": "Local-first MCP cockpit that helps AI coding agents observe, route, act, verify and remember with ANA MAX.",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "publisher": "d4d8176a-bb85-66ef-93dd-a58bc9ddfdad",
   "preview": true,
   "author": {
@@ -97,11 +97,13 @@
       },
       {
         "command": "anaMax.startRuntime",
-        "title": "ANA MAX: Start Runtime"
+        "title": "ANA MAX: Start Runtime",
+        "icon": "$(play)"
       },
       {
         "command": "anaMax.showHealth",
-        "title": "ANA MAX: Show Health"
+        "title": "ANA MAX: Smart Ready / Show Health",
+        "icon": "$(pulse)"
       },
       {
         "command": "anaMax.runScenario",
@@ -117,11 +119,13 @@
       },
       {
         "command": "anaMax.showRouterDecisions",
-        "title": "ANA MAX: Show Router Decisions"
+        "title": "ANA MAX: Show Router Decisions",
+        "icon": "$(list-tree)"
       },
       {
         "command": "anaMax.runRemSleep",
-        "title": "ANA MAX: Run REM Sleep"
+        "title": "ANA MAX: Run REM Sleep",
+        "icon": "$(repo-push)"
       },
       {
         "command": "anaMax.showObservability",
@@ -129,9 +133,69 @@
       },
       {
         "command": "anaMax.openDashboard",
-        "title": "ANA MAX: Open Dashboard"
+        "title": "ANA MAX: Open Dashboard",
+        "icon": "$(dashboard)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "anaMax",
+          "title": "ANA MAX",
+          "icon": "assets/ana-max-icon.png"
+        }
+      ]
+    },
+    "views": {
+      "anaMax": [
+        {
+          "id": "anaMax.actions",
+          "name": "Runtime"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "anaMax.startRuntime",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.showHealth",
+          "when": "true"
+        },
+        {
+          "command": "ana.openChat",
+          "when": "true"
+        },
+        {
+          "command": "ana.showHybridConfig",
+          "when": "true"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "anaMax.startRuntime",
+          "when": "view == anaMax.actions",
+          "group": "navigation@1"
+        },
+        {
+          "command": "anaMax.showHealth",
+          "when": "view == anaMax.actions",
+          "group": "navigation@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "anaMax.startRuntime",
+          "group": "navigation@20"
+        },
+        {
+          "command": "ana.openChat",
+          "group": "navigation@21"
+        }
+      ]
+    },
     "configuration": {
       "title": "ANA MAX",
       "properties": {
