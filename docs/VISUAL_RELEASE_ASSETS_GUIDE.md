@@ -16,6 +16,14 @@ ANA_MAX/sandbox/screenshots/
 This is a private mother-lab folder. Do not sync it directly to the clean public
 release.
 
+After capture, create a local inventory:
+
+```powershell
+python ANA_MAX\dev_artifacts\scripts\screenshot_asset_inventory.py
+```
+
+Then use `docs/VISUAL_ASSET_INTAKE_TEMPLATE.md` for the review decision.
+
 ## Required Public-Safe Checks
 
 Before any screenshot is copied to README, docs, site, or Marketplace assets,
@@ -60,4 +68,3 @@ Rest Preview analyzes the session without writing memory until the user chooses 
 - If it is visually noisy or version-stale, keep it in sandbox only.
 - If the screenshot exposes private information, delete or quarantine it from
   public workflows.
-

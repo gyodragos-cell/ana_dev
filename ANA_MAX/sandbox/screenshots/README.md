@@ -27,3 +27,16 @@ directly to the public release.
 07-github-pages-home.png
 ```
 
+## Inventory
+
+After captures are created, run from the workspace root:
+
+```powershell
+python ANA_MAX\dev_artifacts\scripts\screenshot_asset_inventory.py
+```
+
+It writes `asset_inventory.json` in this folder. That JSON is ignored by git and
+is only for review.
+
+Use `docs/VISUAL_ASSET_INTAKE_TEMPLATE.md` to decide which images are safe
+enough for public README, site, or Marketplace use.
