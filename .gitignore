@@ -14,6 +14,12 @@ screenshots/
 memory/
 *.vsix
 extension.vsixmanifest
+ANA_MAX/dev_artifacts/*.zip
+ANA_MAX/dev_artifacts/media/
+ANA_MAX/dev_artifacts/reports/
+ANA_MAX/dev_artifacts/vsix_build_*/
+ANA_MAX/dev_artifacts/vsix_verify_*/
+ANA_MAX/dev_artifacts/vsix_template/
 *.db
 ANA_MAX/data/*.db
 ANA_MAX/desktop_vision_diag_report.txt

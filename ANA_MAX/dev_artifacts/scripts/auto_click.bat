@@ -1,0 +1,1 @@
+﻿start "" /MIN cmd /c "cd /d C:\\Users\\billy\\Desktop\\ana_dev\\ANA_MAX && venv\\Scripts\\pythonw.exe -c \"from tools.windows_uia_bridge import WindowsUiaBridgeTool; WindowsUiaBridgeTool().execute(action='click_element', window_title='Calculator', element_title='Five', control_type='Button')\""
