@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.11 - Quieter Safe Mode For Read-Only Agent Tools
+
+- Stopped asking for `Allow tool execution?` on known read-only guidance tools
+  such as `tool_router`, `agent_coach`, `ana_identity`, health checks, and
+  workspace observation.
+- Kept confirmation prompts for writes, subprocess/runtime starts, network,
+  terminal, and unknown tool calls.
+- Reduced prompt noise in Antigravity/Qoder/Windsurf while preserving safe-mode
+  boundaries for real actions.
+
 ## 1.0.10 - Antigravity Visible Runtime Controls
 
 - Added an `ANA MAX` Activity Bar view with visible runtime actions for

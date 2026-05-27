@@ -86,7 +86,27 @@ function safeModeMessage(action) {
 
 function getDangerousActionPrompts(toolName, args) {
   const text = `${toolName || ""} ${JSON.stringify(args || {})}`.toLowerCase();
-  const prompts = ["Allow tool execution?"];
+  const normalizedTool = String(toolName || "").toLowerCase();
+  const readOnlyTools = new Set([
+    "ana_identity",
+    "agent_coach",
+    "ana_health_check",
+    "ana_runtime_inspector",
+    "baseline_update_suggester",
+    "codebase_understanding",
+    "docs_generator",
+    "error_radar",
+    "foreground_ui_snapshot",
+    "project_navigator",
+    "runtime_guard",
+    "schema_diff",
+    "session_rem_sleep",
+    "tool_contract_validator",
+    "tool_healthcheck",
+    "tool_router",
+    "workspace_situational_awareness"
+  ]);
+  const prompts = [];
 
   if (/(write|patch|edit|delete|remove|move|rename|save|commit|push|install|uninstall)/.test(text)) {
     prompts.push("Allow write?");

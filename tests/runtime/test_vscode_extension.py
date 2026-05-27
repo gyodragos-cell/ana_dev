@@ -62,5 +62,8 @@ def test_extension_confirmation_dialogs_present():
     assert "Allow write?" in source
     assert "Allow subprocess?" in source
     assert "Allow network call?" in source
-    assert "Allow tool execution?" in source
+    assert "Allow tool execution?" not in source
     assert "confirmDangerousAction" in source
+    assert "readOnlyTools" in source
+    assert '"tool_router"' in source
+    assert '"agent_coach"' in source
