@@ -29,7 +29,7 @@ class AnaContextTool(Tool):
         del kwargs
 
         project_root = Path(__file__).resolve().parents[1]
-        tools = sorted(name for name in registry.list_tools() if name != "ana_identity")
+        tools = sorted(registry.list_tools())
         payload = {
             "name": "A.N.A. MAX",
             "role": "runtime MCP local pentru OpenCode",

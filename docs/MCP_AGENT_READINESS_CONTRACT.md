@@ -19,12 +19,12 @@ Expected fields:
 {
   "status": "online",
   "mcp_ready": true,
-  "tools_count": 85
+  "tools_count": 86
 }
 ```
 
-`tools_count` may grow, but readiness should fail if the core routing tools are
-missing or broken.
+`tools_count` may differ between clean public releases and mother-lab builds,
+but readiness should fail if the core routing tools are missing or broken.
 
 ## Required Tools
 
@@ -39,6 +39,7 @@ agent_coach
 
 ```text
 session_rem_sleep
+session_lifecycle
 ```
 
 `agent_coach` input schema must include:

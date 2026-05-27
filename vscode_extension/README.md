@@ -110,11 +110,13 @@ Expected local lab health:
 ```text
 status=online
 mcp_ready=true
-tools_count=85
+tools_count=86
 ```
 
-Lean public installs may show fewer tools when optional desktop or vector
-dependencies are not installed. The important check is that Smart Ready passes.
+Clean public releases may show 85 tools, while the mother lab currently shows
+86 after `session_lifecycle` is enabled. Lean installs may show fewer tools when
+optional desktop or vector dependencies are not installed. The important check
+is that Smart Ready passes.
 
 ## Default Endpoints
 
