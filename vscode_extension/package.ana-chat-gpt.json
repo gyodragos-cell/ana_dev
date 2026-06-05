@@ -1,0 +1,38 @@
+{
+  "name": "ana-chatgpt-cockpit",
+  "displayName": "ANA MAX - ChatGPT Cockpit (Hybrid)",
+  "description": "Hybrid MCP cockpit that supports Codex and ChatGPT channel integration.",
+  "version": "1.0.0-beta",
+  "publisher": "d4d8176a-bb85-66ef-93dd-a58bc9ddfdad",
+  "author": {
+    "name": "Dragos / gyodragos-cell",
+    "email": "gyodragos@gmail.com"
+  },
+  "license": "MIT",
+  "icon": "assets/ana-max-icon.png",
+  "homepage": "https://gyodragos-cell.github.io/ANA-MAX-v0.1.0-beta---Advanced-Neural-Architecture/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gyodragos-cell/ANA-MAX-v0.1.0-beta---Advanced-Neural-Architecture.git"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:ana.chatgpt.connect"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "ana.chatgpt.connect",
+        "title": "ANA MAX: Connect ChatGPT Channel"
+      },
+      {
+        "command": "anaMax.openLiveConsole",
+        "title": "ANA MAX: Open Live Console"
+      }
+    ]
+  }
+}
