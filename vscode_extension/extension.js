@@ -27,6 +27,7 @@ let lastOrientationCue = "";
 let lastOrientationCueAt = 0;
 let codexGuardInFlight = false;
 let lastCodexGuardAt = 0;
+let webhookServer = undefined;
 const MAX_LOG_LINES = 500;
 
 function getConfig() {
@@ -67,6 +68,8 @@ function getConfig() {
     voiceInboxSubmitPrefix: config.get("voiceInboxSubmitPrefix", "codex,ana"),
     voiceInboxAllowedTitles: config.get("voiceInboxAllowedTitles", "Visual Studio Code,Code,Codex,ChatGPT"),
     conversationAuditLiveAutoStart: config.get("conversationAuditLiveAutoStart", true)
+    ,webhookPort: config.get("webhookPort", 9876)
+    ,webhookPath: config.get("webhookPath", "/webhook")
   };
 }
 
@@ -107,6 +110,45 @@ function requestGetJson(url) {
       req.destroy(new Error(`Request timed out: ${url}`));
     });
     req.on("error", reject);
+  });
+}
+
+function requestPostJson(url, obj) {
+  return new Promise((resolve, reject) => {
+    try {
+      const data = JSON.stringify(obj);
+      const parsed = new URL(url);
+      const options = {
+        method: 'POST',
+        hostname: parsed.hostname,
+        port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+        path: parsed.pathname + (parsed.search || ''),
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(data)
+        }
+      };
+      const req = http.request(options, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            return reject(new Error(`HTTP ${res.statusCode}: ${body}`));
+          }
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            resolve(body);
+          }
+        });
+      });
+      req.on('error', reject);
+      req.write(data);
+      req.end();
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -411,6 +453,61 @@ function startVoiceBridge(config = getConfig(), paths = resolveRuntimePaths(conf
   voiceBridgeProcess.on("close", (code) => {
     appendLiveLog(`[VOICE] stopped code=${code}`);
     voiceBridgeProcess = undefined;
+  });
+  return true;
+}
+
+function stopWebhookServer() {
+  try {
+    if (webhookServer) {
+      webhookServer.close();
+      webhookServer = undefined;
+      appendLiveLog('[WEBHOOK] Server stopped.');
+    }
+  } catch (e) {
+    appendLiveLog(`[WEBHOOK stop error] ${e.message || e}`);
+  }
+}
+
+function startWebhookServer(config = getConfig(), paths = resolveRuntimePaths(config)) {
+  if (webhookServer) return true;
+  const port = Number(config.webhookPort || 9876) || 9876;
+  const webhookPath = String(config.webhookPath || '/webhook');
+  webhookServer = http.createServer((req, res) => {
+    if (req.method === 'POST' && req.url === webhookPath) {
+      let body = '';
+      req.on('data', (chunk) => { body += chunk; });
+      req.on('end', async () => {
+        let parsed = null;
+        try { parsed = JSON.parse(body); } catch (e) { parsed = body; }
+        try {
+          const anaRoot = anaRootPath(paths);
+          const memDir = path.join(anaRoot, 'memory');
+          fs.mkdirSync(memDir, { recursive: true });
+          const file = path.join(memDir, 'webhook_events.jsonl');
+          fs.appendFileSync(file, JSON.stringify({ receivedAt: new Date().toISOString(), remote: req.socket.remoteAddress, payload: parsed }) + '\n', 'utf8');
+          appendLiveLog(`[WEBHOOK] Received event from ${req.socket.remoteAddress}`);
+        } catch (e) {
+          appendLiveLog(`[WEBHOOK write error] ${e.message || e}`);
+        }
+        try {
+          await requestJson(config.runtimeUrl, { jsonrpc: '2.0', id: `vscode-webhook-${Date.now()}`, method: 'events/webhook', params: { payload: parsed } });
+        } catch (e) {
+          appendLiveLog(`[WEBHOOK forward warn] ${e.message || e}`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      });
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+  webhookServer.on('error', (err) => {
+    appendLiveLog(`[WEBHOOK server error] ${err.message || err}`);
+  });
+  webhookServer.listen(port, '127.0.0.1', () => {
+    appendLiveLog(`[WEBHOOK] Listening on http://127.0.0.1:${port}${webhookPath}`);
   });
   return true;
 }
@@ -1902,6 +1999,29 @@ function activate(context) {
       vscode.window.showErrorMessage(e.message);
     }
   });
+
+  context.subscriptions.push(vscode.commands.registerCommand("ana.chatgpt.connect", async () => {
+    const cfg = getConfig();
+    const portInput = await vscode.window.showInputBox({ prompt: "Webhook port", value: String(cfg.webhookPort || 9876) });
+    if (!portInput) return;
+    const pathInput = await vscode.window.showInputBox({ prompt: "Webhook path (begin with /)", value: String(cfg.webhookPath || "/webhook") });
+    if (pathInput === undefined) return;
+    try {
+      const workspaceCfg = vscode.workspace.getConfiguration('anaMax');
+      await workspaceCfg.update('webhookPort', Number(portInput), vscode.ConfigurationTarget.Workspace);
+      await workspaceCfg.update('webhookPath', pathInput, vscode.ConfigurationTarget.Workspace);
+    } catch (e) {
+      // non-fatal: continue with in-memory config
+    }
+    const config = getConfig();
+    const paths = resolveRuntimePaths(config);
+    try {
+      startWebhookServer(config, paths);
+      vscode.window.showInformationMessage(`Webhook server started at http://127.0.0.1:${config.webhookPort}${config.webhookPath}`);
+    } catch (err) {
+      vscode.window.showErrorMessage(`Failed to start webhook: ${err.message || err}`);
+    }
+  }));
 
   context.subscriptions.push(openCockpit, callToolExternal);
 
