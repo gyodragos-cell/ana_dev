@@ -63,6 +63,18 @@ class DesktopControlTool(Tool):
                     required=False
                 ),
                 ToolParameter(
+                    name="x",
+                    description="Coordonata X pentru move_mouse",
+                    type="string",
+                    required=False
+                ),
+                ToolParameter(
+                    name="y",
+                    description="Coordonata Y pentru move_mouse",
+                    type="string",
+                    required=False
+                ),
+                ToolParameter(
                     name="window_title",
                     description="Titlul ferestrei pentru operatiuni specifice",
                     type="string",
@@ -82,7 +94,7 @@ class DesktopControlTool(Tool):
             if operation == "read_text":
                 return self._read_text()
             if operation == "move_mouse":
-                return self._move_mouse(kwargs.get("x") or kwargs.get("target"), kwargs.get("y"))
+                return self._move_mouse(kwargs.get("x") or target, kwargs.get("y"))
             if operation == "click_at":
                 return self._click_at(target)
             if operation == "type":

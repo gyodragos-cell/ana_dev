@@ -5,6 +5,7 @@ ANA MAX - Tool Healthcheck
 from __future__ import annotations
 
 import time
+import importlib.util
 from typing import Any, Dict, List
 
 from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStatus, registry
@@ -143,6 +144,8 @@ class ToolHealthcheckTool(Tool):
             else:
                 failed += 1
 
+        dependencies = self._dependency_health()
+
         return ToolResult(
             status=ToolStatus.SUCCESS,
             data={
@@ -150,6 +153,22 @@ class ToolHealthcheckTool(Tool):
                 "ok": ok,
                 "failed": failed,
                 "results": results,
+                "dependencies": dependencies,
             },
             message=f"Healthcheck finalizat: {ok} OK / {failed} FAIL",
         )
+
+    @staticmethod
+    def _dependency_health() -> Dict[str, Dict[str, Any]]:
+        ddgs_available = (
+            importlib.util.find_spec("ddgs") is not None
+            or importlib.util.find_spec("duckduckgo_search") is not None
+        )
+        return {
+            "web_search": {
+                "ok": ddgs_available,
+                "packages_any_of": ["ddgs", "duckduckgo-search"],
+                "impact": "web_search operation=search/news/images" if not ddgs_available else "",
+                "fix": "pip install ddgs" if not ddgs_available else "",
+            }
+        }

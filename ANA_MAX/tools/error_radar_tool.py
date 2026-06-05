@@ -19,7 +19,13 @@ ERROR_PATTERNS = [
     ("python_import", re.compile(r"ModuleNotFoundError|ImportError", re.IGNORECASE)),
     ("syntax", re.compile(r"SyntaxError|IndentationError", re.IGNORECASE)),
     ("test_failure", re.compile(r"FAILED|FAIL:|ERROR:", re.IGNORECASE)),
-    ("auth", re.compile(r"\b(?:401|403)\b|unauthorized|forbidden|authentication", re.IGNORECASE)),
+    (
+        "auth",
+        re.compile(
+            r"(?<![,.\d])(?:401|403)(?![,.\d])|status(?:_code)?\s*[=:]\s*(?:401|403)|unauthorized|forbidden|authentication",
+            re.IGNORECASE,
+        ),
+    ),
 ]
 SECRET_RE = re.compile(r"(?i)(api[_-]?key|token|password|secret)\s*[:=]\s*\S+")
 
@@ -50,18 +56,56 @@ class ErrorRadarTool(Tool):
         if scope in {"quick", "ui", "all"}:
             findings.extend(self._scan_windows())
 
-        findings = findings[:limit]
         severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        findings = self._dedupe_findings(findings)
         findings.sort(key=lambda item: severity_order.get(item.get("severity", "low"), 3))
+        findings = findings[:limit]
 
         data = {
             "schema": "ana.error_radar.v1",
             "scope": scope,
             "findings": findings,
             "count": len(findings),
+            "summary": self._finding_summary(findings),
             "recommended_next_step": self._recommend(findings),
         }
         return ToolResult(status=ToolStatus.SUCCESS, data=data, message=f"{len(findings)} findings")
+
+    def _dedupe_findings(self, findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        unique: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, str]] = set()
+        for finding in findings:
+            key = (
+                str(finding.get("source") or ""),
+                str(finding.get("kind") or ""),
+                str(finding.get("summary") or "")[:160],
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(finding)
+        return unique
+
+    def _finding_summary(self, findings: list[dict[str, Any]]) -> dict[str, Any]:
+        by_severity: dict[str, int] = {}
+        by_kind: dict[str, int] = {}
+        by_source: dict[str, int] = {}
+        for finding in findings:
+            severity = str(finding.get("severity") or "unknown")
+            kind = str(finding.get("kind") or "unknown")
+            source = str(finding.get("source") or "unknown")
+            by_severity[severity] = by_severity.get(severity, 0) + 1
+            by_kind[kind] = by_kind.get(kind, 0) + 1
+            by_source[source] = by_source.get(source, 0) + 1
+        top = findings[0] if findings else None
+        return {
+            "by_severity": by_severity,
+            "by_kind": by_kind,
+            "by_source": by_source,
+            "top_kind": top.get("kind") if top else None,
+            "top_severity": top.get("severity") if top else None,
+            "top_source": top.get("source") if top else None,
+        }
 
     def _scan_logs(self, limit: int) -> List[Dict[str, Any]]:
         findings: List[Dict[str, Any]] = []
@@ -80,6 +124,10 @@ class ErrorRadarTool(Tool):
                     continue
                 if log_name.endswith(".jsonl"):
                     text = self._observability_summary(text)
+                    if not text:
+                        continue
+                if self._is_monitor_noise(text):
+                    continue
                 for kind, pattern in ERROR_PATTERNS:
                     if pattern.search(text):
                         findings.append({
@@ -111,8 +159,76 @@ class ErrorRadarTool(Tool):
             return [{"source": "git", "kind": "git_error", "severity": "medium", "summary": result.stderr.strip()[:180]}]
         lines = [line for line in result.stdout.splitlines() if line.strip()]
         if len(lines) > 40:
-            return [{"source": "git", "kind": "large_dirty_tree", "severity": "medium", "summary": f"{len(lines)} changed paths; review before committing"}]
+            breakdown = self._dirty_tree_breakdown(lines)
+            return [{
+                "source": "git",
+                "kind": "large_dirty_tree",
+                "severity": "medium",
+                "summary": f"{len(lines)} changed paths; review before committing",
+                "details": breakdown,
+            }]
         return []
+
+    def _dirty_tree_breakdown(self, lines: list[str]) -> dict[str, Any]:
+        tracked = 0
+        untracked = 0
+        docs = 0
+        tests = 0
+        runtime = 0
+        checkpoints = 0
+        examples = 0
+        samples: list[str] = []
+        for line in lines:
+            status = line[:2]
+            path = line[3:].strip() if len(line) > 3 else line.strip()
+            normalized = path.replace("\\", "/")
+            if status == "??":
+                untracked += 1
+            else:
+                tracked += 1
+            if normalized.startswith("docs/") or "/docs/" in normalized:
+                docs += 1
+            if normalized.startswith("tests/") or "/tests/" in normalized:
+                tests += 1
+            if self._is_runtime_path(normalized):
+                runtime += 1
+            if "SESSION_CHECKPOINT_" in normalized or "/rem_sleep/" in normalized:
+                checkpoints += 1
+            if normalized.startswith("docs/examples/"):
+                examples += 1
+            if len(samples) < 8:
+                samples.append(normalized)
+        return {
+            "total": len(lines),
+            "tracked": tracked,
+            "untracked": untracked,
+            "docs": docs,
+            "examples": examples,
+            "tests": tests,
+            "runtime": runtime,
+            "checkpoints": checkpoints,
+            "sample_paths": samples,
+            "next_step": "Group changes by docs/tests/runtime/checkpoints before any commit or archive action.",
+        }
+
+    def _is_runtime_path(self, normalized: str) -> bool:
+        path = normalized.removeprefix("../")
+        return (
+            path.startswith("ANA_MAX/tools/")
+            or path.startswith("ANA_MAX/core/")
+            or path.startswith("ANA_MAX/dev_artifacts/scripts/")
+            or path.startswith("tools/")
+            or path.startswith("core/")
+            or path.startswith("dev_artifacts/scripts/")
+            or path in {
+                "ANA_MAX/main.py",
+                "ANA_MAX/mcp_stdio.py",
+                "ANA_MAX/test_all_tools.py",
+                "main.py",
+                "mcp_stdio.py",
+                "test_all_tools.py",
+            }
+        )
 
     def _scan_windows(self) -> List[Dict[str, Any]]:
         findings: List[Dict[str, Any]] = []
@@ -139,7 +255,27 @@ class ErrorRadarTool(Tool):
         except Exception as exc:
             logger.debug("Could not parse observability record: %s", exc)
             return text
-        return text
+        return ""
+
+    def _is_monitor_noise(self, text: str) -> bool:
+        markers = [
+            "MCP tool failed with schema mismatch action versus operation",
+            "Invalid value for operation",
+            "definitely_missing_tool_for_guidance",
+            "Tool tool_contract_validator failed",
+            "tool_contract_validator failed",
+            "HTTP /mcp tools/call start name=debugger",
+            "TOOL START name=debugger",
+        ]
+        if any(marker in text for marker in markers):
+            return True
+        if "traceback_text" in text and "name=debugger" in text:
+            return True
+        if " - INFO - " in text and "success=True" in text:
+            return True
+        if " - INFO - " in text and re.search(r"\bfailed\b|\bERROR\b", text, re.IGNORECASE):
+            return True
+        return False
 
     def _redact(self, text: str) -> str:
         return SECRET_RE.sub(lambda m: f"{m.group(1)}=********", text)

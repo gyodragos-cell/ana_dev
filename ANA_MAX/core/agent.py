@@ -289,10 +289,6 @@ class ANAAgent:
             from core.backends import aimlapi_backend
 
             aimlapi_backend.init(self)
-        elif backend == "adal":
-            from core.backends import adal_backend
-
-            adal_backend.init(self)
         elif backend == "nemotron_openrouter":
             from core.backends import nemotron_openrouter_backend
 
@@ -444,10 +440,6 @@ class ANAAgent:
             from core.backends import aimlapi_backend
 
             return aimlapi_backend.send(self, message)
-        if backend == "adal":
-            from core.backends import adal_backend
-
-            return adal_backend.send(self, message)
         if backend == "nemotron_openrouter":
             from core.backends import nemotron_openrouter_backend
 

@@ -127,7 +127,7 @@ These are the default tools agents should prefer first.
 
 | Tool | Role | Invocation | Risk | Decision | Next action |
 | --- | --- | --- | --- | --- | --- |
-| `adal_integration` | experimental | hidden-lab | medium | hide | Clarify current value and safe status operation. |
+| `adal_integration` | retired | historical | medium | remove | Removed from active ANA surface to avoid external-tool promotion/noise. |
 | `science_research` | experimental | user-confirmed | medium | hide | Needs dataset/simulation use case. |
 | `privacy_shield` | release | agent-first/user-confirmed | low | keep | Use for release hygiene and redaction checks. |
 

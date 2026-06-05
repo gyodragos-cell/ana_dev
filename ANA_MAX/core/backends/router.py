@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, Dict
 
-from core.backends import adal_backend, aimlapi_backend, gemini_backend, grok_backend, ollama_backend
+from core.backends import aimlapi_backend, gemini_backend, grok_backend, ollama_backend
 from core.backends import opencode_zen_backend, kimi_backend
 from core.backends import nemotron_openrouter_backend
 
@@ -19,7 +19,6 @@ def init_backend(agent: Any) -> None:
     initializers: Dict[str, Callable[[], None]] = {
         "gemini": lambda: gemini_backend.init(agent),
         "ollama": lambda: ollama_backend.init(agent),
-        "adal": lambda: adal_backend.init(agent),
         "aimlapi": lambda: aimlapi_backend.init(agent),
         "grok": lambda: grok_backend.init(agent),
         "opencode_zen": lambda: opencode_zen_backend.init(agent),

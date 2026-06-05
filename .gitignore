@@ -33,6 +33,7 @@ vscode_extension/extension/
 ANA_MAX/dev_artifacts/*.zip
 ANA_MAX/dev_artifacts/media/
 ANA_MAX/dev_artifacts/reports/
+ANA_MAX/dev_artifacts/archives/
 ANA_MAX/dev_artifacts/vsix_build_*/
 ANA_MAX/dev_artifacts/vsix_verify_*/
 ANA_MAX/dev_artifacts/vsix_template/
@@ -68,3 +69,6 @@ ANA_MAX/full_analysis.py
 ANA_MAX/read_subs.py
 ANA_MAX/voice_queue.txt
 voice_queue.txt
+
+# Claude brain — canal experimental Claude<->ANA, lab-only
+.claude_brain/

@@ -49,6 +49,21 @@ OBSERVATION_TOOLS = {
     "system_control",
 }
 
+MONITOR_CONTEXT_QUERIES = {
+    "operator status reload behavior",
+    "next scoped lab action after green baseline",
+}
+
+MONITOR_CONTEXT_TASKS = {
+    "ANA nucleus smoke graph context",
+    "ANA lab autonomous readiness pass",
+}
+
+MONITOR_ROUTER_TASKS = {
+    "ANA nucleus smoke code context verify",
+    "ANA lab autonomous readiness pass",
+}
+
 
 class AgentCoachTool(Tool):
     def __init__(self) -> None:
@@ -232,6 +247,9 @@ class AgentCoachTool(Tool):
                 "mode": router_data.get("mode", router_mode),
                 "headline": router_data.get("headline", ""),
                 "recommended_tools": router_tools,
+                "tool_profiles": router_data.get("tool_profiles", {}),
+                "active_profiles": router_data.get("active_profiles", []),
+                "filtered_by_profile": router_data.get("filtered_by_profile", []),
                 "steps": router_data.get("steps", []),
                 "guardrail": router_data.get("guardrail", ""),
             },
@@ -279,13 +297,17 @@ class AgentCoachTool(Tool):
         return lessons[-limit:]
 
     def _build_report(self, entries: List[Dict[str, Any]], repeat_threshold: int) -> Dict[str, Any]:
+        raw_count = len(entries)
+        entries = [entry for entry in entries if not self._is_monitor_entry(entry)]
         if not entries:
             return {
                 "severity": "ok",
-                "headline": "No telemetry yet. Start by observing the workspace and UI.",
+                "headline": "Only monitor telemetry found. Lab hub/watchdog/mirror look calm.",
                 "signals": [],
-                "advice": ["Call workspace_situational_awareness, then inspect the active UI before acting."],
+                "advice": ["Continue with the live console open; investigate only if a real task/tool fails."],
                 "next_best_tools": OBSERVE_TOOLS,
+                "inspected_entries": 0,
+                "raw_entries": raw_count,
             }
 
         signals: List[Dict[str, Any]] = []
@@ -370,7 +392,81 @@ class AgentCoachTool(Tool):
             "next_best_tools": next_tools,
             "recent_tools": self._recent_tool_counts(entries),
             "inspected_entries": len(entries),
+            "raw_entries": raw_count,
         }
+
+    def _is_monitor_entry(self, entry: Dict[str, Any]) -> bool:
+        tool = str(entry.get("tool", ""))
+        args = entry.get("args") or {}
+        status = str(entry.get("status") or "")
+        error = str(entry.get("error") or "")
+
+        if tool == "event_stream" and str(args.get("action", "")).strip("'\"") == "stats":
+            return True
+        if tool == "graph_context_pack" and str(args.get("action", "")).strip("'\"") == "stats":
+            return status == "success"
+        if (
+            tool == "code_context_pack"
+            and str(args.get("query", "")).strip("'\"") == "operator status reload behavior"
+            and status == "success"
+        ):
+            return True
+        if tool == "code_context_pack" and status == "success":
+            query = str(args.get("query", "")).strip("'\"")
+            task = str(args.get("task", "")).strip("'\"")
+            if query in MONITOR_CONTEXT_QUERIES or task in MONITOR_CONTEXT_TASKS:
+                return True
+        if tool == "tool_router" and status == "success":
+            task = str(args.get("task", "")).strip("'\"")
+            if task in MONITOR_ROUTER_TASKS:
+                return True
+        if tool == "session_audit" and str(args.get("action", "")).strip("'\"") == "trust":
+            return status == "success"
+        if tool == "error_radar" and str(args.get("scope", "quick")).strip("'\"") in {"quick", "git"}:
+            return status == "success"
+        if tool == "foreground_ui_snapshot" and status == "success":
+            return True
+        if tool == "windows_uia_bridge" and self._is_readonly_uia(args) and status == "success":
+            return True
+        if tool == "frida_instrument" and str(args.get("operation", "")).strip("'\"") in {"version", "devices"}:
+            return status == "success" or "Frida not installed" in error
+        if tool == "desktop_control" and str(args.get("operation", "")).strip("'\"") == "view":
+            return status == "success"
+        if (
+            tool == "ana_memory"
+            and str(args.get("action", "")).strip("'\"") == "find_error_solution"
+            and status == "success"
+        ):
+            return True
+        if (
+            tool == "tool_contract_validator"
+            and str(args.get("action", "")).strip("'\"") == "validate_tool"
+            and str(args.get("tool_name", "")).strip("'\"") == "definitely_missing_tool_for_guidance"
+        ):
+            return True
+        if tool == "tool_router" and "MCP tool failed with schema mismatch" in str(args.get("task", "")):
+            return True
+        if tool == "tool_router" and str(args.get("error", "")).strip("'\"") == "Invalid value for operation":
+            return True
+        if tool == "tool_router" and str(args.get("task", "")).strip("'\"") == "Tool tool_contract_validator failed":
+            return True
+        if tool == "demo_probe" and "inactive profile" in error.lower():
+            return True
+        if tool == "router_failure_demo" and error == "demo failure":
+            return True
+        if (
+            tool in {"tool_router", "agent_coach"}
+            and str(args.get("task", "")).strip("'\"") == "Tool router_failure_demo failed"
+            and str(args.get("error", "")).strip("'\"") == "demo failure"
+        ):
+            return True
+        if (
+            tool == "agent_coach"
+            and str(args.get("task", "")).strip("'\"") == "Tool tool_contract_validator failed"
+            and str(args.get("error", "")).strip("'\"") == "success=false"
+        ):
+            return True
+        return False
 
     def _find_repeated_actions(self, entries: Iterable[Dict[str, Any]], repeat_threshold: int) -> List[Dict[str, Any]]:
         counts: Counter[Tuple[str, str]] = Counter()

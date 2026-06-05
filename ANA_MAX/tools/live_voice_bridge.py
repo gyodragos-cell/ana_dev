@@ -15,7 +15,10 @@ import atexit
 import tempfile
 from pathlib import Path
 
-import pyttsx3
+try:
+    import pyttsx3
+except Exception:  # pragma: no cover - depends on local voice packages
+    pyttsx3 = None
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,8 @@ _pyttsx3_broken = False
 
 
 def _create_engine(rate: int = 150, volume: float = 0.7):
+    if pyttsx3 is None:
+        raise RuntimeError("pyttsx3 is not installed")
     engine = pyttsx3.init()
     engine.setProperty("rate", rate)
     engine.setProperty("volume", volume)

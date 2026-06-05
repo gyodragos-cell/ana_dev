@@ -112,7 +112,6 @@ def load_tools():
         ("tools.ana_runtime_inspector",     "AnaRuntimeInspectorTool"),
         ("tools.event_stream_tool",         "EventStreamTool"),
         ("tools.vector_memory_tool",        "VectorMemoryTool"),
-        ("tools.adal_tool",                 "AdalTool"),
         ("tools.apk_analyzer",              "ApkAnalyzerTool"),
         ("tools.mitm_analyzer_tool",        "MitmAnalyzerTool"),
         ("tools.network_pentest_tool",      "NetworkPentestTool"),

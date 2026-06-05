@@ -59,6 +59,7 @@ Use these when normal observation is not enough.
 | --- | --- | --- |
 | `live_watchdog.py` | Operator dashboard: MCP health, tool count, Frida version, window sanity, log tail, coach warnings. | Runs as a monitor; not a decision-maker. |
 | `frida_instrument` | Runtime instrumentation, process/module/function inspection, white-hat diagnostics. | Authorized use only; `confirm=True`; not default for normal coding. |
+| `ana_input_probe_spec.py` | Lab-only spec for short, aggregate-only Windows input API probes such as Raw Input registration or keyboard state API calls. | Authorized targets only; no raw key storage, no character decoding, no continuous monitoring, no anti-cheat bypass. |
 | `windows_insight` / `windows_deep_sight` | Deep local diagnostics and process/system view. | Premium/internal; controlled lab use. |
 | `event_stream` | Runtime event/debug stream. | Needs concise safe views before default use. |
 | `live_tool_healer` | Failure pattern and repair guidance. | Needs more real failure validation. |
@@ -128,6 +129,12 @@ tests, or UI snapshots cannot answer:
 
 Do not use Frida for ordinary file edits, docs, project navigation, simple test
 failures, or guesses. It is a microscope, not a hammer.
+
+Input API probes are even narrower: use them only to confirm whether an
+authorized local test process calls Windows input APIs such as
+`RegisterRawInputDevices`, `GetAsyncKeyState`, or `GetKeyboardState`. They must
+be short-lived, aggregate-only, and lab-only. Do not decode characters, store raw
+keys, monitor continuously, or use them for anti-cheat bypass.
 
 ## When Watchdog Is Worth It
 

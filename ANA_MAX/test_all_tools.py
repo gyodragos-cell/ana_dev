@@ -52,7 +52,6 @@ SKIP_REASONS: Dict[str, str] = {
 }
 
 SAFE_PARAMS: Dict[str, Dict[str, Any]] = {
-    "adal_integration": {"operation": "version"},
     "adb_operations": {"operation": "devices", "timeout": 5},
     "ana_identity": {},
     "ana_memory": {"action": "stats"},

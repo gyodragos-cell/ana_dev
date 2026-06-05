@@ -306,7 +306,9 @@ def health():
     return jsonify({
         "status": "online",
         "agent": f"ANA MAX MCP v{srv.agent_version}",
+        "mcp_ready": True,
         "ready": True,
+        "tools_count": len(srv.tools),
         "port": 8765
     })
 

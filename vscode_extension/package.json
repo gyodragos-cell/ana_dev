@@ -1,8 +1,8 @@
 {
-  "name": "ana-antigravity-chat",
-  "displayName": "ANA MAX - Hybrid AI Cockpit",
-  "description": "Local-first MCP cockpit that helps AI coding agents observe, route, act, verify and remember with ANA MAX.",
-  "version": "1.0.13",
+  "name": "ana-codex-cockpit",
+  "displayName": "ANA MAX - Codex MCP Cockpit",
+  "description": "Local-first MCP cockpit for Codex: observe, route, act, verify, and remember with ANA MAX.",
+  "version": "1.0.71",
   "publisher": "d4d8176a-bb85-66ef-93dd-a58bc9ddfdad",
   "preview": true,
   "author": {
@@ -37,9 +37,8 @@
     "ai-agent",
     "agent-ide",
     "codex",
-    "antigravity",
-    "qoder",
-    "windsurf",
+    "codex-tools",
+    "coding-agent",
     "vscode",
     "local-ai",
     "windows-automation",
@@ -58,48 +57,42 @@
   },
   "qna": false,
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.75.0"
   },
   "extensionKind": [
+    "ui",
     "workspace"
   ],
-  "activationEvents": [
-    "onCommand:ana.openChat",
-    "onCommand:ana.callTool",
-    "onCommand:ana.showHybridConfig",
-    "onCommand:anaMax.startRuntime",
-    "onCommand:anaMax.wakeSession",
-    "onCommand:anaMax.showHealth",
-    "onCommand:anaMax.runScenario",
-    "onCommand:anaMax.executeTool",
-    "onCommand:anaMax.inspectRuntime",
-    "onCommand:anaMax.showRouterDecisions",
-    "onCommand:anaMax.runRemSleep",
-    "onCommand:anaMax.previewRest",
-    "onCommand:anaMax.showObservability",
-    "onCommand:anaMax.openDashboard"
-  ],
   "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:anaMax.actions"
+  ],
   "contributes": {
     "commands": [
       {
+        "command": "anaMax.openLiveConsole",
+        "title": "ANA MAX: Open Live Console",
+        "icon": "$(terminal)"
+      },
+      {
         "command": "ana.openChat",
-        "title": "ANA & Antigravity: Open Cockpit",
+        "title": "ANA MAX: Cockpit Disabled / Open Live Console",
         "category": "ANA"
       },
       {
         "command": "ana.callTool",
-        "title": "ANA & Antigravity: Call MCP Tool",
+        "title": "ANA MAX: Call MCP Tool",
         "category": "ANA"
       },
       {
-        "command": "ana.showHybridConfig",
-        "title": "ANA & Antigravity: Show Hybrid MCP Config",
+        "command": "ana.showCodexMcpConfig",
+        "title": "ANA MAX: Show MCP Config",
         "category": "ANA"
       },
       {
         "command": "anaMax.startRuntime",
-        "title": "ANA MAX: Start Runtime",
+        "title": "ANA MAX: Start MCP Server",
         "icon": "$(play)"
       },
       {
@@ -108,9 +101,114 @@
         "icon": "$(pulse)"
       },
       {
+        "command": "anaMax.codexCompanion",
+        "title": "ANA MAX: Codex Companion",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "anaMax.codexGuard",
+        "title": "ANA MAX: Codex Guard",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "anaMax.voiceInbox",
+        "title": "ANA MAX: Voice Inbox",
+        "icon": "$(record)"
+      },
+      {
+        "command": "anaMax.conversationAudit",
+        "title": "ANA MAX: Conversation Audit",
+        "icon": "$(megaphone)"
+      },
+      {
+        "command": "anaMax.liveConversationAudit",
+        "title": "ANA MAX: Live Conversation Audit",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "anaMax.voiceOperatorSmoke",
+        "title": "ANA MAX: Voice Operator Smoke",
+        "icon": "$(unmute)"
+      },
+      {
+        "command": "anaMax.showHealthJson",
+        "title": "ANA MAX: Health JSON",
+        "icon": "$(json)"
+      },
+      {
+        "command": "anaMax.listTools",
+        "title": "ANA MAX: List Tools",
+        "icon": "$(list-unordered)"
+      },
+      {
+        "command": "anaMax.liveDebug",
+        "title": "ANA MAX: Live Debug",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "anaMax.nucleusSmoke",
+        "title": "ANA MAX: Nucleus Smoke",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "anaMax.autonomyPass",
+        "title": "ANA MAX: Autonomy Pass",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "anaMax.labQualityGate",
+        "title": "ANA MAX: Lab Quality Gate",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "anaMax.noReloadGate",
+        "title": "ANA MAX: No-Reload Gate",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "anaMax.postReloadVerify",
+        "title": "ANA MAX: Post-Reload Verify",
+        "icon": "$(pass)"
+      },
+      {
+        "command": "anaMax.operatorStatus",
+        "title": "ANA MAX: Operator Status",
+        "icon": "$(info)"
+      },
+      {
+        "command": "anaMax.reviewBatchPlan",
+        "title": "ANA MAX: Review Batch Plan",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "anaMax.liveBehavior",
+        "title": "ANA MAX: Live Behavior",
+        "icon": "$(debug-coverage)"
+      },
+      {
+        "command": "anaMax.reloadReadiness",
+        "title": "ANA MAX: Reload Readiness",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "anaMax.reloadConsistency",
+        "title": "ANA MAX: Reload Consistency",
+        "icon": "$(check-all)"
+      },
+      {
         "command": "anaMax.wakeSession",
         "title": "ANA MAX: Wake Session",
         "icon": "$(debug-restart)"
+      },
+      {
+        "command": "anaMax.checkpoint",
+        "title": "ANA MAX: Checkpoint",
+        "icon": "$(save)"
+      },
+      {
+        "command": "anaMax.identity",
+        "title": "ANA MAX: Identity",
+        "icon": "$(account)"
       },
       {
         "command": "anaMax.runScenario",
@@ -128,6 +226,31 @@
         "command": "anaMax.showRouterDecisions",
         "title": "ANA MAX: Show Router Decisions",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "anaMax.profileStatus",
+        "title": "ANA MAX: Profile Status",
+        "icon": "$(symbol-namespace)"
+      },
+      {
+        "command": "anaMax.refreshCodeMap",
+        "title": "ANA MAX: Refresh Context Maps",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "anaMax.showTrustScore",
+        "title": "ANA MAX: Show Trust Score",
+        "icon": "$(verified)"
+      },
+      {
+        "command": "anaMax.generateSessionAudit",
+        "title": "ANA MAX: Generate Session Audit",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "anaMax.binaryMap",
+        "title": "ANA MAX: Static Binary Map",
+        "icon": "$(file-binary)"
       },
       {
         "command": "anaMax.runRemSleep",
@@ -154,7 +277,7 @@
         {
           "id": "anaMax",
           "title": "ANA MAX",
-          "icon": "assets/ana-max-icon.png"
+          "icon": "assets/ana-max-activity.svg"
         }
       ]
     },
@@ -162,12 +285,21 @@
       "anaMax": [
         {
           "id": "anaMax.actions",
-          "name": "Runtime"
+          "name": "Runtime",
+          "icon": "assets/ana-max-activity.svg"
         }
       ]
     },
     "menus": {
       "commandPalette": [
+        {
+          "command": "anaMax.openLiveConsole",
+          "when": "true"
+        },
+        {
+          "command": "ana.openChat",
+          "when": "false"
+        },
         {
           "command": "anaMax.startRuntime",
           "when": "true"
@@ -177,11 +309,115 @@
           "when": "true"
         },
         {
+          "command": "anaMax.codexCompanion",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.codexGuard",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.voiceInbox",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.conversationAudit",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.liveConversationAudit",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.voiceOperatorSmoke",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.showHealthJson",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.listTools",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.liveDebug",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.nucleusSmoke",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.autonomyPass",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.labQualityGate",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.noReloadGate",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.postReloadVerify",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.operatorStatus",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.reviewBatchPlan",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.liveBehavior",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.reloadReadiness",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.reloadConsistency",
+          "when": "true"
+        },
+        {
           "command": "anaMax.wakeSession",
           "when": "true"
         },
         {
-          "command": "anaMax.previewRest",
+          "command": "anaMax.checkpoint",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.identity",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.showRouterDecisions",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.profileStatus",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.refreshCodeMap",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.showTrustScore",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.generateSessionAudit",
+          "when": "true"
+        },
+        {
+          "command": "anaMax.binaryMap",
           "when": "true"
         },
         {
@@ -189,43 +425,36 @@
           "when": "true"
         },
         {
-          "command": "ana.openChat",
-          "when": "true"
-        },
-        {
-          "command": "ana.showHybridConfig",
+          "command": "anaMax.previewRest",
           "when": "true"
         }
       ],
       "view/title": [
         {
-          "command": "anaMax.startRuntime",
+          "command": "anaMax.openLiveConsole",
           "when": "view == anaMax.actions",
           "group": "navigation@1"
         },
         {
-          "command": "anaMax.showHealth",
-          "when": "view == anaMax.actions",
+          "command": "ana.openChat",
+          "when": "false",
           "group": "navigation@2"
         },
         {
-          "command": "anaMax.wakeSession",
+          "command": "anaMax.startRuntime",
           "when": "view == anaMax.actions",
           "group": "navigation@3"
         },
         {
-          "command": "anaMax.previewRest",
+          "command": "anaMax.showHealth",
           "when": "view == anaMax.actions",
           "group": "navigation@4"
         }
       ],
       "editor/title": [
         {
-          "command": "anaMax.startRuntime",
-          "group": "navigation@20"
-        },
-        {
           "command": "ana.openChat",
+          "when": "false",
           "group": "navigation@21"
         }
       ]
@@ -246,7 +475,7 @@
         "anaMax.runtimeRoot": {
           "type": "string",
           "default": "",
-          "description": "Local ANA MAX runtime root used by the start command. Defaults to the open workspace folder."
+          "description": "Local ANA MAX runtime root used by the start command. Defaults to the open workspace folder. In Remote/WSL/SSH windows, set this to the Windows ANA_MAX folder when using local desktop tools."
         },
         "anaMax.pythonPath": {
           "type": "string",
@@ -261,17 +490,152 @@
         "anaMax.dashboardUrl": {
           "type": "string",
           "default": "http://127.0.0.1:8787",
-          "description": "ANA MAX Control Center dashboard endpoint."
+          "description": "Legacy dashboard endpoint. The Activity Bar dashboard command now generates a local HTML dashboard from the live MCP runtime."
+        },
+        "anaMax.preferredBrowserPath": {
+          "type": "string",
+          "default": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "description": "Preferred browser executable for local generated ANA HTML reports. Falls back to VS Code openExternal if unavailable."
         },
         "anaMax.codexServerName": {
           "type": "string",
           "default": "anamax",
-          "description": "Codex MCP server name for the shared ANA MAX runtime."
+          "description": "Codex MCP server name for the ANA MAX runtime."
         },
-        "anaMax.antigravityServerName": {
+        "anaMax.autoStartRuntime": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open the Live Console and start or attach to the ANA MAX MCP runtime when the extension activates."
+        },
+        "anaMax.goldenRulePreflight": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the ANA Codex Companion preflight before high-impact Activity Bar actions so Codex does not work blind."
+        },
+        "anaMax.codexGuardAutoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "After ANA MCP becomes ready, automatically run an audible ANA Guard check so Codex cannot silently proceed without ANA evidence."
+        },
+        "anaMax.codexGuardMinIntervalMs": {
+          "type": "number",
+          "default": 60000,
+          "description": "Minimum delay between automatic ANA Guard checks."
+        },
+        "anaMax.codexGuardStrict": {
+          "type": "boolean",
+          "default": false,
+          "description": "Treat ANA Guard WARN as blocking. Keep disabled in the lab unless Billy asks for strict stop-on-warn behavior."
+        },
+        "anaMax.voiceReadout": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak important ANA Live Console decisions and warnings through the local chat voice bridge."
+        },
+        "anaMax.voiceReadoutDirect": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also speak filtered Live Console lines directly through Windows System.Speech. Disabled by default to avoid duplicate voices; the queue bridge is the primary ANA voice channel."
+        },
+        "anaMax.voiceReadoutClipboard": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak copied chat text through the local chat voice bridge. Private lab only; sensitive words are skipped by the bridge."
+        },
+        "anaMax.voiceReadoutLogEvents": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak useful Live Console log events such as tool start/end, MCP call results, watchdog warnings, and audit/reload status while still filtering mirror/heartbeat screenshot noise."
+        },
+        "anaMax.voiceAccessibilityCues": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable private-lab accessibility audio cues for ANA buttons, action start/end, server readiness, and Voice Inbox phrase completion."
+        },
+        "anaMax.voiceButtonAnnouncements": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak a short label when ANA MAX Activity Bar or command-palette actions are triggered."
+        },
+        "anaMax.voiceActionCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak a short completion or failure message when ANA MAX actions finish."
+        },
+        "anaMax.voiceOrientationCues": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak deduplicated screen-orientation cues from mirror/watchdog logs, such as the active app and window title."
+        },
+        "anaMax.voiceOrientationMinIntervalMs": {
+          "type": "number",
+          "default": 20000,
+          "description": "Minimum delay before repeating the same spoken screen-orientation cue."
+        },
+        "anaMax.voiceCueBeeps": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play short beep cues for button, start, success, failure, ready, and phrase-completion events."
+        },
+        "anaMax.voiceReadoutMaxChars": {
+          "type": "number",
+          "default": 260,
+          "description": "Maximum characters spoken from one filtered Live Console line."
+        },
+        "anaMax.voiceFullReadout": {
+          "type": "boolean",
+          "default": true,
+          "description": "Speak long ANA queue and copied-chat text in chunks instead of skipping or truncating it."
+        },
+        "anaMax.voiceFullReadoutMaxChars": {
+          "type": "number",
+          "default": 6000,
+          "description": "Maximum total characters spoken for one full-readout ANA queue or copied-chat event."
+        },
+        "anaMax.voiceFullReadoutChunkChars": {
+          "type": "number",
+          "default": 700,
+          "description": "Characters per spoken chunk when full voice readout is enabled."
+        },
+        "anaMax.voiceReadoutMinIntervalMs": {
+          "type": "number",
+          "default": 1500,
+          "description": "Minimum delay between spoken Live Console lines."
+        },
+        "anaMax.voiceInboxAutoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the private-lab microphone Voice Inbox daemon when the ANA Live Console opens."
+        },
+        "anaMax.voiceInboxAutoSubmit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically paste recognized Voice Inbox text into the focused allowed window when it starts with an allowed prefix."
+        },
+        "anaMax.voiceInboxPressEnter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Press Enter after Voice Inbox auto-submit. Keep the Codex/ChatGPT input focused before speaking."
+        },
+        "anaMax.voiceInboxDuration": {
+          "type": "number",
+          "default": 8,
+          "description": "Seconds for each repeated Voice Inbox listening window, from 2 to 30."
+        },
+        "anaMax.voiceInboxSubmitPrefix": {
           "type": "string",
-          "default": "anamax",
-          "description": "Antigravity/Qoder/Windsurf MCP server name for the shared ANA MAX runtime."
+          "default": "codex,ana",
+          "description": "Comma-separated words that must start recognized speech before Voice Inbox auto-submit runs."
+        },
+        "anaMax.voiceInboxAllowedTitles": {
+          "type": "string",
+          "default": "Visual Studio Code,Code,Codex,ChatGPT",
+          "description": "Comma-separated foreground window title fragments where Voice Inbox auto-submit is allowed."
+        },
+        "anaMax.conversationAuditLiveAutoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically stream ANA conversation audit events into the Live Console in real time."
         }
       }
     }

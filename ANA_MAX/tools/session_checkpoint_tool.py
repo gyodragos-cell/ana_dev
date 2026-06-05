@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
@@ -58,17 +59,21 @@ class SessionCheckpointTool(Tool):
             self._save_to_conversation_learning(checkpoint)
             self._save_to_ana_memory(checkpoint, md_path)
             self._write_latest_pointer(md_path, checkpoint)
+            memory_archive_refresh = self._refresh_memory_archive_report()
         except Exception as exc:
             return ToolResult(status=ToolStatus.ERROR, error=str(exc))
 
+        data = {
+            "saved": True,
+            "path": str(md_path),
+            "topic": checkpoint["memory_topic"],
+            "timestamp": checkpoint["timestamp"],
+        }
+        if memory_archive_refresh:
+            data["memory_archive_refresh"] = memory_archive_refresh
         return ToolResult(
             status=ToolStatus.SUCCESS,
-            data={
-                "saved": True,
-                "path": str(md_path),
-                "topic": checkpoint["memory_topic"],
-                "timestamp": checkpoint["timestamp"],
-            },
+            data=data,
             message=f"Session checkpoint saved: {md_path.name}",
         )
 
@@ -165,6 +170,7 @@ class SessionCheckpointTool(Tool):
 
     def _write_latest_pointer(self, md_path: Path, checkpoint: Dict[str, Any]) -> None:
         latest = self.docs_dir / "CURRENT_SESSION_HANDOFF.md"
+        preserved_notes = self._read_latest_preserved_notes(latest)
         latest.write_text(
             "\n".join(
                 [
@@ -176,10 +182,45 @@ class SessionCheckpointTool(Tool):
                     "",
                     "Open the checkpoint file for the full handoff.",
                     "",
+                    *preserved_notes,
                 ]
             ),
             encoding="utf-8",
         )
+
+    def _refresh_memory_archive_report(self) -> Dict[str, Any]:
+        scripts_dir = self.root / "dev_artifacts" / "scripts"
+        if str(scripts_dir) not in sys.path:
+            sys.path.insert(0, str(scripts_dir))
+        try:
+            import ana_memory_archive  # type: ignore
+
+            plan = ana_memory_archive.build_archive_plan()
+            path = ana_memory_archive.write_report(plan)
+            return {
+                "mode": plan.get("mode"),
+                "total_moves": plan.get("total_moves"),
+                "archive_date_basis": plan.get("archive_date_basis", "utc"),
+                "report": str(path),
+            }
+        except Exception as exc:
+            return {
+                "status": "WARN",
+                "error": str(exc),
+            }
+
+    def _read_latest_preserved_notes(self, latest: Path) -> List[str]:
+        if not latest.exists():
+            return []
+        text = latest.read_text(encoding="utf-8", errors="replace")
+        marker = "Open the checkpoint file for the full handoff."
+        marker_pos = text.find(marker)
+        if marker_pos < 0:
+            return []
+        notes = text[marker_pos + len(marker):].strip()
+        if not notes:
+            return []
+        return notes.splitlines() + [""]
 
     def _git_status(self) -> Dict[str, Any]:
         root = self.root.parent

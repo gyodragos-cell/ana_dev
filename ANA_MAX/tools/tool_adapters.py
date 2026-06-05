@@ -15,7 +15,7 @@ class ContextEngineAdapter(Tool):
             name="context_engine",
             description="Advanced context management: observes active windows, clipboard, processes, classifies activity, predicts intentions",
             parameters=[
-                ToolParameter(name="action", description="Action to perform", type="string", required=True, choices=["start", "stop", "status", "predict", "feedback", "get_context"]),
+                ToolParameter(name="action", description="Action to perform", type="string", required=True, choices=["start", "stop", "context", "summary", "predict", "feedback", "get_context"]),
                 ToolParameter(name="pattern_key", description="Pattern key for feedback", type="string", required=False),
                 ToolParameter(name="accepted", description="Whether prediction was accepted", type="boolean", required=False)
             ],
@@ -26,7 +26,7 @@ class ContextEngineAdapter(Tool):
         try:
             from tools.context_engine import run
             result = run(kwargs)
-            if result.get("status") == "success":
+            if result.get("success") is True or result.get("status") == "success":
                 return ToolResult(status=ToolStatus.SUCCESS, data=result)
             else:
                 return ToolResult(status=ToolStatus.ERROR, error=result.get("error"))

@@ -1,4 +1,4 @@
-"""Package the ANA Antigravity cockpit VSIX without installing it.
+"""Package the ANA MAX cockpit VSIX without installing it.
 
 This is intentionally stdlib-only. It prepares a local VSIX from
 vscode_extension/ so the operator can install/reload later, when chat continuity
@@ -225,7 +225,7 @@ def main() -> int:
     version = package["version"]
     build_dir = ARTIFACTS_DIR / f"vsix_build_{version}"
     verify_dir = ARTIFACTS_DIR / f"vsix_verify_{version}"
-    output_main = ANA_ROOT / f"ana-antigravity-hybrid-{version}.vsix"
+    output_main = ANA_ROOT / f"ana-max-codex-cockpit-{version}.vsix"
     output_copy = SOURCE_DIR / f"{package['name']}-{version}.vsix"
 
     if build_dir.exists():

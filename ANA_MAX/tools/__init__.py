@@ -29,12 +29,17 @@ from tools.conversation_learning_tool import ConversationLearningTool
 from tools.session_log_miner_tool import SessionLogMinerTool
 from tools.session_checkpoint_tool import SessionCheckpointTool
 from tools.session_rem_sleep_tool import SessionRemSleepTool
+from tools.session_audit_tool import SessionAuditTool
 from tools.ana_context_tool import AnaContextTool
 from tools.tool_healthcheck import ToolHealthcheckTool
 from tools.terminal_tool import TerminalTool
 from tools.file_patch_tool import FilePatchTool
 from tools.project_navigator_tool import ProjectNavigatorTool
 from tools.error_radar_tool import ErrorRadarTool
+from tools.code_context_pack_tool import CodeContextPackTool
+from tools.graph_context_pack_tool import GraphContextPackTool
+from tools.input_api_probe_tool import InputApiProbeTool
+from tools.binary_map_tool import BinaryMapTool
 from tools.todo_tool import TodoWriteTool
 from tools.edit_tool import EditTool
 from tools.system_optimization_tool import SystemOptimizationTool
@@ -58,12 +63,6 @@ try:
 except Exception as exc:
     logger.debug("Optional tool import failed: ScienceTool: %s", exc)
     ScienceTool = None  # type: ignore
-
-try:
-    from tools.adal_tool import AdaLTool
-except Exception as exc:
-    logger.debug("Optional tool import failed: AdaLTool: %s", exc)
-    AdaLTool = None  # type: ignore
 
 try:
     from tools.advanced_scanner import AdvancedScannerTool
@@ -257,10 +256,11 @@ __all__ = [
     'SystemTool', 'CodeTool', 'GitTool', 'NetworkTool', 'SecurityTool',
     'QATool', 'MemoryTool', 'SmartSearchTool', 'DebuggerTool',
     'CodebaseUnderstandingTool', 'ConversationLearningTool',
-    'SessionLogMinerTool', 'SessionCheckpointTool', 'SessionRemSleepTool', 'AnaContextTool', 'ToolHealthcheckTool',
+    'SessionLogMinerTool', 'SessionCheckpointTool', 'SessionRemSleepTool', 'SessionAuditTool', 'AnaContextTool', 'ToolHealthcheckTool',
     'TerminalTool', 'FilePatchTool', 'ProjectNavigatorTool', 'ErrorRadarTool',
+    'CodeContextPackTool', 'InputApiProbeTool', 'BinaryMapTool',
     'WebAIBridgeTool', 'AutonomousTool', 'ScienceTool',
-    'AdaLTool', 'AdvancedScannerTool', 'TodoWriteTool', 'EditTool', 'TaskTool', 'SystemOptimizationTool',
+    'AdvancedScannerTool', 'TodoWriteTool', 'EditTool', 'TaskTool', 'SystemOptimizationTool',
     'MITMAnalyzerTool', 'NetworkPentestTool', 'HardwareScannerTool',
     # Mobile tools
     'ADBTool', 'FridaTool', 'APKAnalyzerTool', 'CodeSearchTool', 'WebScraperTool',

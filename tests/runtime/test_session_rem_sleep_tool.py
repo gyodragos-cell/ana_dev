@@ -70,3 +70,19 @@ def test_session_rem_sleep_consolidate_writes_report_without_memory(tmp_path: Pa
     latest = tool.execute(action="latest")
     assert latest.is_success
     assert latest.data["found"] is True
+
+
+def test_session_rem_sleep_latest_returns_newest_written_report(tmp_path: Path) -> None:
+    tool = _tool_with_tmp_root(tmp_path)
+    tool.reports_dir.mkdir(parents=True, exist_ok=True)
+    old = tool.reports_dir / "REM_SLEEP_REPORT_2026-05-31T190000+0000.md"
+    new = tool.reports_dir / "REM_SLEEP_REPORT_2026-05-31T221219+0000.md"
+    old.write_text("# old\n", encoding="utf-8")
+    new.write_text("# new\n", encoding="utf-8")
+
+    latest = tool.execute(action="latest")
+
+    assert latest.is_success
+    assert latest.data["found"] is True
+    assert latest.data["path"].endswith(new.name)
+    assert "# new" in latest.data["content"]

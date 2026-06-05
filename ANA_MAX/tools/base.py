@@ -203,21 +203,37 @@ import datetime
 import time
 
 _manifest = None
-def _load_permission_manifest():
-    global _manifest
-    if _manifest is not None:
-        return _manifest
-    
-    possible_paths = [
+_manifest_mtime = None
+_manifest_source = None
+
+
+def _permission_manifest_paths() -> List[str]:
+    env_path = os.environ.get("ANA_PERMISSION_MANIFEST", "").strip()
+    paths = []
+    if env_path:
+        paths.append(env_path)
+    paths.extend([
         os.path.join(os.path.dirname(__file__), "..", "config", "permission_manifest.json"),
         os.path.join("config", "permission_manifest.json"),
         "permission_manifest.json"
-    ]
-    for path in possible_paths:
+    ])
+    return paths
+
+
+def _load_permission_manifest():
+    global _manifest, _manifest_mtime, _manifest_source
+
+    for path in _permission_manifest_paths():
         if os.path.exists(path):
             try:
+                source = os.path.abspath(path)
+                mtime = os.path.getmtime(path)
+                if _manifest is not None and _manifest_source == source and _manifest_mtime == mtime:
+                    return _manifest
                 with open(path, 'r', encoding='utf-8') as f:
                     _manifest = json.load(f)
+                    _manifest_mtime = mtime
+                    _manifest_source = source
                     return _manifest
             except Exception as e:
                 logger.error(f"Error loading permission manifest: {e}")
@@ -226,7 +242,24 @@ def _load_permission_manifest():
         "global_settings": {"readonly_mode": False, "allowlist": []},
         "tools": {}
     }
+    _manifest_mtime = None
+    _manifest_source = None
     return _manifest
+
+
+def _profile_allows_tool(tool_conf: Dict[str, Any], global_settings: Dict[str, Any]) -> bool:
+    active_profiles = global_settings.get("active_profiles", [])
+    if not active_profiles:
+        return True
+
+    profile = tool_conf.get("profile")
+    profiles = tool_conf.get("profiles")
+    if profile and not profiles:
+        profiles = [profile]
+    if not profiles:
+        return True
+
+    return bool(set(profiles) & set(active_profiles))
 
 
 def _log_observability(tool_name: str, args: Dict[str, Any], start_time: float, latency: float, status: ToolStatus, error: Optional[str] = None):
@@ -256,6 +289,36 @@ def _log_observability(tool_name: str, args: Dict[str, Any], start_time: float, 
             f.write(json.dumps(entry, ensure_ascii=True) + "\n")
     except Exception as e:
         logger.error(f"Failed to write observability log: {e}")
+
+    _emit_observability_event(tool_name, masked_args, latency, status, error)
+
+
+def _emit_observability_event(
+    tool_name: str,
+    masked_args: Dict[str, Any],
+    latency: float,
+    status: ToolStatus,
+    error: Optional[str] = None,
+) -> None:
+    try:
+        from core.event_stream import EventType, get_event_stream
+
+        event_type = EventType.TOOL_RESULT if status == ToolStatus.SUCCESS else EventType.ERROR
+        get_event_stream().emit(
+            event_type=event_type,
+            source=tool_name,
+            data={
+                "tool": tool_name,
+                "args": masked_args,
+                "status": status.value,
+                "error": error,
+            },
+            metadata={"observer": "tools.base.safe_execute"},
+            duration=round(latency, 4),
+            success=status == ToolStatus.SUCCESS,
+        )
+    except Exception as exc:
+        logger.debug("Event stream observability emit skipped: %s", exc)
 
 
 class Tool(ABC):
@@ -324,6 +387,14 @@ class Tool(ABC):
             res = ToolResult(
                 status=ToolStatus.BLOCKED,
                 error=f"Tool disabled by permission manifest: {self.name}"
+            )
+            _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.BLOCKED, res.error)
+            return res
+
+        if not _profile_allows_tool(tool_conf, global_settings):
+            res = ToolResult(
+                status=ToolStatus.BLOCKED,
+                error=f"Tool blocked by inactive profile: {self.name}"
             )
             _log_observability(self.name, kwargs, time.time(), 0.0, ToolStatus.BLOCKED, res.error)
             return res

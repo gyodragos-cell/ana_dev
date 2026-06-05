@@ -1,0 +1,187 @@
+{
+  "schema": "ana.session_audit.v1",
+  "run_id": "vscode-2026-06-01T13-53-00-651Z",
+  "generated_at": "2026-06-01T13:53:00.681814Z",
+  "scope": {
+    "hours": 1,
+    "limit": 120,
+    "events": 3
+  },
+  "trust": {
+    "score": 42,
+    "weights": {
+      "context_found": 0.4,
+      "schema_validated": 0.3,
+      "verification_passed": 0.3
+    },
+    "signals": {
+      "context_found": 0.0,
+      "schema_validated": 1.0,
+      "verification_passed": 0.4,
+      "has_code_context_pack": false,
+      "has_ui_snapshot": false,
+      "has_code_map": false,
+      "has_error_radar": false,
+      "has_tool_healthcheck": false,
+      "recent_failures": 0,
+      "schema_errors": 0,
+      "identity_surface_status": "PASS",
+      "identity_surface_violations": 0,
+      "identity_surface_missing_required": 0,
+      "identity_cap_applied": false
+    },
+    "message": "Gata cu 42% incredere."
+  },
+  "identity_surface": {
+    "schema": "ana.session_identity_surface.v1",
+    "available": true,
+    "status": "PASS",
+    "files_checked": 10,
+    "violations": 0,
+    "missing_required": 0,
+    "raw_private_payloads": false
+  },
+  "trace": {
+    "schema": "ana.session_trace_summary.v1",
+    "available": true,
+    "status": "PASS",
+    "file": "trace_report_20260531_223702.json",
+    "run_id": "ana-autonomy-20260531-215502",
+    "autonomy_status": "WARN",
+    "trust_score": 92,
+    "steps": 16,
+    "spans": 16,
+    "aligned": true,
+    "operations": {
+      "audit": 1,
+      "context_pack": 4,
+      "tool_call": 2,
+      "verification": 9
+    },
+    "span_errors": 0,
+    "raw_private_payloads": false
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "chain_head": "db9554be4ff847e1abb34fa736469d9faa7bbdd8cb28ec81bd3133cbb2c696ab"
+  },
+  "events": [
+    {
+      "event_id": "b02f7a79-12d",
+      "run_id": "vscode-2026-06-01T13-53-00-651Z",
+      "actor": "ana_local_agent",
+      "policy": {
+        "mode": "local-dev",
+        "raw_private_payloads": false,
+        "redacted": true
+      },
+      "approval": "not_required_or_not_seen",
+      "dispatch": {
+        "step_id": 1,
+        "event_type": "tool_result",
+        "tool": "session_lifecycle",
+        "source": "session_lifecycle",
+        "status": "success",
+        "duration_sec": 0.104
+      },
+      "replay": {
+        "step_id": 1,
+        "tool_call": {
+          "tool": "session_lifecycle",
+          "args_hash": "3079b94f70896f471c3485ab5ce613169e1ecdb937d6fde4dcdca3bb5f1b432c"
+        },
+        "result_hash": "73b1f37043250b2e6a82b15e0350ca0f0e59de88fdba9ebdc7e442ec4eb45140",
+        "files_touched": [],
+        "test_output_summary": null,
+        "ui_snapshot_digest": null
+      },
+      "ts": "2026-06-01T13:52:44.510152Z",
+      "metadata": {
+        "observer": "tools.base.safe_execute"
+      },
+      "integrity": {
+        "payload_hash": "e81565099b0702e19b4e14b207b234cd990ed02ffc27abdb14f3ec569a6dc68c",
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "chain_hash": "b4fbc51939714dcfdfe035d00e36f4b8143015d4b2568c110ab3298e25699061"
+      }
+    },
+    {
+      "event_id": "cf7d8b7a-1cd",
+      "run_id": "vscode-2026-06-01T13-53-00-651Z",
+      "actor": "ana_local_agent",
+      "policy": {
+        "mode": "local-dev",
+        "raw_private_payloads": false,
+        "redacted": true
+      },
+      "approval": "not_required_or_not_seen",
+      "dispatch": {
+        "step_id": 2,
+        "event_type": "tool_result",
+        "tool": "session_lifecycle",
+        "source": "session_lifecycle",
+        "status": "success",
+        "duration_sec": 0.0811
+      },
+      "replay": {
+        "step_id": 2,
+        "tool_call": {
+          "tool": "session_lifecycle",
+          "args_hash": "cabdb8b89d0b135ffc98d00024e9fb529fe55fbc03e9428f75044faa99dd5092"
+        },
+        "result_hash": "73b1f37043250b2e6a82b15e0350ca0f0e59de88fdba9ebdc7e442ec4eb45140",
+        "files_touched": [],
+        "test_output_summary": null,
+        "ui_snapshot_digest": null
+      },
+      "ts": "2026-06-01T13:52:46.042604Z",
+      "metadata": {
+        "observer": "tools.base.safe_execute"
+      },
+      "integrity": {
+        "payload_hash": "ada6c2d0b1b01c0ca976b38aa2f0e8ebb3aafadb1b91740fd3e3360fafa69c46",
+        "prev_hash": "b4fbc51939714dcfdfe035d00e36f4b8143015d4b2568c110ab3298e25699061",
+        "chain_hash": "e0a91ea6454f3a423af47ab6953cdbd8820bff7cafe6afeffca6929d34031f28"
+      }
+    },
+    {
+      "event_id": "1a62d7c9-107",
+      "run_id": "vscode-2026-06-01T13-53-00-651Z",
+      "actor": "ana_local_agent",
+      "policy": {
+        "mode": "local-dev",
+        "raw_private_payloads": false,
+        "redacted": true
+      },
+      "approval": "not_required_or_not_seen",
+      "dispatch": {
+        "step_id": 3,
+        "event_type": "tool_result",
+        "tool": "session_audit",
+        "source": "session_audit",
+        "status": "success",
+        "duration_sec": 0.0296
+      },
+      "replay": {
+        "step_id": 3,
+        "tool_call": {
+          "tool": "session_audit",
+          "args_hash": "85ce50ef24844dc1a4860fc33610056d89f5641bfd1076328267a5133237d2e2"
+        },
+        "result_hash": "899c8cdf0ea4733d380df3e7b135fef44b563cb47d4df339d82410c653645bd2",
+        "files_touched": [],
+        "test_output_summary": null,
+        "ui_snapshot_digest": null
+      },
+      "ts": "2026-06-01T13:52:54.444972Z",
+      "metadata": {
+        "observer": "tools.base.safe_execute"
+      },
+      "integrity": {
+        "payload_hash": "7ab0de6412f40c094f2fcb1c585df864f0eb8792eb9b21693bdcc5bebdd474a9",
+        "prev_hash": "e0a91ea6454f3a423af47ab6953cdbd8820bff7cafe6afeffca6929d34031f28",
+        "chain_hash": "db9554be4ff847e1abb34fa736469d9faa7bbdd8cb28ec81bd3133cbb2c696ab"
+      }
+    }
+  ]
+}

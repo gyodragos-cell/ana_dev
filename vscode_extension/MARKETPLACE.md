@@ -1,18 +1,20 @@
-# ANA MAX Marketplace Upload Notes
+﻿# ANA MAX Marketplace Upload Notes
 
 Use this checklist before publishing or updating the VS Code Marketplace
 extension.
 
 ## Current Package
 
-- Extension id: `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat`
-- Display name: `ANA MAX - Hybrid AI Cockpit`
-- Version: `1.0.9`
+- Extension id: `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-codex-cockpit`
+- Display name: `ANA MAX - Codex MCP Cockpit`
+- Version: `1.0.71`
 - Publisher in `package.json`: `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad`
-- Marketplace package built by VSCE:
-  `vscode_extension\ana-antigravity-chat-1.0.9.vsix`
+- Marketplace package:
+  `vscode_extension\ana-codex-cockpit-1.0.71.vsix`
 - Local/operator install package also available at:
-  `ANA_MAX\ana-antigravity-hybrid-1.0.9.vsix`
+  `ANA_MAX\ana-max-codex-cockpit-1.0.71.vsix`
+
+This package is intentionally Codex-only.
 
 ## Upload Checklist
 
@@ -22,10 +24,11 @@ extension.
    For this package it must be `d4d8176a-bb85-66ef-93dd-a58bc9ddfdad`.
 3. If the selected publisher has another name, update `vscode_extension/package.json`
    before packaging.
-4. Upload `vscode_extension\ana-antigravity-chat-1.0.9.vsix`.
+4. Upload `vscode_extension\ana-codex-cockpit-1.0.71.vsix` only if Billy
+   explicitly decides to publish this lab build.
 5. Confirm the marketplace page shows:
    - icon: ANA MAX icon;
-   - display name: `ANA MAX - Hybrid AI Cockpit`;
+   - display name: `ANA MAX - Codex MCP Cockpit`;
    - author/credit: Dragos / gyodragos-cell with Codex;
    - repository and homepage links;
    - README sections: Quick Start, MCP Client Config, Safety Model;
@@ -50,8 +53,9 @@ npx.cmd --yes @vscode/vsce package --no-dependencies
 
 ## Notes
 
-- Do not upload old `ana-antigravity-1.0.x.vsix` files.
+- Do not rename `package.json` field `name` unless you want a new Marketplace
+  listing instead of an update to the current one.
 - Do not publish local logs, screenshots, private memory, `.env`, tokens, or
   machine-specific paths.
 - Keep the marketplace copy practical: ANA MAX is a local-first MCP cockpit for
-  AI coding agents, not a cloud service.
+  Codex in VS Code, not a cloud service.

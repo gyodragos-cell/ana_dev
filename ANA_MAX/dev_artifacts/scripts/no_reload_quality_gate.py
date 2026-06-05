@@ -61,6 +61,15 @@ def run_step(step: Step) -> dict:
         }
 
 
+def run_advisory(step: Step) -> dict:
+    result = run_step(step)
+    if result["status"] == "pass":
+        result["status"] = "ok"
+    elif result["status"] == "fail":
+        result["status"] = "warn"
+    return result
+
+
 def tail(text: str, max_chars: int = 4000) -> str:
     text = str(text or "").strip()
     if len(text) <= max_chars:
@@ -82,10 +91,29 @@ def main() -> int:
                 "ANA_MAX/tools/agent_coach_tool.py",
                 "ANA_MAX/tools/session_rem_sleep_tool.py",
                 "ANA_MAX/tools/tool_router_tool.py",
+                "ANA_MAX/core/agent_trace_schema.py",
                 "ANA_MAX/main.py",
                 "ANA_MAX/mcp_stdio.py",
                 "ANA_MAX_Launcher/mcp_readiness_check.py",
                 "ANA_MAX/dev_artifacts/scripts/package_cockpit_vsix.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_permission_manifest_coverage.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_local_checkpoint.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_operator_status.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_lab_state_summary.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_post_reload_verify.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_vsix_version_check.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_patch_advisor.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_graph_map.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_trace_report.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_file_activity_snapshot.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_dirty_tree_report.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_review_batch_runner.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_memory_archive.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_live_tool_surface_check.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_live_behavior_check.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_reload_consistency_check.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_identity_surface_check.py",
+                "ANA_MAX/dev_artifacts/scripts/ana_nucleus_smoke.py",
             ],
             60,
         ),
@@ -98,9 +126,49 @@ def main() -> int:
                 "tests/runtime/test_tool_router_tool.py",
                 "tests/runtime/test_agent_coach_recommend.py",
                 "tests/runtime/test_session_rem_sleep_tool.py",
+                "tests/runtime/test_ana_governance_check.py",
+                "tests/runtime/test_ana_local_checkpoint.py",
+                "tests/runtime/test_ana_operator_status.py",
+                "tests/runtime/test_ana_lab_state_summary.py",
+                "tests/runtime/test_ana_post_reload_verify.py",
+                "tests/runtime/test_ana_vsix_version_check.py",
+                "tests/runtime/test_ana_patch_advisor.py",
+                "tests/runtime/test_agent_trace_schema.py",
+                "tests/runtime/test_ana_graph_map.py",
+                "tests/runtime/test_ana_trace_report.py",
+                "tests/runtime/test_ana_file_activity_snapshot.py",
+                "tests/runtime/test_ana_dirty_tree_report.py",
+                "tests/runtime/test_ana_review_batch_runner.py",
+                "tests/runtime/test_ana_memory_archive.py",
+                "tests/runtime/test_ana_memory_hygiene.py",
+                "tests/runtime/test_ana_live_tool_surface_check.py",
+                "tests/runtime/test_ana_live_behavior_check.py",
+                "tests/runtime/test_ana_reload_consistency_check.py",
+                "tests/runtime/test_ana_identity_surface_check.py",
+                "tests/runtime/test_ana_nucleus_smoke.py",
+                "tests/runtime/test_session_checkpoint_tool.py",
+                "tests/runtime/test_vscode_extension.py",
                 "-q",
             ],
             120,
+        ),
+        Step(
+            "permission_manifest_coverage",
+            [
+                python,
+                "ANA_MAX/dev_artifacts/scripts/ana_permission_manifest_coverage.py",
+                "--no-write",
+            ],
+            120,
+        ),
+        Step(
+            "identity_surface_check",
+            [
+                python,
+                "ANA_MAX/dev_artifacts/scripts/ana_identity_surface_check.py",
+                "--no-write",
+            ],
+            60,
         ),
         Step(
             "mcp_smart_readiness",
@@ -121,6 +189,14 @@ def main() -> int:
             300,
         ),
         Step(
+            "vsix_version_consistency",
+            [
+                python,
+                "ANA_MAX/dev_artifacts/scripts/ana_vsix_version_check.py",
+            ],
+            60,
+        ),
+        Step(
             "package_cockpit_vsix_no_install",
             [
                 python,
@@ -129,23 +205,61 @@ def main() -> int:
             90,
         ),
     ]
+    advisories = [
+        Step(
+            "live_reload_marker",
+            [
+                python,
+                "ANA_MAX/dev_artifacts/scripts/ana_live_reload_check.py",
+                "--no-write",
+            ],
+            60,
+        ),
+        Step(
+            "live_tool_surface",
+            [
+                python,
+                "ANA_MAX/dev_artifacts/scripts/ana_live_tool_surface_check.py",
+            ],
+            60,
+        ),
+        Step(
+            "live_behavior",
+            [
+                python,
+                "ANA_MAX/dev_artifacts/scripts/ana_live_behavior_check.py",
+            ],
+            60,
+        ),
+    ]
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     results = [run_step(step) for step in steps]
+    advisory_results = [run_advisory(step) for step in advisories]
     summary: dict[str, int] = {}
     for result in results:
         summary[result["status"]] = summary.get(result["status"], 0) + 1
+    advisory_summary: dict[str, int] = {}
+    for result in advisory_results:
+        advisory_summary[result["status"]] = advisory_summary.get(result["status"], 0) + 1
 
     report = {
         "schema": "ana.no_reload_quality_gate.v1",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "summary": dict(sorted(summary.items())),
+        "advisory_summary": dict(sorted(advisory_summary.items())),
         "results": results,
+        "advisories": advisory_results,
     }
     report_path = REPORT_DIR / f"no_reload_quality_gate_{time.strftime('%Y%m%d_%H%M%S')}.json"
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=True), encoding="utf-8")
 
     print(json.dumps({"summary": report["summary"], "report": str(report_path)}, indent=2))
+    for result in advisory_results:
+        if result["status"] != "ok":
+            print(f"ADVISORY {result['name']}")
+            if result.get("stdout_tail"):
+                print(result["stdout_tail"])
     for result in results:
         status = result["status"]
         if status != "pass":

@@ -4,15 +4,21 @@ This repository treats Codex as the primary project manager and implementation a
 
 ## Operating Rules
 
+- Golden rule for this lab: use ANA before meaningful action. Run
+  `ana_codex_companion.py`, `agent_coach action=recommend`, `tool_router`, or a
+  relevant ANA observation/context tool before scoped ANA work. If ANA returns
+  `WARN`, pause mutation and address the challenge; if ANA returns `FAIL`, stop
+  action work until readiness/evidence is repaired. See
+  `docs/ANA_CODEX_GOLDEN_RULE.md`.
 - Prefer MCP resources and MCP tools first whenever they provide relevant project context, tool access, diagnostics, or structured knowledge.
 - Fall back to local shell, file inspection, or web search only when MCP does not cover the task or when direct verification is needed.
 - Read `docs/AGENT_MEMORY.md` before substantial work so durable project context survives across chat sessions and agents.
-- Keep edits scoped and preserve existing work from the user, Codex, Antigravity, extensions, or other agents.
+- Keep edits scoped and preserve existing work from the user, Codex, extensions, or prior lab sessions.
 - Before changing shared behavior, inspect the surrounding code and follow the established project patterns.
 - When multiple agents or tools are active, avoid reverting or overwriting unrelated changes; integrate carefully with the current workspace state.
 - Record durable project guidance here when it should affect future sessions.
 - Put ad-hoc experiments, one-off scripts, temporary prompts, and scratch outputs in `ANA_MAX/sandbox/`, not the repository root. Promote only cleaned logic and focused tests into `ANA_MAX/core/`, `ANA_MAX/tools/`, or `tests/`.
-- To watch live MCP activity from Antigravity/Qoder/Windsurf/Codex, run `ANA_MAX/dev_artifacts/scripts/tail_mcp_log.ps1`. Avoid adding desktop notification dependencies unless explicitly requested.
+- To watch live MCP activity for Codex/ANA, run `ANA_MAX/dev_artifacts/scripts/tail_mcp_log.ps1`. Avoid adding desktop notification dependencies unless explicitly requested.
 
 ## Project Context
 

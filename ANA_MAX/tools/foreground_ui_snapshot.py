@@ -145,14 +145,15 @@ class ForegroundUISnapshotTool(Tool):
                 "inputs": inputs[:max_elements],
                 "visible_text": texts[:max_elements] if include_text else [],
                 "detected_errors": errors,
-                "suggested_actions": self._suggest_actions(buttons, errors, inputs)
+                "suggested_actions": self._suggest_actions(app_name, window_title, buttons, errors, inputs)
             }
 
             return snapshot
 
         except Exception as e:
-            logger.error(f"UI capture error: {e}")
-            fallback["reason"] = f"UIA error: {str(e)}"
+            error_text = str(e) or type(e).__name__
+            logger.warning("UIA capture failed, using Win32 fallback: %s", error_text)
+            fallback["reason"] = f"UIA error: {error_text}"
             fallback["fallback"] = "win32_foreground_window"
             return fallback
 
@@ -222,12 +223,25 @@ class ForegroundUISnapshotTool(Tool):
         text_lower = text.lower()
         return any(keyword in text_lower for keyword in error_keywords)
 
-    def _suggest_actions(self, buttons: List[str], errors: List[str], inputs: List[dict]) -> List[Dict[str, str]]:
+    def _suggest_actions(
+        self,
+        app_name: str,
+        window_title: str,
+        buttons: List[str],
+        errors: List[str],
+        inputs: List[dict],
+    ) -> List[Dict[str, str]]:
         """Sugereaza actiuni bazate pe UI state."""
         actions = []
 
         # If errors detected, suggest dismissal
         if errors:
+            if self._looks_like_log_view(app_name, window_title, errors):
+                return [{
+                    "action": "inspect_log",
+                    "target": "terminal_or_output",
+                    "reason": f"Log text contains error signal: {errors[0][:50]}",
+                }]
             # Look for OK/Close/Dismiss buttons
             for btn in buttons:
                 if btn.lower() in ["ok", "close", "dismiss", "retry", "clear"]:
@@ -252,6 +266,23 @@ class ForegroundUISnapshotTool(Tool):
                     break
 
         return actions
+
+    def _looks_like_log_view(self, app_name: str, window_title: str, errors: List[str]) -> bool:
+        """Avoid destructive UI suggestions when errors are merely log text."""
+        haystack = f"{app_name} {window_title} {' '.join(errors[:3])}".lower()
+        log_markers = [
+            "code ",
+            "visual studio code",
+            "terminal",
+            "watchdog",
+            "powershell",
+            "error_radar",
+            "tools.base",
+            "tool start",
+            "tool end",
+            "errors=",
+        ]
+        return any(marker in haystack for marker in log_markers)
 
     def _empty_snapshot(self, reason: str = "") -> Dict[str, Any]:
         """Return empty snapshot with reason."""

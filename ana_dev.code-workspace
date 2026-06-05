@@ -5,11 +5,30 @@
 		},
 		{
 			"path": "../ANA_MAX_GitHub_Release"
+		},
+		{
+			"path": "../deco"
 		}
 	],
 	"extensions": {
 		"recommendations": [
 			"d4d8176a-bb85-66ef-93dd-a58bc9ddfdad.ana-antigravity-chat"
 		]
+	},
+	"settings": {
+		"accessibility.signals.format": {
+			"sound": "always",
+			"announcement": "always"
+		},
+		"accessibility.signals.progress": {
+			"announcement": "auto"
+		},
+		"accessibility.signals.save": {
+			"sound": "always",
+			"announcement": "always"
+		},
+		"accessibility.chat.showCheckmarks": true,
+		"chat.agent.sandbox.autoApproveUnsandboxedCommands": true,
+		"chat.agent.sandbox.enabledWindows": "allowNetwork"
 	}
 }

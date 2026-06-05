@@ -30,7 +30,7 @@ In progress: live desktop, UI mutation, template matching, broader MCP tests
 
 | Tool | Status | Notes |
 | --- | --- | --- |
-| `adal_integration` | In progress | Registered; not exercised in this pass. |
+| `adal_integration` | Retired | Removed from active tool registration; historical only. |
 | `adb_operations` | In progress | Registered; device-dependent. |
 | `advanced_scanner` | In progress | Registered; authorized security use only. |
 | `agent_coach` | OK | Present; safe healthcheck path uses it in offline profile. |

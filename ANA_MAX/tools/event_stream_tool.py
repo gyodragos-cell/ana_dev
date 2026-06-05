@@ -19,6 +19,13 @@ from tools.base import Tool, ToolDefinition, ToolParameter, ToolResult, ToolStat
 from core.event_stream import get_event_stream, EventType
 
 
+def _as_int(value, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 class EventStreamTool(Tool):
     """Event Stream Tool for debugging and observability."""
     
@@ -106,6 +113,8 @@ class EventStreamTool(Tool):
     def _query(self, stream, event_type: str = None, source: str = None,
                hours: int = 24, limit: int = 50, **kwargs) -> ToolResult:
         """Query events."""
+        hours = _as_int(hours, 24)
+        limit = _as_int(limit, 50)
         end_time = time.time()
         start_time = end_time - (hours * 3600)
         
@@ -135,6 +144,8 @@ class EventStreamTool(Tool):
     
     def _timeline(self, stream, hours: int = 1, limit: int = 50, **kwargs) -> ToolResult:
         """Get event timeline."""
+        hours = _as_int(hours, 1)
+        limit = _as_int(limit, 50)
         end_time = time.time()
         start_time = end_time - (hours * 3600)
         
@@ -152,6 +163,7 @@ class EventStreamTool(Tool):
     
     def _stats(self, stream, hours: int = 24, **kwargs) -> ToolResult:
         """Get event statistics."""
+        hours = _as_int(hours, 24)
         stats = stream.get_statistics(hours=hours)
         
         return ToolResult(
@@ -162,6 +174,7 @@ class EventStreamTool(Tool):
     
     def _replay(self, stream, limit: int = 50, **kwargs) -> ToolResult:
         """Get replayable actions."""
+        limit = _as_int(limit, 50)
         actions = stream.replay_actions(limit=limit)
         
         return ToolResult(
@@ -172,6 +185,7 @@ class EventStreamTool(Tool):
     
     def _cleanup(self, stream, hours: int = 168, **kwargs) -> ToolResult:
         """Clean up old events."""
+        hours = _as_int(hours, 168)
         deleted = stream.cleanup_old_events(max_age_hours=hours)
         
         return ToolResult(
